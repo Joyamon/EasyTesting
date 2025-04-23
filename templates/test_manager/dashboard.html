@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - EasyTesting{% endblock %}
+
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body stat-card primary">
+                <div class="stat-title">Projects</div>
+                <div class="stat-value">{{ projects_count }}</div>
+                <a href="{% url 'project_list' %}" class="btn btn-sm btn-light stat-link">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body stat-card success">
+                <div class="stat-title">Test Cases</div>
+                <div class="stat-value">{{ test_cases_count }}</div>
+                <a href="{% url 'test_case_list' %}" class="btn btn-sm btn-light stat-link">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body stat-card info">
+                <div class="stat-title">Test Suites</div>
+                <div class="stat-value">{{ test_suites_count }}</div>
+                <a href="{% url 'test_suite_list' %}" class="btn btn-sm btn-light stat-link">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body stat-card warning">
+                <div class="stat-title">Test Runs</div>
+                <div class="stat-value">{{ test_runs_count }}</div>
+                <a href="{% url 'test_run_list' %}" class="btn btn-sm btn-light stat-link">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Test Run Statistics</span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" href="#">Export as PNG</a></li>
+                        <li><a class="dropdown-item" href="#">View Full Report</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="testRunChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Test Result Statistics</span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton2">
+                        <li><a class="dropdown-item" href="#">Export as PNG</a></li>
+                        <li><a class="dropdown-item" href="#">View Full Report</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="testResultChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Recent Test Runs</span>
+                <a href="{% url 'test_run_list' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Project</th>
+                                <th>Environment</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test_run in recent_test_runs %}
+                                <tr>
+                                    <td>{{ test_run.name }}</td>
+                                    <td>{{ test_run.project.name }}</td>
+                                    <td>{{ test_run.environment.name }}</td>
+                                    <td>
+                                        {% if test_run.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif test_run.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% elif test_run.status == 'running' %}
+                                            <span class="badge bg-primary">Running</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ test_run.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'test_run_detail' pk=test_run.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i> No test runs yet.
+                                        </div>
+                                        <a href="{% url 'test_case_list' %}" class="btn btn-sm btn-primary mt-2">
+                                            Run a Test
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set chart defaults
+        Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.plugins.legend.position = 'bottom';
+
+        // Test Run Chart
+        var testRunCtx = document.getElementById('testRunChart').getContext('2d');
+        var testRunChart = new Chart(testRunCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Passed', 'Failed', 'Pending', 'Running'],
+                datasets: [{
+                    data: [
+                        {{ test_run_stats.passed }},
+                        {{ test_run_stats.failed }},
+                        {{ test_run_stats.pending }},
+                        {{ test_run_stats.running }}
+                    ],
+                    backgroundColor: [
+                        'rgba(76, 201, 240, 0.7)',
+                        'rgba(230, 57, 70, 0.7)',
+                        'rgba(108, 117, 125, 0.7)',
+                        'rgba(67, 97, 238, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(76, 201, 240, 1)',
+                        'rgba(230, 57, 70, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(67, 97, 238, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Test Run Status Distribution',
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        },
+                        font: {
+                            size: 16,
+                            weight: 'normal'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Test Result Chart
+        var testResultCtx = document.getElementById('testResultChart').getContext('2d');
+        var testResultChart = new Chart(testResultCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Passed', 'Failed', 'Error', 'Skipped'],
+                datasets: [{
+                    data: [
+                        {{ test_result_stats.passed }},
+                        {{ test_result_stats.failed }},
+                        {{ test_result_stats.error }},
+                        {{ test_result_stats.skipped }}
+                    ],
+                    backgroundColor: [
+                        'rgba(76, 201, 240, 0.7)',
+                        'rgba(230, 57, 70, 0.7)',
+                        'rgba(247, 37, 133, 0.7)',
+                        'rgba(108, 117, 125, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(76, 201, 240, 1)',
+                        'rgba(230, 57, 70, 1)',
+                        'rgba(247, 37, 133, 1)',
+                        'rgba(108, 117, 125, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Test Result Status Distribution',
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        },
+                        font: {
+                            size: 16,
+                            weight: 'normal'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

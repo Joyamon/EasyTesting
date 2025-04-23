@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Run Test Suite: {{ test_suite.name }} - EasyTesting{% endblock %}
+
+{% block header %}Run Test Suite: {{ test_suite.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <span>Test Suite Details</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5 class="text-muted mb-2">Project</h5>
+                    <p>
+                        <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
+                            {{ test_suite.project.name }}
+                        </a>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <h5 class="text-muted mb-2">Test Cases</h5>
+                    <p>This suite contains {{ test_suite.test_cases.count }} test cases.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>Run Test Suite</span>
+            </div>
+            <div class="card-body">
+                {% if test_suite.test_cases.count == 0 %}
+                    <div class="alert alert-warning">
+                        <div class="d-flex">
+                            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                            <div>
+                                <strong>Warning:</strong> This test suite doesn't contain any test cases. Please add test cases before running the suite.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Add Test Cases
+                        </a>
+                    </div>
+                {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="environment" class="form-label fw-medium">Select Environment</label>
+                            <select class="form-select form-select-lg" id="environment" name="environment" required>
+                                <option value="">Select an environment</option>
+                                {% for env in environments %}
+                                    <option value="{{ env.id }}">{{ env.name }} ({{ env.base_url }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Choose the environment to run this test suite against</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <div class="d-flex">
+                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                <div>
+                                    <strong>Note:</strong> Running this test suite will create a new test run and execute all {{ test_suite.test_cases.count }} test cases against the selected environment.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Test Suite
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-play-fill"></i> Run Suite
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

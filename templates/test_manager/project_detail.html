@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - EasyTesting{% endblock %}
+
+{% block header %}Project: {{ project.name }}{% endblock %}
+
+{% block header_buttons %}
+<div class="btn-group">
+    <a href="{% url 'project_edit' pk=project.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i> Edit
+    </a>
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-plus-lg"></i> Add New
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+            <a class="dropdown-item" href="{% url 'environment_create' %}?project={{ project.pk }}">
+                <i class="bi bi-gear"></i> Environment
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'test_case_create' %}?project={{ project.pk }}">
+                <i class="bi bi-file-earmark-code"></i> Test Case
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'test_suite_create' %}?project={{ project.pk }}">
+                <i class="bi bi-collection"></i> Test Suite
+            </a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Project Details</span>
+                <a href="{% url 'project_edit' pk=project.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5 class="text-muted mb-2">Description</h5>
+                    <p>{{ project.description|default:"No description provided" }}</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h5 class="text-muted mb-2">Created By</h5>
+                        <div class="d-flex align-items-center">
+                            <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                {{ project.created_by.username|first|upper }}
+                            </span>
+                            <span>{{ project.created_by.username }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <h5 class="text-muted mb-2">Created At</h5>
+                        <p class="mb-0">{{ project.created_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="text-muted mb-2">Last Updated</h5>
+                        <p class="mb-0">{{ project.updated_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Environments</span>
+                <a href="{% url 'environment_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Add Environment
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Base URL</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for env in environments %}
+                                <tr>
+                                    <td>{{ env.name }}</td>
+                                    <td>
+                                        <code class="bg-light px-2 py-1 rounded">{{ env.base_url }}</code>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'environment_detail' pk=env.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i> No environments yet.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Test Cases</span>
+                <a href="{% url 'test_case_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Add Test Case
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Method</th>
+                                <th>URL</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test_case in test_cases %}
+                                <tr>
+                                    <td>{{ test_case.name }}</td>
+                                    <td>
+                                        <span class="badge
+                                            {% if test_case.request_method == 'GET' %}bg-success{% endif %}
+                                            {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
+                                            {% if test_case.request_method == 'PUT' %}bg-warning{% endif %}
+                                            {% if test_case.request_method == 'DELETE' %}bg-danger{% endif %}
+                                            {% if test_case.request_method == 'PATCH' %}bg-info{% endif %}
+                                        ">
+                                            {{ test_case.request_method }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 150px;">
+                                            {{ test_case.request_url }}
+                                        </code>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i> No test cases yet.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Test Suites</span>
+                <a href="{% url 'test_suite_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg"></i> Add Test Suite
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test_suite in test_suites %}
+                                <tr>
+                                    <td>{{ test_suite.name }}</td>
+                                    <td>{{ test_suite.description|truncatechars:30 }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i> No test suites yet.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Recent Test Runs</span>
+                <a href="{% url 'test_run_list' %}?project={{ project.pk }}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Environment</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test_run in test_runs %}
+                                <tr>
+                                    <td>{{ test_run.name }}</td>
+                                    <td>{{ test_run.environment.name }}</td>
+                                    <td>
+                                        {% if test_run.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif test_run.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% elif test_run.status == 'running' %}
+                                            <span class="badge bg-primary">Running</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ test_run.start_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                                    <td>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'test_run_detail' pk=test_run.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-info-circle me-2"></i> No test runs yet.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

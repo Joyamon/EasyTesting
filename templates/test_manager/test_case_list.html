@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Cases - EasyTesting{% endblock %}
+
+{% block header %}Test Cases{% endblock %}
+
+{% block header_buttons %}
+<a href="{% url 'test_case_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg"></i> New Test Case
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if project %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    <strong>Filtered by Project:</strong> {{ project.name }}
+                    <a href="{% url 'test_case_list' %}" class="btn btn-sm btn-outline-primary ms-3">
+                        <i class="bi bi-x-lg"></i> Clear Filter
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Project</th>
+                        <th>Method</th>
+                        <th>URL</th>
+                        <th>Expected Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test_case in test_cases %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="fw-medium text-decoration-none text-dark">
+                                    {{ test_case.name }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'project_detail' pk=test_case.project.pk %}" class="text-decoration-none">
+                                    {{ test_case.project.name }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if test_case.request_method == 'GET' %}bg-success{% endif %}
+                                    {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
+                                    {% if test_case.request_method == 'PUT' %}bg-warning{% endif %}
+                                    {% if test_case.request_method == 'DELETE' %}bg-danger{% endif %}
+                                    {% if test_case.request_method == 'PATCH' %}bg-info{% endif %}
+                                ">
+                                    {{ test_case.request_method }}
+                                </span>
+                            </td>
+                            <td>
+                                <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;">
+                                    {{ test_case.request_url }}
+                                </code>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ test_case.expected_status_code }}</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'test_case_edit' pk=test_case.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'test_case_run' pk=test_case.pk %}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-play-fill"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="bi bi-file-earmark-code display-4 text-muted mb-3"></i>
+                                    <h5>No test cases yet</h5>
+                                    <p class="text-muted">Create your first test case to get started</p>
+                                    <a href="{% url 'test_case_create' %}" class="btn btn-primary mt-2">
+                                        <i class="bi bi-plus-lg"></i> Create Test Case
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
