@@ -5,44 +5,44 @@ import requests
 from urllib.parse import urljoin
 
 # 尝试导入 HTTPRunner，如果失败则记录错误但不中断执行
-try:
-    import httprunner
-
-    # 尝试多种方式获取 HTTPRunner 版本
-    if hasattr(httprunner, "__version__"):
-        HTTPRUNNER_VERSION = httprunner.__version__
-    elif hasattr(httprunner, "__version"):
-        HTTPRUNNER_VERSION = httprunner.__version
-    elif hasattr(httprunner, "version"):
-        HTTPRUNNER_VERSION = httprunner.version
-    else:
-        # 尝试从包信息获取版本
-        try:
-            import pkg_resources
-
-            HTTPRUNNER_VERSION = pkg_resources.get_distribution("httprunner").version
-        except:
-            HTTPRUNNER_VERSION = "unknown"
-
-    # 尝试导入 HttpRunner 类
-    try:
-        from httprunner.runner import HttpRunner
-
-        HTTPRUNNER_AVAILABLE = True
-    except ImportError:
-        # 尝试其他可能的导入路径
-        try:
-            from httprunner.api import HttpRunner
-
-            HTTPRUNNER_AVAILABLE = True
-        except ImportError:
-            HTTPRUNNER_AVAILABLE = False
-except ImportError:
-    HTTPRUNNER_AVAILABLE = False
-    HTTPRUNNER_VERSION = "not installed"
+# try:
+#     import httprunner
+#
+#     # 尝试多种方式获取 HTTPRunner 版本
+#     if hasattr(httprunner, "__version__"):
+#         HTTPRUNNER_VERSION = httprunner.__version__
+#     elif hasattr(httprunner, "__version"):
+#         HTTPRUNNER_VERSION = httprunner.__version
+#     elif hasattr(httprunner, "version"):
+#         HTTPRUNNER_VERSION = httprunner.version
+#     else:
+#         # 尝试从包信息获取版本
+#         try:
+#             import pkg_resources
+#
+#             HTTPRUNNER_VERSION = pkg_resources.get_distribution("httprunner").version
+#         except:
+#             HTTPRUNNER_VERSION = "unknown"
+#
+#     # 尝试导入 HttpRunner 类
+#     try:
+#         from httprunner.runner import HttpRunner
+#
+#         HTTPRUNNER_AVAILABLE = True
+#     except ImportError:
+#         # 尝试其他可能的导入路径
+#         try:
+#             from httprunner.api import HttpRunner
+#
+#             HTTPRUNNER_AVAILABLE = True
+#         except ImportError:
+#             HTTPRUNNER_AVAILABLE = False
+# except ImportError:
+#     HTTPRUNNER_AVAILABLE = False
+#     HTTPRUNNER_VERSION = "not installed"
 
 logger = logging.getLogger(__name__)
-logger.info(f"HTTPRunner version: {HTTPRUNNER_VERSION}, Available: {HTTPRUNNER_AVAILABLE}")
+# logger.info(f"HTTPRunner version: {HTTPRUNNER_VERSION}, Available: {HTTPRUNNER_AVAILABLE}")
 
 
 def execute_test_case(test_case, environment):
@@ -87,8 +87,7 @@ def _execute_with_requests(test_case, environment):
         # 构建完整 URL
         base_url = environment.base_url.rstrip('/')
         request_url = test_case.request_url.lstrip('/')
-        full_url = base_url + '/' + request_url
-        print(f"Full URL: {full_url}")
+        full_url = urljoin(f"{base_url}/", request_url)
 
         logger.info(f"Executing direct HTTP request to: {full_url}")
 
@@ -112,8 +111,6 @@ def _execute_with_requests(test_case, environment):
                 if 'Content-Type' not in headers:
                     kwargs["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
                 kwargs["data"] = test_case.request_body
-                print(kwargs)
-                print(kwargs["data"])
                 logger.debug(f"Request body (form-data): {test_case.request_body}")
 
         # 发送请求
@@ -124,10 +121,16 @@ def _execute_with_requests(test_case, environment):
             **kwargs
         )
 
+        # 处理响应
+        logger.debug(f"Response status code: {response.status_code}")
+        logger.debug(f"Response headers: {dict(response.headers)}")
+
         try:
             response_body = response.json()
+            logger.debug("Response body parsed as JSON")
         except ValueError:
             response_body = {"content": response.text}
+            logger.debug("Response body parsed as text")
 
         # 检查状态码是否符合预期
         success = response.status_code == test_case.expected_status_code

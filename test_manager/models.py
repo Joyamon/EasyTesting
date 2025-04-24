@@ -30,6 +30,11 @@ class Environment(models.Model):
 
 
 class TestCase(models.Model):
+    REQUEST_BODY_FORMAT_CHOICES = [
+        ('json', 'JSON'),
+        ('form-data', 'Form Data'),
+    ]
+
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_cases')
     description = models.TextField(blank=True)
@@ -40,9 +45,10 @@ class TestCase(models.Model):
         ('DELETE', 'DELETE'),
         ('PATCH', 'PATCH'),
     ])
-    request_url = models.CharField(max_length=255)
+    request_url = models.CharField(max_length=500)
     request_headers = models.JSONField(default=dict, blank=True)
     request_body = models.JSONField(default=dict, blank=True, null=True)
+    request_body_format = models.CharField(max_length=20, choices=REQUEST_BODY_FORMAT_CHOICES, default='json')
     expected_status_code = models.IntegerField(default=200)
     validation_rules = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -285,7 +285,7 @@
                                 {{ result.test_case.request_method }}
                             </span>
 
-                            <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_run.environment.base_url }}/?{{ result.test_case.request_url }}</code>
+                            <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_run.environment.base_url }}{{ result.test_case.request_url }}</code>
                         </div>
 
                         <h6 class="text-muted mb-2">Headers</h6>

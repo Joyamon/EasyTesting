@@ -101,6 +101,11 @@
                 </div>
 
                 <div class="mb-4">
+                    <h5 class="text-muted mb-2">Body Format</h5>
+                    <span class="badge bg-info">{{ test_case.get_request_body_format_display }}</span>
+                </div>
+
+                <div class="mb-4">
                     <h5 class="text-muted mb-2">Body</h5>
                     {% if test_case.request_body %}
                         <pre class="bg-light p-3 rounded"><code>{{ test_case.request_body|pprint }}</code></pre>
@@ -191,6 +196,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% include 'pagination.html' with page_obj=test_results %}
             </div>
         </div>
     </div>
