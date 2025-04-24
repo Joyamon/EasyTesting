@@ -37,7 +37,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "test_manager",
+    'test_manager.apps.TestManagerConfig',  # 使用自定义的 AppConfig
+
+    # "test_manager",
+
 ]
 
 MIDDLEWARE = [
@@ -127,3 +130,21 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
 }
+# 登录和登出后的重定向 URL
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
+# # 邮件设置 (开发环境使用控制台输出)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'
+
+
+# 邮件设置 - SMTP 配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'  # SMTP 服务器地址
+EMAIL_PORT = 465  # SMTP 服务器端口
+EMAIL_USE_TLS = True  # 使用 TLS 加密
+EMAIL_HOST_USER = '1210777805@qq.com'  # SMTP 用户名
+EMAIL_HOST_PASSWORD = 'umbclibpysdzffii'  # SMTP 密码
+DEFAULT_FROM_EMAIL = '1210777805@qq.com'  # 默认发件人
+
+SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'

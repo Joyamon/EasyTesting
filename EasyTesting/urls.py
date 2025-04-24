@@ -16,44 +16,103 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
-from test_manager.auth_views import register_view, profile_view, edit_profile_view
+from test_manager import views
+from test_manager import auth_views as custom_auth_views
+
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('admin/', admin.site.urls),
     path('api/', include('test_manager.api.urls')),
-    path('', include('test_manager.urls')),
-    path('', RedirectView.as_view(url='/dashboard/', permanent=True)),
 
-    # 认证相关的 URL
+    # 主页和仪表盘
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    # 项目相关
+    path('projects/', views.project_list, name='project_list'),
+    path('projects/create/', views.project_create, name='project_create'),
+    path('projects/<int:pk>/', views.project_detail, name='project_detail'),
+    path('projects/<int:pk>/edit/', views.project_edit, name='project_edit'),
+    path('projects/<int:pk>/delete/', views.project_delete, name='project_delete'),
+
+    # 环境相关
+    path('environments/', views.environment_list, name='environment_list'),
+    path('environments/create/', views.environment_create, name='environment_create'),
+    path('environments/<int:pk>/', views.environment_detail, name='environment_detail'),
+    path('environments/<int:pk>/edit/', views.environment_edit, name='environment_edit'),
+    path('environments/<int:pk>/delete/', views.environment_delete, name='environment_delete'),
+
+    # 测试用例相关
+    path('test-cases/', views.test_case_list, name='test_case_list'),
+    path('test-cases/create/', views.test_case_create, name='test_case_create'),
+    path('test-cases/<int:pk>/', views.test_case_detail, name='test_case_detail'),
+    path('test-cases/<int:pk>/edit/', views.test_case_edit, name='test_case_edit'),
+    path('test-cases/<int:pk>/run/', views.test_case_run, name='test_case_run'),
+
+    # 测试套件相关
+    path('test-suites/', views.test_suite_list, name='test_suite_list'),
+    path('test-suites/create/', views.test_suite_create, name='test_suite_create'),
+    path('test-suites/<int:pk>/', views.test_suite_detail, name='test_suite_detail'),
+    path('test-suites/<int:pk>/edit/', views.test_suite_edit, name='test_suite_edit'),
+    path('test-suites/<int:pk>/run/', views.test_suite_run, name='test_suite_run'),
+
+    # 测试运行相关
+    path('test-runs/', views.test_run_list, name='test_run_list'),
+    path('test-runs/<int:pk>/', views.test_run_detail, name='test_run_detail'),
+    path('test-runs/<int:pk>/delete/', views.test_run_delete, name='test_run_delete'),
+
+    # 认证相关
     path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-    path('register/', register_view, name='register'),
-    path('accounts/profile/', profile_view, name='profile'),
-    path('profile/edit/', edit_profile_view, name='edit_profile'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('register/', custom_auth_views.register_view, name='register'),
 
     # 密码重置
-    path('password_reset/', auth_views.PasswordResetView.as_view(
-        template_name='auth/password_reset_form.html',
-        email_template_name='auth/password_reset_email.html',
-        subject_template_name='auth/password_reset_subject.txt'
-    ), name='password_reset'),
-    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(
-        template_name='auth/password_reset_done.html'
-    ), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
-        template_name='auth/password_reset_confirm.html'
-    ), name='password_reset_confirm'),
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
-        template_name='auth/password_reset_complete.html'
-    ), name='password_reset_complete'),
+    path('password-reset/',
+         auth_views.PasswordResetView.as_view(
+             template_name='auth/password_reset_form.html',
+             email_template_name='auth/password_reset_email.html',
+             subject_template_name='auth/password_reset_subject.txt'
+         ),
+         name='password_reset'),
+    path('password-reset/done/',
+         auth_views.PasswordResetDoneView.as_view(
+             template_name='auth/password_reset_done.html'
+         ),
+         name='password_reset_done'),
+    path('password-reset/<uidb64>/<token>/',
+         auth_views.PasswordResetConfirmView.as_view(
+             template_name='auth/password_reset_confirm.html'
+         ),
+         name='password_reset_confirm'),
+    path('password-reset/complete/',
+         auth_views.PasswordResetCompleteView.as_view(
+             template_name='auth/password_reset_complete.html'
+         ),
+         name='password_reset_complete'),
 
     # 密码修改
-    path('password_change/', auth_views.PasswordChangeView.as_view(
-        template_name='auth/password_change_form.html'
-    ), name='password_change'),
-    path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(
-        template_name='auth/password_change_done.html'
-    ), name='password_change_done'),
+    path('password-change/',
+         auth_views.PasswordChangeView.as_view(
+             template_name='auth/password_change_form.html'
+         ),
+         name='password_change'),
+    path('password-change/done/',
+         auth_views.PasswordChangeDoneView.as_view(
+             template_name='auth/password_change_done.html'
+         ),
+         name='password_change_done'),
+
+    # 用户个人资料
+    path('profile/', custom_auth_views.profile_view, name='profile'),
+    path('profile/edit/', custom_auth_views.edit_profile_view, name='edit_profile'),
+
+
+
+    # 邮件配置
+    path('email-config/', views.email_config_list, name='email_config_list'),
+    path('email-config/create/', views.email_config_create, name='email_config_create'),
+    path('email-config/<int:pk>/edit/', views.email_config_edit, name='email_config_edit'),
+    path('email-config/<int:pk>/delete/', views.email_config_delete, name='email_config_delete'),
+    path('email-config/<int:pk>/test/', views.email_config_test, name='email_config_test'),
+    path('email-config/<int:pk>/activate/', views.email_config_activate, name='email_config_activate'),
 ]

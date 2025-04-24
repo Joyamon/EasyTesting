@@ -419,10 +419,22 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">
+                            <a class="nav-link" href="{% url 'logout' %}" >
                                 <i class="bi bi-box-arrow-right"></i> 退出登录
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
+                                <i class="bi bi-gear"></i> 管理后台
+                            </a>
+                        </li>
+                        <!-- 邮件配置 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'email_config_list' %}">
+                                <i class="bi bi-list"></i> 邮件配置列表
+                            </a>
+                        </li>
+
                     </ul>
                     {% endif %}
                 </div>
