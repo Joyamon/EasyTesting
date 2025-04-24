@@ -168,7 +168,7 @@ def project_edit(request, pk):
 def project_delete(request, pk):
     # 删除项目时，检查该项目是否存在关联的测试用例、测试套件或测试运行
     project = get_object_or_404(Project, pk=pk)
-    if project.test_runs.exists() or project.test_suites.exists() or project.test_cases.exists() or project.environments.exists():
+    if project.test_runs.exists() or project.test_suites.exists() or project.test_cases.exists():
         messages.warning(request, 'Cannot delete project with associated test cases, test suites, or test runs.')
     else:
         project.delete()
@@ -234,11 +234,11 @@ def environment_detail(request, pk):
     environment = get_object_or_404(Environment, pk=pk)
 
     # 获取每页显示的记录数
-    per_page = request.GET.get('per_page', 10)
+    per_page = request.GET.get('per_page', 5)
     try:
         per_page = int(per_page)
     except ValueError:
-        per_page = 10
+        per_page = 5
 
     # 分页获取测试运行
     all_test_runs = environment.test_runs.all().order_by('-created_at')
