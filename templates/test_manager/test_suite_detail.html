@@ -15,6 +15,8 @@
 </div>
 {% endblock %}
 
+{% csrf_token %}
+
 {% block content %}
 <div class="row">
     <div class="col-md-4 mb-4">
@@ -288,59 +290,100 @@
 {% block extra_js %}
 <script>
     function addTestCase(testSuiteId, testCaseId) {
-        // Send AJAX request to add test case to suite
-        fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
+    // 获取CSRF令牌
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
+
+    // 显示加载状态
+    const addButton = document.getElementById('addTestCaseModal').querySelector('.btn-primary');
+    const originalText = addButton.innerHTML;
+    addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+    addButton.disabled = true;
+
+    // 发送AJAX请求添加测试用例到套件
+    fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            test_case_id: testCaseId,
+            order: document.querySelectorAll('#test-cases-list tr').length + 1
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+        // 重新加载页面以显示更新后的测试用例
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add test case to suite. Please try again.');
+        // 恢复按钮状态
+        addButton.innerHTML = originalText;
+        addButton.disabled = false;
+    });
+}
+
+// 辅助函数：获取Cookie值
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function removeTestCase(testSuiteId, testCaseId) {
+    if (confirm('Are you sure you want to remove this test case from the suite?')) {
+        // 获取CSRF令牌
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
+
+        // 显示加载状态
+        const removeButton = event.target.closest('button');
+        const originalHTML = removeButton.innerHTML;
+        removeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        removeButton.disabled = true;
+
+        // 发送AJAX请求从套件中移除测试用例
+        fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                'X-CSRFToken': csrftoken
             },
             body: JSON.stringify({
-                test_case_id: testCaseId,
-                order: document.querySelectorAll('#test-cases-list tr').length + 1
+                test_case_id: testCaseId
             })
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
             }
-            return response.json();
-        })
-        .then(data => {
-            // Reload the page to show the updated test cases
+            // 重新加载页面以显示更新后的测试用例
             window.location.reload();
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to add test case to suite. Please try again.');
+            alert('Failed to remove test case from suite. Please try again.');
+            // 恢复按钮状态
+            removeButton.innerHTML = originalHTML;
+            removeButton.disabled = false;
         });
     }
-
-    function removeTestCase(testSuiteId, testCaseId) {
-        if (confirm('Are you sure you want to remove this test case from the suite?')) {
-            // Send AJAX request to remove test case from suite
-            fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: JSON.stringify({
-                    test_case_id: testCaseId
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                // Reload the page to show the updated test cases
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to remove test case from suite. Please try again.');
-            });
-        }
-    }
+}
 </script>
 {% endblock %}

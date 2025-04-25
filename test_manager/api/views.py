@@ -123,20 +123,29 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         if not test_case_id:
             return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        test_case = get_object_or_404(TestCase, id=test_case_id)
+        try:
+            test_case = TestCase.objects.get(id=test_case_id)
+        except TestCase.DoesNotExist:
+            return Response({"error": "Test case not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check if test case is already in the suite
-        if TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).exists():
-            return Response({"error": "Test case already in suite"}, status=status.HTTP_400_BAD_REQUEST)
+        # 检查测试用例是否已经在套件中
+        existing = TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).first()
+        if existing:
+            # 如果已存在，返回现有记录
+            serializer = TestSuiteCaseSerializer(existing)
+            return Response(serializer.data)
 
-        test_suite_case = TestSuiteCase.objects.create(
-            test_suite=test_suite,
-            test_case=test_case,
-            order=order
-        )
-
-        serializer = TestSuiteCaseSerializer(test_suite_case)
-        return Response(serializer.data)
+        # 创建新的关联
+        try:
+            test_suite_case = TestSuiteCase.objects.create(
+                test_suite=test_suite,
+                test_case=test_case,
+                order=order
+            )
+            serializer = TestSuiteCaseSerializer(test_suite_case)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def remove_test_case(self, request, pk=None):
