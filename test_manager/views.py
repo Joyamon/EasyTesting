@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -57,6 +59,35 @@ def dashboard(request):
         'skipped': TestResult.objects.filter(status='skipped').count(),
     }
 
+    # 模拟最近活动数据
+    recent_activities = [
+        {
+            'action': 'Test run completed',
+            'timestamp': timezone.now() - datetime.timedelta(hours=2),
+            'description': 'API Integration Test Suite completed successfully'
+        },
+        {
+            'action': 'Test case created',
+            'timestamp': timezone.now() - datetime.timedelta(hours=5),
+            'description': 'New test case "Login Authentication" added to Auth Project'
+        },
+        {
+            'action': 'Project updated',
+            'timestamp': timezone.now() - datetime.timedelta(days=1),
+            'description': 'Project "Payment Gateway" description and settings updated'
+        },
+        {
+            'action': 'Test run failed',
+            'timestamp': timezone.now() - datetime.timedelta(days=1, hours=6),
+            'description': 'Checkout Process Test Suite failed with 3 errors'
+        },
+        {
+            'action': 'Environment created',
+            'timestamp': timezone.now() - datetime.timedelta(days=2),
+            'description': 'New staging environment created for E-commerce Project'
+        },
+    ]
+
     context = {
         'projects_count': projects_count,
         'test_cases_count': test_cases_count,
@@ -65,6 +96,7 @@ def dashboard(request):
         'recent_test_runs': recent_test_runs,
         'test_run_stats': test_run_stats,
         'test_result_stats': test_result_stats,
+        'recent_activities': recent_activities,
     }
 
     return render(request, 'test_manager/dashboard.html', context)
