@@ -667,10 +667,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
 
 
-
-def is_admin(user):
+def is_admin(request,user):
     """检查用户是否是管理员"""
-    return user.is_superuser
+    if user.is_superuser:
+        return user.is_superuser
+    else:
+        messages.error(request, '您不是管理员，无法访问此页面。')
+    # return user.is_superuser
 
 
 @login_required
@@ -682,7 +685,7 @@ def email_config_list(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+# @user_passes_test(is_admin)
 def email_config_create(request):
     """创建邮件配置视图"""
     if request.method == 'POST':
@@ -702,7 +705,7 @@ def email_config_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+# @user_passes_test(is_admin)
 def email_config_edit(request, pk):
     """编辑邮件配置视图"""
     config = get_object_or_404(EmailConfig, pk=pk)
@@ -725,7 +728,7 @@ def email_config_edit(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin)
+# @user_passes_test(is_admin)
 def email_config_delete(request, pk):
     """删除邮件配置视图"""
     config = get_object_or_404(EmailConfig, pk=pk)
@@ -740,7 +743,7 @@ def email_config_delete(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin)
+# @user_passes_test(is_admin)
 def email_config_test(request, pk):
     """测试邮件配置视图"""
     config = get_object_or_404(EmailConfig, pk=pk)
@@ -767,7 +770,7 @@ def email_config_test(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin)
+# @user_passes_test(is_admin)
 def email_config_activate(request, pk):
     """激活邮件配置视图"""
     config = get_object_or_404(EmailConfig, pk=pk)

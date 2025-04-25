@@ -127,7 +127,7 @@ class TestResult(models.Model):
 
 from django.db import models
 from django.conf import settings
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import  EmailMessage
 from django.core.exceptions import ValidationError
 import smtplib
 import ssl
@@ -217,6 +217,7 @@ class EmailConfig(models.Model):
 
     def send_test_email(self, to_email):
         """发送测试邮件"""
+        global current_backend, current_host, current_port, current_user, current_password, current_tls, current_ssl, current_from
         subject = "EasyTesting - 测试邮件"
         message = "这是一封测试邮件，用于验证 EasyTesting 的邮件发送功能是否正常工作。"
         from_email = f"{self.default_from_name} <{self.default_from_email}>"
