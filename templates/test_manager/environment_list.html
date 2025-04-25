@@ -86,6 +86,9 @@
                 </tbody>
             </table>
         </div>
+
+        {% include 'pagination.html' with page_obj=environments %}
     </div>
 </div>
+
 {% endblock %}

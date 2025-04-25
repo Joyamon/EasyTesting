@@ -14,7 +14,6 @@ from .forms import (
 from .httprunner_executor import execute_test_case, execute_test_suite
 
 
-# 分页辅助函数
 def paginate_queryset(request, queryset, per_page=10):
     page = request.GET.get('page', 1)
     paginator = Paginator(queryset, per_page)
@@ -635,6 +634,7 @@ def test_run_list(request):
             'project': project,
             'per_page': per_page,
             'total_count': all_test_runs.count()
+
         }
     else:
         all_test_runs = TestRun.objects.all().order_by('-created_at')
@@ -699,7 +699,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
 
 
-def is_admin(request,user):
+def is_admin(request, user):
     """检查用户是否是管理员"""
     if user.is_superuser:
         return user.is_superuser
