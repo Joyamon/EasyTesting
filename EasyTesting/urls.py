@@ -20,7 +20,6 @@ from django.contrib.auth import views as auth_views
 from test_manager import views
 from test_manager import auth_views as custom_auth_views
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('test_manager.api.urls')),
@@ -62,7 +61,7 @@ urlpatterns = [
     path('test-runs/<int:pk>/delete/', views.test_run_delete, name='test_run_delete'),
 
     # 认证相关
-    path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
+    path('', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', custom_auth_views.register_view, name='register'),
 
@@ -105,8 +104,6 @@ urlpatterns = [
     # 用户个人资料
     path('profile/', custom_auth_views.profile_view, name='profile'),
     path('profile/edit/', custom_auth_views.edit_profile_view, name='edit_profile'),
-
-
 
     # 邮件配置
     path('email-config/', views.email_config_list, name='email_config_list'),
