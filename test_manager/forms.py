@@ -73,6 +73,12 @@ class TestCaseForm(forms.ModelForm):
         help_text='Enter validation rules as JSON array, e.g., [{"eq": ["$.data.id", 1]}]'
     )
 
+    extract_params_json = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 6}),
+        required=False,
+        help_text='Enter extract parameters as JSON array, e.g., [{"name": "token", "path": "$.data.token"}]'
+    )
+
     class Meta:
         model = TestCase
         fields = [
@@ -100,6 +106,7 @@ class TestCaseForm(forms.ModelForm):
                     self.fields['request_body_form_data'].initial = "\n".join(form_data_lines)
 
             self.fields['validation_rules_json'].initial = json.dumps(self.instance.validation_rules, indent=2)
+            self.fields['extract_params_json'].initial = json.dumps(self.instance.extract_params, indent=2)
 
     def clean_request_headers_json(self):
         headers_json = self.cleaned_data.get('request_headers_json')
@@ -144,6 +151,16 @@ class TestCaseForm(forms.ModelForm):
         except json.JSONDecodeError:
             raise forms.ValidationError('Invalid JSON format')
 
+    def clean_extract_params_json(self):
+        extract_json = self.cleaned_data.get('extract_params_json')
+        if not extract_json:
+            return []
+
+        try:
+            return json.loads(extract_json)
+        except json.JSONDecodeError:
+            raise forms.ValidationError('Invalid JSON format')
+
     def clean(self):
         cleaned_data = super().clean()
         request_body_format = cleaned_data.get('request_body_format')
@@ -172,6 +189,7 @@ class TestCaseForm(forms.ModelForm):
             instance.request_body = self.cleaned_data.get('request_body_form_data', {})
 
         instance.validation_rules = self.cleaned_data.get('validation_rules_json', [])
+        instance.extract_params = self.cleaned_data.get('extract_params_json', [])
         if commit:
             instance.save()
         return instance

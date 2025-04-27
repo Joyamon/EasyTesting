@@ -51,6 +51,7 @@ class TestCase(models.Model):
     request_body_format = models.CharField(max_length=20, choices=REQUEST_BODY_FORMAT_CHOICES, default='json')
     expected_status_code = models.IntegerField(default=200)
     validation_rules = models.JSONField(default=list, blank=True)
+    extract_params = models.JSONField(default=list, blank=True)  # 新增字段，用于存储提取的参数
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_cases')
