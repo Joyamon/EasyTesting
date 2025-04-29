@@ -120,6 +120,7 @@ class TestResult(models.Model):
     response_headers = models.JSONField(default=dict, blank=True)
     response_body = models.JSONField(default=dict, blank=True, null=True)
     error_message = models.TextField(blank=True)
+    extracted_params = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -1,190 +1,211 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Test Run: {{ test_run.name }} - EasyTesting{% endblock %}
 
 {% block header %}Test Run: {{ test_run.name }}{% endblock %}
 
 {% block header_buttons %}
-{% if test_run.test_suite %}
-<a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}" class="btn btn-outline-primary">
-    <i class="bi bi-collection"></i> View Test Suite
-</a>
-{% endif %}
+    {% if test_run.test_suite %}
+        <a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-collection"></i> View Test Suite
+        </a>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <span>Test Run Details</span>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Project</h5>
-                    <p>
-                        <a href="{% url 'project_detail' pk=test_run.project.pk %}" class="text-decoration-none">
-                            {{ test_run.project.name }}
-                        </a>
-                    </p>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span>Test Run Details</span>
                 </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Project</h5>
+                        <p>
+                            <a href="{% url 'project_detail' pk=test_run.project.pk %}" class="text-decoration-none">
+                                {{ test_run.project.name }}
+                            </a>
+                        </p>
+                    </div>
 
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Environment</h5>
-                    <p>
-                        <a href="{% url 'environment_detail' pk=test_run.environment.pk %}" class="text-decoration-none">
-                            {{ test_run.environment.name }}
-                        </a>
-                    </p>
-                </div>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Environment</h5>
+                        <p>
+                            <a href="{% url 'environment_detail' pk=test_run.environment.pk %}"
+                               class="text-decoration-none">
+                                {{ test_run.environment.name }}
+                            </a>
+                        </p>
+                    </div>
 
-                {% if test_run.test_suite %}
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Test Suite</h5>
-                    <p>
-                        <a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}" class="text-decoration-none">
-                            {{ test_run.test_suite.name }}
-                        </a>
-                    </p>
-                </div>
-                {% endif %}
+                    {% if test_run.test_suite %}
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-2">Test Suite</h5>
+                            <p>
+                                <a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}"
+                                   class="text-decoration-none">
+                                    {{ test_run.test_suite.name }}
+                                </a>
+                            </p>
+                        </div>
+                    {% endif %}
 
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Status</h5>
-                    <p>
-                        {% if test_run.status == 'completed' %}
-                            <span class="badge bg-success">Completed</span>
-                        {% elif test_run.status == 'failed' %}
-                            <span class="badge bg-danger">Failed</span>
-                        {% elif test_run.status == 'running' %}
-                            <span class="badge bg-primary">Running</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Pending</span>
-                        {% endif %}
-                    </p>
-                </div>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Status</h5>
+                        <p>
+                            {% if test_run.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                            {% elif test_run.status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                            {% elif test_run.status == 'running' %}
+                                <span class="badge bg-primary">Running</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pending</span>
+                            {% endif %}
+                        </p>
+                    </div>
 
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Created By</h5>
-                    <div class="d-flex align-items-center">
-                        <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Created By</h5>
+                        <div class="d-flex align-items-center">
+                        <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                              style="width: 30px; height: 30px;">
                             {{ test_run.created_by.username|first|upper }}
                         </span>
-                        <span>{{ test_run.created_by.username }}</span>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Created At</h5>
-                    <p>{{ test_run.created_at|date:"Y-m-d H:i" }}</p>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <h5 class="text-muted mb-2">Start Time</h5>
-                        <p>{{ test_run.start_time|date:"Y-m-d H:i"|default:"-" }}</p>
+                            <span>{{ test_run.created_by.username }}</span>
+                        </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <h5 class="text-muted mb-2">End Time</h5>
-                        <p>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</p>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Created At</h5>
+                        <p>{{ test_run.created_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h5 class="text-muted mb-2">Start Time</h5>
+                            <p>{{ test_run.start_time|date:"Y-m-d H:i"|default:"-" }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-2">End Time</h5>
+                            <p>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span>Test Results Summary</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Total Tests</h6>
+                                    <h2 class="mb-0">{{ total_tests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <h6 class="text-success mb-2">Passed</h6>
+                                    <h2 class="text-success mb-0">{{ passed_tests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <h6 class="text-danger mb-2">Failed</h6>
+                                    <h2 class="text-danger mb-0">{{ failed_tests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <h6 class="text-warning mb-2">Error</h6>
+                                    <h2 class="text-warning mb-0">{{ error_tests }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress mb-4" style="height: 20px;">
+                        {% if total_tests > 0 %}
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {{ passed_tests|floatformat:0 }}%;" aria-valuenow="{{ passed_tests }}"
+                                 aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ passed_tests }}</div>
+                            <div class="progress-bar bg-danger" role="progressbar"
+                                 style="width: {{ failed_tests|floatformat:0 }}%;" aria-valuenow="{{ failed_tests }}"
+                                 aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ failed_tests }}</div>
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                 style="width: {{ error_tests|floatformat:0 }}%;" aria-valuenow="{{ error_tests }}"
+                                 aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ error_tests }}</div>
+                            <div class="progress-bar bg-secondary" role="progressbar"
+                                 style="width: {{ skipped_tests|floatformat:0 }}%;" aria-valuenow="{{ skipped_tests }}"
+                                 aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ skipped_tests }}</div>
+                        {% else %}
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                                 aria-valuemin="0" aria-valuemax="100">0%
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <span class="badge bg-success me-1">Passed: {{ passed_tests }}</span>
+                            <span class="badge bg-danger me-1">Failed: {{ failed_tests }}</span>
+                            <span class="badge bg-warning me-1">Error: {{ error_tests }}</span>
+                            <span class="badge bg-secondary">Skipped: {{ skipped_tests }}</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportResults()">
+                                <i class="bi bi-download"></i> Export Results
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-8 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <span>Test Results Summary</span>
-            </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted mb-2">Total Tests</h6>
-                                <h2 class="mb-0">{{ total_tests }}</h2>
-                            </div>
-                        </div>
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span>Test Results</span>
                     </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-success bg-opacity-10">
-                            <div class="card-body text-center">
-                                <h6 class="text-success mb-2">Passed</h6>
-                                <h2 class="text-success mb-0">{{ passed_tests }}</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-danger bg-opacity-10">
-                            <div class="card-body text-center">
-                                <h6 class="text-danger mb-2">Failed</h6>
-                                <h2 class="text-danger mb-0">{{ failed_tests }}</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-warning bg-opacity-10">
-                            <div class="card-body text-center">
-                                <h6 class="text-warning mb-2">Error</h6>
-                                <h2 class="text-warning mb-0">{{ error_tests }}</h2>
-                            </div>
-                        </div>
+                    <div class="btn-group">
+                        <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}"
+                           class="btn btn-sm btn-outline-secondary" id="show-all-btn">All</a>
+                        <a href="?page=
+                                {{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=passed"
+                           class="btn btn-sm btn-outline-success" id="show-passed-btn">Passed</a>
+                        <a href="?page=
+                                {{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=failed"
+                           class="btn btn-sm btn-outline-danger" id="show-failed-btn">Failed</a>
+                        <a href="?page=
+                                {{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=error"
+                           class="btn btn-sm btn-outline-warning" id="show-error-btn">Error</a>
                     </div>
                 </div>
-
-                <div class="progress mb-4" style="height: 20px;">
-                    {% if total_tests > 0 %}
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ passed_tests|floatformat:0 }}%;" aria-valuenow="{{ passed_tests }}" aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ passed_tests }}</div>
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ failed_tests|floatformat:0 }}%;" aria-valuenow="{{ failed_tests }}" aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ failed_tests }}</div>
-                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ error_tests|floatformat:0 }}%;" aria-valuenow="{{ error_tests }}" aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ error_tests }}</div>
-                        <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ skipped_tests|floatformat:0 }}%;" aria-valuenow="{{ skipped_tests }}" aria-valuemin="0" aria-valuemax="{{ total_tests }}">{{ skipped_tests }}</div>
-                    {% else %}
-                        <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                    {% endif %}
-                </div>
-
-                <div class="d-flex justify-content-between mb-3">
-                    <div>
-                        <span class="badge bg-success me-1">Passed: {{ passed_tests }}</span>
-                        <span class="badge bg-danger me-1">Failed: {{ failed_tests }}</span>
-                        <span class="badge bg-warning me-1">Error: {{ error_tests }}</span>
-                        <span class="badge bg-secondary">Skipped: {{ skipped_tests }}</span>
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="exportResults()">
-                            <i class="bi bi-download"></i> Export Results
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <span>Test Results</span>
-                </div>
-                <div class="btn-group">
-                    <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}" class="btn btn-sm btn-outline-secondary" id="show-all-btn">All</a>
-                    <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=passed" class="btn btn-sm btn-outline-success" id="show-passed-btn">Passed</a>
-                    <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=failed" class="btn btn-sm btn-outline-danger" id="show-failed-btn">Failed</a>
-                    <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}&status=error" class="btn btn-sm btn-outline-warning" id="show-error-btn">Error</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="results-table">
-                        <thead>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="results-table">
+                            <thead>
                             <tr>
                                 <th>Test Case</th>
                                 <th>Method</th>
@@ -194,12 +215,13 @@
                                 <th>Response Status</th>
                                 <th class="text-end">Actions</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for result in test_results %}
                                 <tr class="result-row {{ result.status }}">
                                     <td>
-                                        <a href="{% url 'test_case_detail' pk=result.test_case.pk %}" class="text-decoration-none">
+                                        <a href="{% url 'test_case_detail' pk=result.test_case.pk %}"
+                                           class="text-decoration-none">
                                             {{ result.test_case.name }}
                                         </a>
                                     </td>
@@ -215,7 +237,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;">
+                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                              style="max-width: 200px;">
                                             {{ result.test_case.request_url }}
                                         </code>
                                     </td>
@@ -236,7 +259,7 @@
                                     </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary show-details-btn"
-                                               data-result-id="{{ result.id }}">
+                                                data-result-id="{{ result.id }}">
                                             <i class="bi bi-eye"></i> Details
                                         </button>
                                     </td>
@@ -250,30 +273,32 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
 
-                {% include 'pagination.html' with page_obj=test_results %}
+                    {% include 'pagination.html' with page_obj=test_results %}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Result Detail Modals Container -->
-<div id="modalsContainer">
-    {% for result in test_results %}
-    <div class="modal fade result-modal" id="resultModal{{ result.id }}" tabindex="-1" aria-labelledby="resultModalLabel{{ result.id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="resultModalLabel{{ result.id }}">Test Result: {{ result.test_case.name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-2">Request</h6>
-                        <div class="d-flex align-items-center mb-2">
+    <!-- Result Detail Modals Container -->
+    <div id="modalsContainer">
+        {% for result in test_results %}
+            <div class="modal fade result-modal" id="resultModal{{ result.id }}" tabindex="-1"
+                 aria-labelledby="resultModalLabel{{ result.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="resultModalLabel{{ result.id }}">Test
+                                Result: {{ result.test_case.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">Request</h6>
+                                <div class="d-flex align-items-center mb-2">
                             <span class="badge
                                 {% if result.test_case.request_method == 'GET' %}bg-success{% endif %}
                                 {% if result.test_case.request_method == 'POST' %}bg-primary{% endif %}
@@ -284,249 +309,299 @@
                             ">
                                 {{ result.test_case.request_method }}
                             </span>
+                                    <code class="bg-light px-3 py-2 rounded flex-grow-1">
+                                        {{ test_run.environment.base_url }}{{ result.test_case.request_url }}</code>
+                                </div>
 
-                            <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_run.environment.base_url }}{{ result.test_case.request_url }}</code>
-                        </div>
+                                <h6 class="text-muted mb-2">Headers</h6>
+                                <code><pre class="bg-light p-3 rounded">{{ result.test_case.request_headers|pprint }}</pre></code>
 
-                        <h6 class="text-muted mb-2">Headers</h6>
-                        <pre class="bg-light p-3 rounded"><code>{{ result.test_case.request_headers|pprint }}</code></pre>
+                                {% if result.test_case.request_body %}
+                                    <h6 class="text-muted mb-2">Body</h6>
+                                    <code><pre class="bg-light p-3 rounded">{{ result.test_case.request_body|pprint }}</pre></code>
+                                {% endif %}
+                            </div>
 
-                        {% if result.test_case.request_body %}
-                            <h6 class="text-muted mb-2">Body</h6>
-                            <pre class="bg-light p-3 rounded"><code>{{ result.test_case.request_body|pprint }}</code></pre>
-                        {% endif %}
-                    </div>
+                            {% if result.test_case.extract_params %}
+                                <div class="mb-4">
+                                    <h6 class="text-muted mb-2">Extracted Parameters</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th>Parameter Name</th>
+                                                <th>JSON Path</th>
+                                                <th>Description</th>
+                                                <th>Extracted Value</th>
 
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-2">Response</h6>
-                        <div class="d-flex align-items-center mb-2">
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for item in result.test_case.extract_params %}
+
+                                                <tr>
+                                                    <td><code>{{ item.name }}</code></td>
+                                                    <td><code>{{ item.path }}</code></td>
+                                                    <td><code>{{ item.description }}</code></td>
+                                                    <td><code>{{ item.name }}:{{ result.extracted_params|get_item:item.name }}</code></td>
+
+
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted">No parameters
+                                                        extracted
+                                                    </td>
+                                                </tr>
+
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">Response</h6>
+                                <div class="d-flex align-items-center mb-2">
                             <span class="badge
                                 {% if result.response_status_code == result.test_case.expected_status_code %}bg-success{% else %}bg-danger{% endif %}
                                 me-2
                             ">
-                                {{ result.response_status_code }}
+                                <code>{{ result.response_status_code }}</code>
                             </span>
-                            <span>Response Time: {{ result.response_time|floatformat:2 }} ms</span>
-                        </div>
+                                    <span>Response Time: {{ result.response_time|floatformat:2 }} ms</span>
+                                </div>
 
-                        <h6 class="text-muted mb-2">Headers</h6>
-                        <pre class="bg-light p-3 rounded"><code>{{ result.response_headers|pprint }}</code></pre>
+                                <h6 class="text-muted mb-2">Headers</h6>
+                                <code><pre class="bg-light p-3 rounded">{{ result.response_headers|pprint }}</pre></code>
 
-                        <h6 class="text-muted mb-2">Body</h6>
-                        <pre class="bg-light p-3 rounded"><code>{{ result.response_body|pprint }}</code></pre>
-                    </div>
-
-                    {% if result.error_message %}
-                        <div class="mb-4">
-                            <h6 class="text-danger mb-2">Error</h6>
-                            <div class="alert alert-danger">
-                                {{ result.error_message }}
+                                <h6 class="text-muted mb-2">Body</h6>
+                               <code> <pre class="bg-light p-3 rounded">{{ result.response_body|pprint }}</pre></code>
                             </div>
+
+                            {% if result.error_message %}
+                                <div class="mb-4">
+                                    <h6 class="text-danger mb-2">Error</h6>
+                                    <div class="alert alert-danger">
+                                        {{ result.error_message }}
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary modal-close-btn" data-bs-dismiss="modal">Close</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary modal-close-btn" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Store the original body padding and overflow
-        const originalBodyPadding = window.getComputedStyle(document.body).paddingRight;
-        const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
-
-        // Highlight active filter button
-        const urlParams = new URLSearchParams(window.location.search);
-        const status = urlParams.get('status');
-
-        const showAllBtn = document.getElementById('show-all-btn');
-        const showPassedBtn = document.getElementById('show-passed-btn');
-        const showFailedBtn = document.getElementById('show-failed-btn');
-        const showErrorBtn = document.getElementById('show-error-btn');
-
-        if (status === 'passed') {
-            showPassedBtn.classList.remove('btn-outline-success');
-            showPassedBtn.classList.add('btn-success');
-        } else if (status === 'failed') {
-            showFailedBtn.classList.remove('btn-outline-danger');
-            showFailedBtn.classList.add('btn-danger');
-        } else if (status === 'error') {
-            showErrorBtn.classList.remove('btn-outline-warning');
-            showErrorBtn.classList.add('btn-warning');
-        } else {
-            showAllBtn.classList.remove('btn-outline-secondary');
-            showAllBtn.classList.add('btn-secondary');
+    <script>
+        // 添加一个自定义过滤器函数来获取字典中的项
+        function getItemFromDict(dict, key) {
+            if (dict && typeof dict === 'object' && key in dict) {
+                return dict[key];
+            }
+            return null;
         }
 
-        // Modal handling improvements
-        const detailButtons = document.querySelectorAll('.show-details-btn');
-        const resultModals = document.querySelectorAll('.result-modal');
-        const modalCloseButtons = document.querySelectorAll('.modal-close-btn');
-        const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+        // 将过滤器添加到模板上下文
+        document.addEventListener('DOMContentLoaded', function () {
+            // Store the original body padding and overflow
+            const originalBodyPadding = window.getComputedStyle(document.body).paddingRight;
+            const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
 
-        // Create modal instances map
-        const modalInstances = {};
+            // Highlight active filter button
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
 
-        // Initialize modals
-        resultModals.forEach(modal => {
-            const modalId = modal.id;
-            modalInstances[modalId] = new bootstrap.Modal(modal, {
-                backdrop: 'static', // Prevent closing when clicking outside
-                keyboard: false     // Prevent closing with keyboard
-            });
+            const showAllBtn = document.getElementById('show-all-btn');
+            const showPassedBtn = document.getElementById('show-passed-btn');
+            const showFailedBtn = document.getElementById('show-failed-btn');
+            const showErrorBtn = document.getElementById('show-error-btn');
 
-            // Handle modal events
-            modal.addEventListener('show.bs.modal', function() {
-                // Save scroll position
-                window.modalScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            });
-
-            modal.addEventListener('shown.bs.modal', function() {
-                // Add class to body to indicate modal is open
-                document.body.classList.add('modal-open');
-            });
-
-            modal.addEventListener('hide.bs.modal', function() {
-                // Remove any lingering backdrops
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(backdrop => {
-                    backdrop.remove();
-                });
-            });
-
-            modal.addEventListener('hidden.bs.modal', function() {
-                // Clean up
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = originalBodyOverflow;
-                document.body.style.paddingRight = originalBodyPadding;
-
-                // Remove any lingering backdrops
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(backdrop => {
-                    backdrop.remove();
-                });
-
-                // Restore scroll position
-                if (window.modalScrollPosition !== undefined) {
-                    window.scrollTo(0, window.modalScrollPosition);
-                }
-
-                // Force redraw
-                document.body.style.display = 'none';
-                void document.body.offsetHeight; // Trigger a reflow
-                document.body.style.display = '';
-            });
-        });
-
-        // Handle detail button clicks
-        detailButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const resultId = this.getAttribute('data-result-id');
-                const modalId = `resultModal${resultId}`;
-                const modal = document.getElementById(modalId);
-
-                if (modal && modalInstances[modalId]) {
-                    // Show the modal
-                    modalInstances[modalId].show();
-                }
-            });
-        });
-
-        // Handle close button clicks
-        modalCloseButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const modal = this.closest('.modal');
-                if (modal && modalInstances[modal.id]) {
-                    modalInstances[modal.id].hide();
-                }
-            });
-        });
-
-        // Handle ESC key to close modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const openModal = document.querySelector('.modal.show');
-                if (openModal && modalInstances[openModal.id]) {
-                    modalInstances[openModal.id].hide();
-                }
+            if (status === 'passed') {
+                showPassedBtn.classList.remove('btn-outline-success');
+                showPassedBtn.classList.add('btn-success');
+            } else if (status === 'failed') {
+                showFailedBtn.classList.remove('btn-outline-danger');
+                showFailedBtn.classList.add('btn-danger');
+            } else if (status === 'error') {
+                showErrorBtn.classList.remove('btn-outline-warning');
+                showErrorBtn.classList.add('btn-warning');
+            } else {
+                showAllBtn.classList.remove('btn-outline-secondary');
+                showAllBtn.classList.add('btn-secondary');
             }
+
+            // Modal handling improvements
+            const detailButtons = document.querySelectorAll('.show-details-btn');
+            const resultModals = document.querySelectorAll('.result-modal');
+            const modalCloseButtons = document.querySelectorAll('.modal-close-btn');
+            const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+
+            // Create modal instances map
+            const modalInstances = {};
+
+            // Initialize modals
+            resultModals.forEach(modal => {
+                const modalId = modal.id;
+                modalInstances[modalId] = new bootstrap.Modal(modal, {
+                    backdrop: 'static', // Prevent closing when clicking outside
+                    keyboard: false     // Prevent closing with keyboard
+                });
+
+                // Handle modal events
+                modal.addEventListener('show.bs.modal', function () {
+                    // Save scroll position
+                    window.modalScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+                });
+
+                modal.addEventListener('shown.bs.modal', function () {
+                    // Add class to body to indicate modal is open
+                    document.body.classList.add('modal-open');
+                });
+
+                modal.addEventListener('hide.bs.modal', function () {
+                    // Remove any lingering backdrops
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        backdrop.remove();
+                    });
+                });
+
+                modal.addEventListener('hidden.bs.modal', function () {
+                    // Clean up
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = originalBodyOverflow;
+                    document.body.style.paddingRight = originalBodyPadding;
+
+                    // Remove any lingering backdrops
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        backdrop.remove();
+                    });
+
+                    // Restore scroll position
+                    if (window.modalScrollPosition !== undefined) {
+                        window.scrollTo(0, window.modalScrollPosition);
+                    }
+
+                    // Force redraw
+                    document.body.style.display = 'none';
+                    void document.body.offsetHeight; // Trigger a reflow
+                    document.body.style.display = '';
+                });
+            });
+
+            // Handle detail button clicks
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const resultId = this.getAttribute('data-result-id');
+                    const modalId = `resultModal${resultId}`;
+                    const modal = document.getElementById(modalId);
+
+                    if (modal && modalInstances[modalId]) {
+                        // Show the modal
+                        modalInstances[modalId].show();
+                    }
+                });
+            });
+
+            // Handle close button clicks
+            modalCloseButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const modal = this.closest('.modal');
+                    if (modal && modalInstances[modal.id]) {
+                        modalInstances[modal.id].hide();
+                    }
+                });
+            });
+
+            // Handle ESC key to close modal
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal && modalInstances[openModal.id]) {
+                        modalInstances[openModal.id].hide();
+                    }
+                }
+            });
+
+            // Clean up any lingering backdrops on page load
+            const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+            existingBackdrops.forEach(backdrop => {
+                backdrop.remove();
+            });
         });
 
-        // Clean up any lingering backdrops on page load
-        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-        existingBackdrops.forEach(backdrop => {
-            backdrop.remove();
-        });
-    });
+        function exportResults() {
+            // This is a placeholder function for exporting results
+            alert('Export functionality will be implemented in a future update.');
+        }
+    </script>
 
-    function exportResults() {
-        // This is a placeholder function for exporting results
-        alert('Export functionality will be implemented in a future update.');
-    }
-</script>
+    <style>
+        /* Fix for modal issues */
+        .modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
+        }
 
-<style>
-/* Fix for modal issues */
-.modal-open {
-    overflow: hidden;
-    padding-right: 0 !important;
-}
+        .modal {
+            padding-right: 0 !important;
+        }
 
-.modal {
-    padding-right: 0 !important;
-}
+        /* Ensure modals are on top */
+        .modal {
+            z-index: 1050;
+        }
 
-/* Ensure modals are on top */
-.modal {
-    z-index: 1050;
-}
+        .modal-backdrop {
+            z-index: 1040;
+        }
 
-.modal-backdrop {
-    z-index: 1040;
-}
+        /* Fix for scrollbar jump */
+        html {
+            overflow-y: scroll;
+        }
 
-/* Fix for scrollbar jump */
-html {
-    overflow-y: scroll;
-}
+        /* Ensure content doesn't shift when modal opens */
+        body.modal-open {
+            width: 100%;
+        }
 
-/* Ensure content doesn't shift when modal opens */
-body.modal-open {
-    width: 100%;
-}
+        /* Fix for multiple backdrops */
+        .modal-backdrop + .modal-backdrop {
+            display: none;
+        }
 
-/* Fix for multiple backdrops */
-.modal-backdrop + .modal-backdrop {
-    display: none;
-}
+        /* Pagination styles */
+        .pagination {
+            margin-bottom: 0;
+        }
 
-/* Pagination styles */
-.pagination {
-    margin-bottom: 0;
-}
+        .pagination .page-link {
+            color: var(--primary-color);
+            border-color: #dee2e6;
+        }
 
-.pagination .page-link {
-    color: var(--primary-color);
-    border-color: #dee2e6;
-}
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
 
-.pagination .page-item.active .page-link {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
-}
-
-.pagination .page-item.disabled .page-link {
-    color: #6c757d;
-}
-</style>
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+        }
+    </style>
 {% endblock %}

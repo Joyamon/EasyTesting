@@ -3,6 +3,12 @@ import time
 import logging
 import requests
 from urllib.parse import urljoin
+import jsonpath
+import json
+import tempfile
+from django.shortcuts import render
+
+from test_manager.models import TestResult
 
 # 尝试导入 HTTPRunner，如果失败则记录错误但不中断执行
 try:
@@ -55,16 +61,39 @@ def execute_test_case(test_case, environment):
             f"Executing test case: {test_case.name} (ID: {test_case.id}) with environment: {environment.name} (ID: {environment.id})")
         logger.info(
             f"Request method: {test_case.request_method}, URL: {test_case.request_url}, Body format: {test_case.request_body_format}")
-
         start_time = time.time()
-
         # 直接使用 HTTP 请求执行测试
         result = _execute_with_requests(test_case, environment)
-
         # 计算响应时间
         end_time = time.time()
         result["response_time"] = (end_time - start_time) * 1000  # 转换为毫秒
-
+        # 在处理响应后，添加参数提取逻辑
+        extracted_params = {}
+        if test_case.extract_params:
+            try:
+                from jsonpath_ng import jsonpath, parse
+                if isinstance(result['response_body'], str):
+                    response_json = json.loads(result['response_body'])
+                else:
+                    response_json = result['response_body']
+                for extract in test_case.extract_params:
+                    try:
+                        jsonpath_expr = parse(extract['path'])
+                        print("jsonpath_expr:", jsonpath_expr)
+                        matches = [match.value for match in jsonpath_expr.find(response_json)]
+                        if matches:
+                            for match in matches:
+                                extracted_params[extract['name']] = match
+                    except Exception as e:
+                        # 处理提取错误
+                        logger.error(f"Error extracting parameter {extract['name']} using JSONPath {extract['path']}: {e}")
+            except Exception as e:
+                # 处理 JSON 解析错误
+                logger.error(f"Error parsing response body as JSON: {e}")
+        # 将提取的参数添加到结果中
+        result['extracted_params'] = extracted_params  # 添加这一行
+        print(extracted_params)
+        print(result)
         return result
 
     except Exception as e:
@@ -112,8 +141,6 @@ def _execute_with_requests(test_case, environment):
                 if 'Content-Type' not in headers:
                     kwargs["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
                 kwargs["data"] = test_case.request_body
-                print(kwargs)
-                print(kwargs["data"])
                 logger.debug(f"Request body (form-data): {test_case.request_body}")
 
         # 发送请求
@@ -124,10 +151,16 @@ def _execute_with_requests(test_case, environment):
             **kwargs
         )
 
+        # 处理响应
+        logger.debug(f"Response status code: {response.status_code}")
+        logger.debug(f"Response headers: {dict(response.headers)}")
+
         try:
             response_body = response.json()
+            logger.debug("Response body parsed as JSON")
         except ValueError:
             response_body = {"content": response.text}
+            logger.debug("Response body parsed as text")
 
         # 检查状态码是否符合预期
         success = response.status_code == test_case.expected_status_code

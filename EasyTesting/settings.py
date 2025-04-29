@@ -37,9 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    'test_manager.apps.TestManagerConfig',  # 使用自定义的 AppConfig
+    # 'test_manager.apps.TestManagerConfig',  # 使用自定义的 AppConfig
 
-    # "test_manager",
+    "test_manager",
 
 ]
 X_FRAME_OPTIONS = "SAMEORIGIN"

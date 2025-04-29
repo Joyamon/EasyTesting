@@ -444,7 +444,9 @@ def test_case_run(request, pk):
             response_status_code=result.get('response_status_code'),
             response_headers=result.get('response_headers', {}),
             response_body=result.get('response_body'),
-            error_message=result.get('error_message', '')
+            error_message=result.get('error_message', ''),
+            extracted_params = result.get('extracted_params', {})
+
         )
 
         messages.success(request, f'Test case executed. Result: {result["status"]}')
@@ -662,6 +664,7 @@ def test_run_detail(request, pk):
     # 分页获取测试结果
     all_test_results = TestResult.objects.filter(test_run=test_run)
     test_results = paginate_queryset(request, all_test_results, per_page)
+    print("test_results:",test_results)
 
     # Calculate statistics
     total_tests = all_test_results.count()
