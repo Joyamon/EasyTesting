@@ -378,6 +378,8 @@
 
                                 <h6 class="text-muted mb-2">Body</h6>
                                <code> <pre class="bg-light p-3 rounded">{{ result.response_body|pprint }}</pre></code>
+                                <h6 class="text-muted mb-2">Validators</h6>
+                                <code><pre class="bg-light p-3 rounded">{{ result.validators|pprint }}</pre></code>
                             </div>
 
                             {% if result.error_message %}

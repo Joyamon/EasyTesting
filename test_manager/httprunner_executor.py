@@ -1,14 +1,8 @@
-import json
 import time
 import logging
 import requests
-from urllib.parse import urljoin
-import jsonpath
 import json
-import tempfile
-from django.shortcuts import render
-
-from test_manager.models import TestResult
+from jsonpath_ng import jsonpath, parse
 
 # 尝试导入 HTTPRunner，如果失败则记录错误但不中断执行
 try:
@@ -68,32 +62,60 @@ def execute_test_case(test_case, environment):
         end_time = time.time()
         result["response_time"] = (end_time - start_time) * 1000  # 转换为毫秒
         # 在处理响应后，添加参数提取逻辑
-        extracted_params = {}
-        if test_case.extract_params:
-            try:
-                from jsonpath_ng import jsonpath, parse
-                if isinstance(result['response_body'], str):
-                    response_json = json.loads(result['response_body'])
-                else:
-                    response_json = result['response_body']
-                for extract in test_case.extract_params:
-                    try:
-                        jsonpath_expr = parse(extract['path'])
-                        print("jsonpath_expr:", jsonpath_expr)
-                        matches = [match.value for match in jsonpath_expr.find(response_json)]
-                        if matches:
-                            for match in matches:
-                                extracted_params[extract['name']] = match
-                    except Exception as e:
-                        # 处理提取错误
-                        logger.error(f"Error extracting parameter {extract['name']} using JSONPath {extract['path']}: {e}")
-            except Exception as e:
-                # 处理 JSON 解析错误
-                logger.error(f"Error parsing response body as JSON: {e}")
-        # 将提取的参数添加到结果中
-        result['extracted_params'] = extracted_params  # 添加这一行
-        print(extracted_params)
-        print(result)
+        try:
+            extracted_params = {}
+            if test_case.extract_params:
+                try:
+                    if isinstance(result['response_body'], str):
+                        response_json = json.loads(result['response_body'])
+                    else:
+                        response_json = result['response_body']
+                    for extract in test_case.extract_params:
+                        try:
+                            jsonpath_expr = parse(extract['path'])
+                            matches = [match.value for match in jsonpath_expr.find(response_json)]
+                            print('matches:', matches)
+                            if matches:
+                                for match in matches:
+                                    extracted_params[extract['name']] = match
+                        except Exception as e:
+                            # 处理提取错误
+                            logger.error(
+                                f"Error extracting parameter {extract['name']} using JSONPath {extract['path']}: {e}")
+                except Exception as e:
+                    # 处理 JSON 解析错误
+                    logger.error(f"Error parsing response body as JSON: {e}")
+            # 将提取的参数添加到结果中
+            result['extracted_params'] = extracted_params
+        except Exception as e:
+            logger.error(f"Error extracting parameters: {e}")
+        # 断言结果
+        try:
+            validators = []
+            validation_rules = test_case.validation_rules
+            for rule in validation_rules:
+                for symbol, assert_list in rule.items():
+                    value = result['response_body']
+                    key = parse(assert_list[0]).find(value)
+                    for k in key:
+                        if result['response_body'][str(k.path)] == assert_list[1]:
+                            check_result = 'pass'
+                        else:
+                            check_result = 'failed'
+                        validators.append(
+                            {
+                                "check": assert_list[0],
+                                "expect": assert_list[1],
+                                "comparator": symbol,
+                                "check_value": assert_list[1],
+                                "check_result": check_result
+                            }
+                        )
+            result['validators'] = validators
+        except Exception as e:
+            # 处理提取错误
+            logger.error(f"Error validating response: {e}")
+
         return result
 
     except Exception as e:

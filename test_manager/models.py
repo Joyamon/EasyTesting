@@ -121,6 +121,7 @@ class TestResult(models.Model):
     response_body = models.JSONField(default=dict, blank=True, null=True)
     error_message = models.TextField(blank=True)
     extracted_params = models.JSONField(default=dict, blank=True)
+    validators = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
