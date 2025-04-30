@@ -74,7 +74,6 @@ def execute_test_case(test_case, environment):
                         try:
                             jsonpath_expr = parse(extract['path'])
                             matches = [match.value for match in jsonpath_expr.find(response_json)]
-                            print('matches:', matches)
                             if matches:
                                 for match in matches:
                                     extracted_params[extract['name']] = match
@@ -139,7 +138,6 @@ def _execute_with_requests(test_case, environment):
         base_url = environment.base_url.rstrip('/')
         request_url = test_case.request_url.lstrip('/')
         full_url = base_url + '/' + request_url
-        print(f"Full URL: {full_url}")
 
         logger.info(f"Executing direct HTTP request to: {full_url}")
 

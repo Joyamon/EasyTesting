@@ -1,3 +1,4 @@
 Django==4.2.7
 djangorestframework==3.14.0
 httprunner==4.3.0
+jsonpath-ng==1.7.0

@@ -16,6 +16,7 @@ from .httprunner_executor import execute_test_case, execute_test_suite
 
 def paginate_queryset(request, queryset, per_page=10):
     page = request.GET.get('page', 1)
+    queryset = queryset.order_by('id')
     paginator = Paginator(queryset, per_page)
 
     try:
