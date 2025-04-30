@@ -28,7 +28,7 @@ class EnvironmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields['variables_json'].initial = json.dumps(self.instance.variables, indent=2)
+            self.fields['variables_json'].initial = json.dumps(self.instance.variables,ensure_ascii=False, indent=2)
 
     def clean_variables_json(self):
         variables_json = self.cleaned_data.get('variables_json')
@@ -97,7 +97,7 @@ class TestCaseForm(forms.ModelForm):
             # 根据请求体格式初始化相应的字段
             if self.instance.request_body:
                 if self.instance.request_body_format == 'json':
-                    self.fields['request_body_json'].initial = json.dumps(self.instance.request_body, indent=2)
+                    self.fields['request_body_json'].initial = json.dumps(self.instance.request_body,ensure_ascii=False, indent=2)
                 elif self.instance.request_body_format == 'form-data':
                     # 将字典转换为键值对格式
                     form_data_lines = []
@@ -105,8 +105,8 @@ class TestCaseForm(forms.ModelForm):
                         form_data_lines.append(f"{key}={value}")
                     self.fields['request_body_form_data'].initial = "\n".join(form_data_lines)
 
-            self.fields['validation_rules_json'].initial = json.dumps(self.instance.validation_rules, indent=2)
-            self.fields['extract_params_json'].initial = json.dumps(self.instance.extract_params, indent=2)
+            self.fields['validation_rules_json'].initial = json.dumps(self.instance.validation_rules,ensure_ascii=False, indent=2)
+            self.fields['extract_params_json'].initial = json.dumps(self.instance.extract_params, ensure_ascii=False,indent=2)
 
     def clean_request_headers_json(self):
         headers_json = self.cleaned_data.get('request_headers_json')
