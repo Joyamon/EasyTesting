@@ -53,7 +53,7 @@
 
                         <div class="mb-4">
                             <label for="environment" class="form-label fw-medium">Select Environment</label>
-                            <select class="form-select form-select-lg" id="environment" name="environment" required>
+                            <select class="form-select form-select-lg" id="env_suite" name="environment" required>
                                 <option value="">Select an environment</option>
                                 {% for env in environments %}
                                     <option value="{{ env.id }}">{{ env.name }} ({{ env.base_url }})</option>
@@ -85,4 +85,21 @@
         </div>
     </div>
 </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const select = document.getElementById('env_suite');
+            const STORAGE_KEY = 'selectedEnvironment';
+
+            // 页面加载时，自动选中上一次的选择
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                select.value = saved;
+            }
+
+            // 用户改变选择时，保存选择
+            select.addEventListener('change', function () {
+                localStorage.setItem(STORAGE_KEY, this.value);
+            });
+        });
+    </script>
 {% endblock %}

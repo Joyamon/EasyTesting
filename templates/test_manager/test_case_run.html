@@ -6,25 +6,25 @@
 {% block header %}Run Test Case: {{ test_case.name }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <span>Test Case Details</span>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h5 class="text-muted mb-2">Project</h5>
-                    <p>
-                        <a href="{% url 'project_detail' pk=test_case.project.pk %}" class="text-decoration-none">
-                            {{ test_case.project.name }}
-                        </a>
-                    </p>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <span>Test Case Details</span>
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="text-muted mb-2">Project</h5>
+                        <p>
+                            <a href="{% url 'project_detail' pk=test_case.project.pk %}" class="text-decoration-none">
+                                {{ test_case.project.name }}
+                            </a>
+                        </p>
+                    </div>
 
-                <div class="mb-3">
-                    <h5 class="text-muted mb-2">Request</h5>
-                    <div class="d-flex align-items-center">
+                    <div class="mb-3">
+                        <h5 class="text-muted mb-2">Request</h5>
+                        <div class="d-flex align-items-center">
                         <span class="badge
                             {% if test_case.request_method == 'GET' %}bg-success{% endif %}
                             {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
@@ -35,56 +35,80 @@
                         ">
                             {{ test_case.request_method }}
                         </span>
-                        <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_case.request_url }}</code>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <h5 class="text-muted mb-2">Expected Status Code</h5>
-                    <span class="badge bg-secondary">{{ test_case.expected_status_code }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <span>Run Test</span>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-
-                    <div class="mb-4">
-                        <label for="environment" class="form-label fw-medium">Select Environment</label>
-                        <select class="form-select form-select-lg" id="environment" name="environment" required>
-                            <option value="">Select an environment</option>
-                            {% for env in environments %}
-                                <option value="{{ env.id }}">{{ env.name }} ({{ env.base_url }})</option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Choose the environment to run this test against</div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <div class="d-flex">
-                            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                            <div>
-                                <strong>Note:</strong> Running this test will create a new test run and execute the test against the selected environment.
-                            </div>
+                            <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_case.request_url }}</code>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Test Case
-                        </a>
-                        <button type="submit" class="btn btn-success px-4">
-                            <i class="bi bi-play-fill"></i> Run Test
-                        </button>
+                    <div class="mb-3">
+                        <h5 class="text-muted mb-2">Expected Status Code</h5>
+                        <span class="badge bg-secondary">{{ test_case.expected_status_code }}</span>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>Run Test</span>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="environment" class="form-label fw-medium">Select Environment</label>
+                            <select class="form-select form-select-lg" id="env_case" name="environment" required>
+                                <option value="">Select an environment</option>
+                                {% for env in environments %}
+                                    <!--首次选择environment后保存，可回显 -->
+                                    <option value="{{ env.id }}"
+                                            {% if env.id == selected_environment %}selected{% endif %}>
+                                        {{ env.name }} ({{ env.base_url }})
+                                    </option>
+
+                                    {#                                    <option value="{{ env.id }}">{{ env.name }} ({{ env.base_url }})</option>#}
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Choose the environment to run this test against</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <div class="d-flex">
+                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                <div>
+                                    <strong>Note:</strong> Running this test will create a new test run and execute the
+                                    test against the selected environment.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Test Case
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-play-fill"></i> Run Test
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const select = document.getElementById('env_case');
+            const STORAGE_KEY = 'selectedEnvironment';
+
+            // 页面加载时，自动选中上一次的选择
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                select.value = saved;
+            }
+
+            // 用户改变选择时，保存选择
+            select.addEventListener('change', function () {
+                localStorage.setItem(STORAGE_KEY, this.value);
+            });
+        });
+    </script>
 {% endblock %}
