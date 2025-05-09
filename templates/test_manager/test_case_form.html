@@ -306,11 +306,66 @@
                         <div class="form-text mt-2">Define parameters to extract from the response using JSONPath expressions</div>
                     </div>
 
+                    <!-- 验证规则表格 -->
                     <div class="mb-4">
-                        <label for="{{ form.validation_rules_json.id_for_label }}" class="form-label fw-medium">Validation Rules (JSON)</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-medium mb-0">Validation Rules</label>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="validation-preset-btn">
+                                    Presets <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-validation-btn">
+                                    Bulk Edit
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-validation-table">
+                                    <i class="bi bi-chevron-down" id="toggle-validation-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="validation-table-container">
+                            <div class="card">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered validation-table mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th style="width: 40px;" class="text-center">
+                                                        <input type="checkbox" class="form-check-input" id="select-all-validation" checked>
+                                                    </th>
+                                                    <th style="width: 20%;">Validator</th>
+                                                    <th style="width: 30%;">Path/Expected</th>
+                                                    <th style="width: 30%;">Value</th>
+                                                    <th>Description</th>
+                                                    <th style="width: 40px;" class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-link p-0" id="bulk-edit-validation-btn-2" title="Bulk Edit">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </button>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="validation-container">
+                                                <!-- 验证规则行将通过JavaScript动态添加 -->
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="6">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-validation-btn">
+                                                            <i class="bi bi-plus-lg"></i> Add Validation Rule
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 隐藏的原始文本区域，用于表单提交 -->
                         {{ form.validation_rules_json.errors }}
-                        <textarea class="form-control font-monospace" id="{{ form.validation_rules_json.id_for_label }}" name="{{ form.validation_rules_json.html_name }}" rows="6" placeholder='[{"eq": ["$.data.id", 1]}, {"contains": ["$.message", "success"]}]'>{{ form.validation_rules_json.value|default:"" }}</textarea>
-                        <div class="form-text">{{ form.validation_rules_json.help_text }}</div>
+                        <textarea class="form-control d-none" id="{{ form.validation_rules_json.id_for_label }}" name="{{ form.validation_rules_json.html_name }}">{{ form.validation_rules_json.value|default:"" }}</textarea>
+                        <div class="form-text mt-2">Define validation rules to verify the response using JSONPath expressions</div>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
@@ -1168,6 +1223,308 @@
         });
     }
 
+    // 处理表格式的验证规则界面
+    function initValidationRulesTable() {
+        const textarea = document.getElementById('{{ form.validation_rules_json.id_for_label }}');
+        const validationContainer = document.getElementById('validation-container');
+        const addValidationBtn = document.getElementById('add-validation-btn');
+        const selectAllCheckbox = document.getElementById('select-all-validation');
+        const toggleValidationBtn = document.getElementById('toggle-validation-table');
+        const toggleValidationIcon = document.getElementById('toggle-validation-icon');
+        const validationTableContainer = document.getElementById('validation-table-container');
+        const bulkEditBtn = document.getElementById('bulk-edit-validation-btn');
+        const bulkEditBtn2 = document.getElementById('bulk-edit-validation-btn-2');
+        const validationPresetBtn = document.getElementById('validation-preset-btn');
+
+        // 验证器类型
+        const validatorTypes = [
+            { value: 'eq', label: 'Equal (==)', description: 'Check if values are equal' },
+            { value: 'ne', label: 'Not Equal (!=)', description: 'Check if values are not equal' },
+            { value: 'gt', label: 'Greater Than (>)', description: 'Check if value is greater than expected' },
+            { value: 'ge', label: 'Greater or Equal (>=)', description: 'Check if value is greater than or equal to expected' },
+            { value: 'lt', label: 'Less Than (<)', description: 'Check if value is less than expected' },
+            { value: 'le', label: 'Less or Equal (<=)', description: 'Check if value is less than or equal to expected' },
+            { value: 'contains', label: 'Contains', description: 'Check if value contains expected substring' },
+            { value: 'startswith', label: 'Starts With', description: 'Check if value starts with expected substring' },
+            { value: 'endswith', label: 'Ends With', description: 'Check if value ends with expected substring' },
+            { value: 'regex_match', label: 'Regex Match', description: 'Check if value matches regex pattern' },
+            { value: 'length_eq', label: 'Length Equal', description: 'Check if length of value equals expected' },
+            { value: 'length_gt', label: 'Length Greater Than', description: 'Check if length of value is greater than expected' },
+            { value: 'length_ge', label: 'Length Greater or Equal', description: 'Check if length of value is greater than or equal to expected' },
+            { value: 'length_lt', label: 'Length Less Than', description: 'Check if length of value is less than expected' },
+            { value: 'length_le', label: 'Length Less or Equal', description: 'Check if length of value is less than or equal to expected' }
+        ];
+
+        // 常用验证规则预设
+        const validationPresets = {
+            'Status Code': [
+                { validator: 'eq', path: 'status_code', value: '200', description: 'Check if status code is 200' }
+            ],
+            'Success Response': [
+                { validator: 'eq', path: '$.code', value: '0', description: 'Check if response code is 0 (success)' },
+                { validator: 'contains', path: '$.message', value: 'success', description: 'Check if message contains "success"' }
+            ],
+            'Data Not Empty': [
+                { validator: 'length_gt', path: '$.data', value: '0', description: 'Check if data array is not empty' }
+            ]
+        };
+
+        // 从JSON文本区域解析验证规则
+        function parseValidationRules() {
+            const rules = [];
+            if (textarea.value) {
+                try {
+                    const rulesArray = JSON.parse(textarea.value);
+                    for (const rule of rulesArray) {
+                        // 处理验证规则格式
+                        const validator = Object.keys(rule)[0];
+                        const params = rule[validator];
+
+                        if (Array.isArray(params) && params.length >= 2) {
+                            rules.push({
+                                validator: validator,
+                                path: params[0],
+                                value: String(params[1]),
+                                description: ''
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing validation rules JSON:', e);
+                }
+            }
+
+            // 确保至少有一个空行
+            if (rules.length === 0) {
+                rules.push({
+                    validator: 'eq',
+                    path: '',
+                    value: '',
+                    description: ''
+                });
+            }
+
+            return rules;
+        }
+
+        // 更新JSON文本区域的值
+        function updateValidationTextarea() {
+            const rows = validationContainer.querySelectorAll('tr');
+            const rules = [];
+
+            rows.forEach(row => {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    const validatorSelect = row.querySelector('.validation-validator');
+                    const pathInput = row.querySelector('.validation-path');
+                    const valueInput = row.querySelector('.validation-value');
+
+                    if (validatorSelect && pathInput && pathInput.value.trim()) {
+                        const rule = {};
+                        rule[validatorSelect.value] = [pathInput.value.trim(), valueInput.value.trim()];
+                        rules.push(rule);
+                    }
+                }
+            });
+
+            textarea.value = JSON.stringify(rules, null, 2);
+        }
+
+        // 添加验证规则行
+        function addValidationRow(rule = { validator: 'eq', path: '', value: '', description: '' }) {
+            const row = document.createElement('tr');
+
+            // 创建验证器选择下拉菜单选项
+            let validatorOptions = '';
+            validatorTypes.forEach(type => {
+                validatorOptions += `<option value="${type.value}" ${rule.validator === type.value ? 'selected' : ''}>${type.label}</option>`;
+            });
+
+            row.innerHTML = `
+                <td class="text-center align-middle">
+                    <input type="checkbox" class="form-check-input validation-checkbox" checked>
+                </td>
+                <td>
+                    <select class="form-select validation-validator">
+                        ${validatorOptions}
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="form-control validation-path" value="${rule.path}" placeholder="JSONPath (e.g., $.data.id)">
+                </td>
+                <td>
+                    <input type="text" class="form-control validation-value" value="${rule.value}" placeholder="Expected value">
+                </td>
+                <td>
+                    <input type="text" class="form-control validation-description" value="${rule.description}" placeholder="Description">
+                </td>
+                <td class="text-center align-middle">
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 delete-validation-btn">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            // 添加事件监听器
+            const validatorSelect = row.querySelector('.validation-validator');
+            const pathInput = row.querySelector('.validation-path');
+            const valueInput = row.querySelector('.validation-value');
+            const descInput = row.querySelector('.validation-description');
+            const checkbox = row.querySelector('.validation-checkbox');
+            const deleteBtn = row.querySelector('.delete-validation-btn');
+
+            validatorSelect.addEventListener('change', updateValidationTextarea);
+            pathInput.addEventListener('input', updateValidationTextarea);
+            valueInput.addEventListener('input', updateValidationTextarea);
+            descInput.addEventListener('input', updateValidationTextarea);
+            checkbox.addEventListener('change', updateValidationTextarea);
+
+            // 添加JSONPath自动完成功能
+            pathInput.addEventListener('input', function() {
+                const commonPaths = [
+                    'status_code', '$.code', '$.message', '$.data',
+                    '$.data.id', '$.data.token', '$.data.user',
+                    '$.data.items', '$.data.pagination.total',  '$.data.token', '$.data.user',
+                    '$.data.items', '$.data.pagination.total'
+                ];
+
+                const value = this.value.trim();
+                if (value) {
+                    const match = commonPaths.find(p => p.startsWith(value));
+                    if (match && match !== value) {
+                        this.value = match;
+                        // 选择补全的部分
+                        const startPos = value.length;
+                        const endPos = match.length;
+                        setTimeout(() => {
+                            this.setSelectionRange(startPos, endPos);
+                        }, 0);
+                    }
+                }
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                row.remove();
+                updateValidationTextarea();
+            });
+
+            validationContainer.appendChild(row);
+        }
+
+        // 初始化表格
+        const validationRules = parseValidationRules();
+        validationRules.forEach(rule => addValidationRow(rule));
+
+        // 添加验证规则按钮
+        addValidationBtn.addEventListener('click', () => {
+            addValidationRow();
+            updateValidationTextarea();
+        });
+
+        // 全选/取消全选
+        selectAllCheckbox.addEventListener('change', () => {
+            const checkboxes = validationContainer.querySelectorAll('.validation-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+            updateValidationTextarea();
+        });
+
+        // 批量编辑按钮
+        bulkEditBtn.addEventListener('click', showBulkEditModal);
+        bulkEditBtn2.addEventListener('click', showBulkEditModal);
+
+        function showBulkEditModal() {
+            // 显示一个模态对话框，允许批量编辑
+            alert('批量编辑功能将在未来版本中实现');
+        }
+
+        // 切换验证规则表格显示/隐藏
+        toggleValidationBtn.addEventListener('click', () => {
+            if (validationTableContainer.style.display === 'none') {
+                validationTableContainer.style.display = 'block';
+                toggleValidationIcon.classList.remove('bi-chevron-up');
+                toggleValidationIcon.classList.add('bi-chevron-down');
+            } else {
+                validationTableContainer.style.display = 'none';
+                toggleValidationIcon.classList.remove('bi-chevron-down');
+                toggleValidationIcon.classList.add('bi-chevron-up');
+            }
+        });
+
+        // 预设按钮
+        validationPresetBtn.addEventListener('click', () => {
+            // 创建预设菜单
+            const menu = document.createElement('div');
+            menu.className = 'dropdown-menu show';
+            menu.style.position = 'absolute';
+            menu.style.transform = 'translate3d(0px, 40px, 0px)';
+            menu.style.top = '0px';
+            menu.style.left = '0px';
+            menu.style.willChange = 'transform';
+
+            // 添加预设选项
+            for (const [name, rules] of Object.entries(validationPresets)) {
+                const item = document.createElement('a');
+                item.className = 'dropdown-item';
+                item.href = '#';
+                item.textContent = name;
+
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // 应用预设
+                    validationContainer.innerHTML = '';
+                    for (const rule of rules) {
+                        addValidationRow(rule);
+                    }
+                    updateValidationTextarea();
+
+                    // 移除菜单
+                    document.body.removeChild(menu);
+                });
+
+                menu.appendChild(item);
+            }
+
+            // 添加自定义选项
+            const customItem = document.createElement('div');
+            customItem.className = 'dropdown-divider';
+            menu.appendChild(customItem);
+
+            const saveItem = document.createElement('a');
+            saveItem.className = 'dropdown-item';
+            saveItem.href = '#';
+            saveItem.textContent = 'Save Current as Preset...';
+            saveItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('保存预设功能将在未来版本中实现');
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(saveItem);
+
+            // 定位并显示菜单
+            const rect = validationPresetBtn.getBoundingClientRect();
+            menu.style.top = `${rect.bottom}px`;
+            menu.style.left = `${rect.left}px`;
+
+            document.body.appendChild(menu);
+
+            // 点击其他地方关闭菜单
+            const closeMenu = (e) => {
+                if (!menu.contains(e.target) && e.target !== validationPresetBtn) {
+                    document.body.removeChild(menu);
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+
+            // 延迟添加事件监听器，避免立即触发
+            setTimeout(() => {
+                document.addEventListener('click', closeMenu);
+            }, 0);
+        });
+    }
+
     // 在页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
         toggleBodyFormat();
@@ -1215,6 +1572,9 @@
 
         // 初始化提取参数表格
         initExtractParamsTable();
+
+        // 初始化验证规则表格
+        initValidationRulesTable();
     });
 
     function toggleBodyFormat() {
@@ -1238,7 +1598,8 @@
     .form-data-table th, .form-data-table td,
     .params-table th, .params-table td,
     .headers-table th, .headers-table td,
-    .extract-table th, .extract-table td {
+    .extract-table th, .extract-table td,
+    .validation-table th, .validation-table td {
         padding: 0.5rem;
         vertical-align: middle;
     }
@@ -1247,7 +1608,9 @@
     .form-data-table .form-select,
     .params-table .form-control,
     .headers-table .form-control,
-    .extract-table .form-control {
+    .extract-table .form-control,
+    .validation-table .form-control,
+    .validation-table .form-select {
         padding: 0.375rem 0.5rem;
         font-size: 0.875rem;
     }
@@ -1255,7 +1618,8 @@
     .form-data-table tbody tr:hover,
     .params-table tbody tr:hover,
     .headers-table tbody tr:hover,
-    .extract-table tbody tr:hover {
+    .extract-table tbody tr:hover,
+    .validation-table tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.02);
     }
 
@@ -1302,7 +1666,8 @@
         border-collapse: collapse;
     }
 
-    .extract-table .extract-path {
+    .extract-table .extract-path,
+    .validation-table .validation-path {
         font-family: monospace;
     }
 </style>
