@@ -210,6 +210,7 @@
                                 <th>Test Case</th>
                                 <th>Method</th>
                                 <th>URL</th>
+                                <th>Environment</th>
                                 <th>Status</th>
                                 <th>Response Time</th>
                                 <th>Response Status</th>
@@ -243,6 +244,9 @@
                                         </code>
                                     </td>
                                     <td>
+                                        <span class="badge bg-secondary">{{ result.environment.name }}</span>
+                                    </td>
+                                    <td>
                                         {% if result.status == 'passed' %}
                                             <span class="badge bg-success">Passed</span>
                                         {% elif result.status == 'failed' %}
@@ -266,7 +270,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="bi bi-info-circle me-2"></i> No test results found.
                                         </div>
@@ -310,7 +314,7 @@
                                 {{ result.test_case.request_method }}
                             </span>
                                     <code class="bg-light px-3 py-2 rounded flex-grow-1">
-                                        {{ test_run.environment.base_url }}{{ result.test_case.request_url }}</code>
+                                        {{ result.environment.base_url }}{{ result.test_case.request_url }}</code>
                                 </div>
 
                                 <h6 class="text-muted mb-2">Headers</h6>
@@ -333,27 +337,26 @@
                                                 <th>JSON Path</th>
                                                 <th>Description</th>
                                                 <th>Extracted Value</th>
-
                                             </tr>
                                             </thead>
                                             <tbody>
                                             {% for item in result.test_case.extract_params %}
-
                                                 <tr>
                                                     <td><code>{{ item.name }}</code></td>
                                                     <td><code>{{ item.path }}</code></td>
-                                                    <td><code>{{ item.description }}</code></td>
-                                                    <td><code>{{ item.name }}:{{ result.extracted_params|get_item:item.name }}</code></td>
-
-
+                                                    <td>{{ item.description|default:"-" }}</td>
+                                                    <td>
+                                                        {% if result.extracted_params|get_item:item.name %}
+                                                            <code>{{ result.extracted_params|get_item:item.name }}</code>
+                                                        {% else %}
+                                                            <span class="text-muted">No value extracted</span>
+                                                        {% endif %}
+                                                    </td>
                                                 </tr>
                                             {% empty %}
                                                 <tr>
-                                                    <td colspan="3" class="text-center text-muted">No parameters
-                                                        extracted
-                                                    </td>
+                                                    <td colspan="4" class="text-center text-muted">No parameters extracted</td>
                                                 </tr>
-
                                             {% endfor %}
                                             </tbody>
                                         </table>
@@ -378,8 +381,44 @@
 
                                 <h6 class="text-muted mb-2">Body</h6>
                                <code> <pre class="bg-light p-3 rounded">{{ result.response_body|pprint }}</pre></code>
-                                <h6 class="text-muted mb-2">Validators</h6>
-                                <code><pre class="bg-light p-3 rounded">{{ result.validators|pprint }}</pre></code>
+
+                                {% if result.validators %}
+                                    <h6 class="text-muted mb-2">Validators</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th>Check</th>
+                                                <th>Comparator</th>
+                                                <th>Expected</th>
+                                                <th>Actual</th>
+                                                <th>Result</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for validator in result.validators %}
+                                                <tr>
+                                                    <td><code>{{ validator.check }}</code></td>
+                                                    <td><code>{{ validator.comparator }}</code></td>
+                                                    <td><code>{{ validator.expect }}</code></td>
+                                                    <td><code>{{ validator.check_value }}</code></td>
+                                                    <td>
+                                                        {% if validator.check_result == "pass" %}
+                                                            <span class="badge bg-success">Pass</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">Fail</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No validators</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% endif %}
                             </div>
 
                             {% if result.error_message %}

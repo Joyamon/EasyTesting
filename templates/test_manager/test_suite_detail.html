@@ -5,78 +5,80 @@
 {% block header %}Test Suite: {{ test_suite.name }}{% endblock %}
 
 {% block header_buttons %}
-<div class="btn-group">
-    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i> Edit
-    </a>
-    <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-success">
-        <i class="bi bi-play-fill"></i> Run Suite
-    </a>
-</div>
+    <div class="btn-group">
+        <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-success">
+            <i class="bi bi-play-fill"></i> Run Suite
+        </a>
+    </div>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Test Suite Details</span>
-                <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-pencil"></i>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Project</h5>
-                    <p>
-                        <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
-                            {{ test_suite.project.name }}
-                        </a>
-                    </p>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Test Suite Details</span>
+                    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Project</h5>
+                        <p>
+                            <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
+                                {{ test_suite.project.name }}
+                            </a>
+                        </p>
+                    </div>
 
-                <div class="mb-4">
-                    <h5 class="text-muted mb-2">Description</h5>
-                    <p>{{ test_suite.description|default:"No description provided" }}</p>
-                </div>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Description</h5>
+                        <p>{{ test_suite.description|default:"No description provided" }}</p>
+                    </div>
 
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <h5 class="text-muted mb-2">Created By</h5>
-                        <div class="d-flex align-items-center">
-                            <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <h5 class="text-muted mb-2">Created By</h5>
+                            <div class="d-flex align-items-center">
+                            <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                  style="width: 30px; height: 30px;">
                                 {{ test_suite.created_by.username|first|upper }}
                             </span>
-                            <span>{{ test_suite.created_by.username }}</span>
+                                <span>{{ test_suite.created_by.username }}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-md-6 mb-3">
-                        <h5 class="text-muted mb-2">Created At</h5>
-                        <p class="mb-0">{{ test_suite.created_at|date:"Y-m-d H:i" }}</p>
-                    </div>
+                        <div class="col-md-6 mb-3">
+                            <h5 class="text-muted mb-2">Created At</h5>
+                            <p class="mb-0">{{ test_suite.created_at|date:"Y-m-d H:i" }}</p>
+                        </div>
 
-                    <div class="col-md-6">
-                        <h5 class="text-muted mb-2">Last Updated</h5>
-                        <p class="mb-0">{{ test_suite.updated_at|date:"Y-m-d H:i" }}</p>
+                        <div class="col-md-6">
+                            <h5 class="text-muted mb-2">Last Updated</h5>
+                            <p class="mb-0">{{ test_suite.updated_at|date:"Y-m-d H:i" }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-8 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Test Cases</span>
-                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
-                    <i class="bi bi-plus-lg"></i> Add Test Case
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Test Cases</span>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addTestCaseModal">
+                        <i class="bi bi-plus-lg"></i> Add Test Case
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
                                 <th>Order</th>
                                 <th>Name</th>
@@ -85,15 +87,16 @@
                                 <th>Environment</th>
                                 <th class="text-end">Actions</th>
                             </tr>
-                        </thead>
-                        <tbody id="test-cases-list">
+                            </thead>
+                            <tbody id="test-cases-list">
                             {% for test_suite_case in test_suite_cases %}
                                 <tr>
                                     <td>
                                         <span class="badge bg-light text-dark">{{ test_suite_case.order }}</span>
                                     </td>
                                     <td>
-                                        <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}" class="text-decoration-none">
+                                        <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}"
+                                           class="text-decoration-none">
                                             {{ test_suite_case.test_case.name }}
                                         </a>
                                     </td>
@@ -109,7 +112,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;">
+                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                              style="max-width: 200px;">
                                             {{ test_suite_case.test_case.request_url }}
                                         </code>
                                     </td>
@@ -119,7 +123,8 @@
                                                 data-case-id="{{ test_suite_case.test_case.id }}">
                                             <option value="">Default</option>
                                             {% for env in environments %}
-                                                <option value="{{ env.id }}" {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
+                                                <option value="{{ env.id }}"
+                                                        {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
                                                     {{ env.name }}
                                                 </option>
                                             {% endfor %}
@@ -127,10 +132,12 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group">
-                                            <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}"
+                                               class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTestCase({{ test_suite.id }}, {{ test_suite_case.test_case.id }})">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="removeTestCase({{ test_suite.id }}, {{ test_suite_case.test_case.id }})">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -142,33 +149,34 @@
                                         <div class="text-muted">
                                             <i class="bi bi-info-circle me-2"></i> No test cases in this suite yet.
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
+                                        <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal"
+                                                data-bs-target="#addTestCaseModal">
                                             <i class="bi bi-plus-lg"></i> Add Test Case
                                         </button>
                                     </td>
                                 </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Recent Test Runs</span>
-                <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-success">
-                    <i class="bi bi-play-fill"></i> Run Suite
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Test Runs</span>
+                    <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-play-fill"></i> Run Suite
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Default Environment</th>
@@ -178,8 +186,8 @@
                                 <th>Created By</th>
                                 <th class="text-end">Actions</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for test_run in test_runs %}
                                 <tr>
                                     <td>{{ test_run.name }}</td>
@@ -199,7 +207,8 @@
                                     <td>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</td>
                                     <td>{{ test_run.created_by.username }}</td>
                                     <td class="text-end">
-                                        <a href="{% url 'test_run_detail' pk=test_run.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'test_run_detail' pk=test_run.pk %}"
+                                           class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
@@ -210,33 +219,35 @@
                                         <div class="text-muted">
                                             <i class="bi bi-info-circle me-2"></i> No test runs yet.
                                         </div>
-                                        <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-success mt-2">
+                                        <a href="{% url 'test_suite_run' pk=test_suite.pk %}"
+                                           class="btn btn-sm btn-success mt-2">
                                             <i class="bi bi-play-fill"></i> Run Suite Now
                                         </a>
                                     </td>
                                 </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add Test Case Modal -->
-<div class="modal fade" id="addTestCaseModal" tabindex="-1" aria-labelledby="addTestCaseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addTestCaseModalLabel">Add Test Case to Suite</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {% if available_test_cases %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+    <!-- Add Test Case Modal -->
+    <div class="modal fade" id="addTestCaseModal" tabindex="-1" aria-labelledby="addTestCaseModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTestCaseModalLabel">Add Test Case to Suite</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if available_test_cases %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
                                 <tr>
                                     <th>Name</th>
                                     <th>Method</th>
@@ -244,8 +255,8 @@
                                     <th>Environment</th>
                                     <th>Actions</th>
                                 </tr>
-                            </thead>
-                            <tbody>
+                                </thead>
+                                <tbody>
                                 {% for test_case in available_test_cases %}
                                     <tr>
                                         <td>{{ test_case.name }}</td>
@@ -261,7 +272,8 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;">
+                                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                                  style="max-width: 200px;">
                                                 {{ test_case.request_url }}
                                             </code>
                                         </td>
@@ -273,156 +285,142 @@
                                                     <option value="{{ env.id }}">{{ env.name }}</option>
                                                 {% endfor %}
                                             </select>
+
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-primary add-test-case-btn"
-                                                    data-suite-id="{{ test_suite.id }}"
-                                                    data-case-id="{{ test_case.id }}">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                    onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
                                                 <i class="bi bi-plus-lg"></i> Add
                                             </button>
                                         </td>
                                     </tr>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="alert alert-info">
-                        <div class="d-flex">
-                            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                            <div>
-                                <strong>No available test cases.</strong> All test cases for this project are already in the suite or no test cases exist.
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <div class="d-flex">
+                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                <div>
+                                    <strong>No available test cases.</strong> All test cases for this project are
+                                    already in the suite or no test cases exist.
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-center mt-3">
-                        <a href="{% url 'test_case_create' %}?project={{ test_suite.project.id }}" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> Create New Test Case
-                        </a>
-                    </div>
-                {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'test_case_create' %}?project={{ test_suite.project.id }}"
+                               class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> Create New Test Case
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 为环境选择下拉框添加事件监听器
-        document.querySelectorAll('.environment-select').forEach(select => {
-            select.addEventListener('change', function() {
-                const suiteId = this.getAttribute('data-suite-id');
-                const caseId = this.getAttribute('data-case-id');
-                const environmentId = this.value;
+    <script>
+        function addTestCase(testSuiteId, testCaseId) {
+            // 获取CSRF令牌
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
 
-                updateTestCaseEnvironment(suiteId, caseId, environmentId);
-            });
-        });
+            // 显示加载状态
+            const addButton = document.getElementById('addTestCaseModal').querySelector('.btn-primary');
+            const originalText = addButton.innerHTML;
+            addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+            addButton.disabled = true;
 
-        // 为添加测试用例按钮添加事件监听器
-        document.querySelectorAll('.add-test-case-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const suiteId = this.getAttribute('data-suite-id');
-                const caseId = this.getAttribute('data-case-id');
-                const environmentSelect = document.querySelector(`.add-environment-select[data-case-id="${caseId}"]`);
-                const environmentId = environmentSelect ? environmentSelect.value : '';
-
-                addTestCase(suiteId, caseId, environmentId);
-            });
-        });
-    });
-
-    function updateTestCaseEnvironment(testSuiteId, testCaseId, environmentId) {
-        // 发送AJAX请求更新测试用例的环境
-        fetch(`/api/test-suites/${testSuiteId}/update_test_case_environment/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({
-                test_case_id: testCaseId,
-                environment_id: environmentId
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // 显示成功消息
-            const toast = new bootstrap.Toast(document.getElementById('toast-container'));
-            document.getElementById('toast-body').textContent = 'Environment updated successfully';
-            toast.show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to update environment. Please try again.');
-        });
-    }
-
-    function addTestCase(testSuiteId, testCaseId, environmentId) {
-        // 发送AJAX请求添加测试用例到套件
-        fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({
-                test_case_id: testCaseId,
-                environment_id: environmentId,
-                order: document.querySelectorAll('#test-cases-list tr').length + 1
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // 重新加载页面以显示更新后的测试用例
-            window.location.reload();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to add test case to suite. Please try again.');
-        });
-    }
-
-    function removeTestCase(testSuiteId, testCaseId) {
-        if (confirm('Are you sure you want to remove this test case from the suite?')) {
-            // 发送AJAX请求从套件中移除测试用例
-            fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
+            // 发送AJAX请求添加测试用例到套件
+            fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-CSRFToken': csrftoken
                 },
                 body: JSON.stringify({
-                    test_case_id: testCaseId
+                    test_case_id: testCaseId,
+                    order: document.querySelectorAll('#test-cases-list tr').length + 1
                 })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                // 重新加载页面以显示更新后的测试用例
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to remove test case from suite. Please try again.');
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    // 重新加载页面以显示更新后的测试用例
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add test case to suite. Please try again.');
+                    // 恢复按钮状态
+                    addButton.innerHTML = originalText;
+                    addButton.disabled = false;
+                });
         }
-    }
-</script>
+
+        // 辅助函数：获取Cookie值
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function removeTestCase(testSuiteId, testCaseId) {
+            if (confirm('Are you sure you want to remove this test case from the suite?')) {
+                // 获取CSRF令牌
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
+
+                // 显示加载状态
+                const removeButton = event.target.closest('button');
+                const originalHTML = removeButton.innerHTML;
+                removeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                removeButton.disabled = true;
+
+                // 发送AJAX请求从套件中移除测试用例
+                fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        test_case_id: testCaseId
+                    })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                        }
+                        // 重新加载页面以显示更新后的测试用例
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to remove test case from suite. Please try again.');
+                        // 恢复按钮状态
+                        removeButton.innerHTML = originalHTML;
+                        removeButton.disabled = false;
+                    });
+            }
+        }
+    </script>
 {% endblock %}

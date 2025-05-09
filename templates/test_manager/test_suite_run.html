@@ -4,49 +4,71 @@
 
 {% block header %}Run Test Suite: {{ test_suite.name }}{% endblock %}
 
+{% block header_buttons %}
+    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Back to Test Suite
+    </a>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Run Configuration</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{% url 'test_suite_run' pk=test_suite.pk %}">
-                    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <span>Run Configuration</span>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'test_suite_run' pk=test_suite.pk %}">
+                        {% csrf_token %}
 
-                    <div class="mb-3">
-                        <label for="run-name" class="form-label">Run Name</label>
-                        <input type="text" class="form-control" id="run-name" name="name" value="Suite run: {{ test_suite.name }}" required>
-                    </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Test Run Name</label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                   value="Suite run: {{ test_suite.name }}" required>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="default-environment" class="form-label">Default Environment</label>
-                        <select class="form-select" id="default-environment" name="environment">
-                            {% for env in environments %}
-                                <option value="{{ env.id }}">{{ env.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">This environment will be used for test cases that don't have a specific environment assigned.</div>
-                    </div>
+                        <div class="mb-3">
+                            <label for="environment" class="form-label">Default Environment</label>
+                            <select class="form-select" id="environment" name="environment" required>
+                                <option value="">Select Environment</option>
+                                {% for env in environments %}
+                                    <option value="{{ env.id }}">{{ env.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">This environment will be used for test cases without a specific environment.</div>
+                        </div>
 
-                    <div class="mb-4">
-                        <h6 class="mb-3">Test Cases</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Test Cases</h5>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="showAdvancedOptions">
+                                    <label class="form-check-label" for="showAdvancedOptions">Show Advanced Options</label>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
                                     <tr>
                                         <th>Order</th>
-                                        <th>Name</th>
+                                        <th>Test Case</th>
                                         <th>Method</th>
-                                        <th>Environment</th>
+                                        <th>URL</th>
+                                        <th class="advanced-option" style="display: none;">Environment</th>
+                                        <th class="advanced-option" style="display: none;">Extract Parameters</th>
                                     </tr>
-                                </thead>
-                                <tbody>
+                                    </thead>
+                                    <tbody>
                                     {% for test_suite_case in test_suite_cases %}
                                         <tr>
                                             <td>{{ test_suite_case.order }}</td>
-                                            <td>{{ test_suite_case.test_case.name }}</td>
+                                            <td>
+                                                <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}"
+                                                   class="text-decoration-none" target="_blank">
+                                                    {{ test_suite_case.test_case.name }}
+                                                </a>
+                                            </td>
                                             <td>
                                                 <span class="badge
                                                     {% if test_suite_case.test_case.request_method == 'GET' %}bg-success{% endif %}
@@ -59,39 +81,76 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <select class="form-select form-select-sm" name="case_environment_{{ test_suite_case.test_case.id }}">
+                                                <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                                      style="max-width: 300px;">
+                                                    {{ test_suite_case.test_case.request_url }}
+                                                </code>
+                                            </td>
+                                            <td class="advanced-option" style="display: none;">
+                                                <select class="form-select form-select-sm"
+                                                        name="case_environment_{{ test_suite_case.test_case.id }}">
                                                     <option value="">Use Default</option>
                                                     {% for env in environments %}
-                                                        <option value="{{ env.id }}" {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
+                                                        <option value="{{ env.id }}"
+                                                            {% if test_suite_case.environment and test_suite_case.environment.id == env.id %}selected{% endif %}>
                                                             {{ env.name }}
                                                         </option>
                                                     {% endfor %}
                                                 </select>
                                             </td>
+                                            <td class="advanced-option" style="display: none;">
+                                                {% if test_suite_case.test_case.extract_params %}
+                                                    <div class="small">
+                                                        {% for param in test_suite_case.test_case.extract_params %}
+                                                            <div class="mb-1">
+                                                                <span class="badge bg-info">{{ param.name }}</span>
+                                                                <code class="small">{{ param.path }}</code>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted small">No parameters to extract</span>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                     {% empty %}
                                         <tr>
-                                            <td colspan="4" class="text-center py-3">
-                                                <div class="text-muted">No test cases in this suite.</div>
+                                            <td colspan="6" class="text-center py-4">
+                                                <div class="text-muted">
+                                                    <i class="bi bi-info-circle me-2"></i> No test cases in this suite.
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Suite
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-play-fill"></i> Run Test Suite
-                        </button>
-                    </div>
-                </form>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-play-fill"></i> Run Test Suite
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const showAdvancedOptionsCheckbox = document.getElementById('showAdvancedOptions');
+            const advancedOptions = document.querySelectorAll('.advanced-option');
+
+            showAdvancedOptionsCheckbox.addEventListener('change', function () {
+                const display = this.checked ? 'table-cell' : 'none';
+                advancedOptions.forEach(option => {
+                    option.style.display = display;
+                });
+            });
+        });
+    </script>
 {% endblock %}
