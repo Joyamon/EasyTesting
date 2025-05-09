@@ -16,7 +16,6 @@ from .httprunner_executor import execute_test_case, execute_test_suite
 
 def paginate_queryset(request, queryset, per_page=10):
     page = request.GET.get('page', 1)
-    queryset = queryset.order_by('id')
     paginator = Paginator(queryset, per_page)
 
     try:
@@ -440,6 +439,7 @@ def test_case_run(request, pk):
         test_result = TestResult.objects.create(
             test_run=test_run,
             test_case=test_case,
+            environment=environment,
             status=result['status'],
             response_time=result.get('response_time'),
             response_status_code=result.get('response_status_code'),
@@ -535,11 +535,15 @@ def test_suite_detail(request, pk):
     test_case_ids_in_suite = all_test_suite_cases.values_list('test_case_id', flat=True)
     available_test_cases = TestCase.objects.filter(project=test_suite.project).exclude(id__in=test_case_ids_in_suite)
 
+    # 获取项目的所有环境
+    environments = Environment.objects.filter(project=test_suite.project)
+
     context = {
         'test_suite': test_suite,
         'test_suite_cases': test_suite_cases,
         'test_runs': test_runs,
         'available_test_cases': available_test_cases,
+        'environments': environments,
         'per_page': per_page,
         'total_cases': all_test_suite_cases.count(),
         'total_runs': all_test_runs.count()
@@ -576,9 +580,16 @@ def test_suite_run(request, pk):
 
         environment = get_object_or_404(Environment, pk=environment_id)
 
+        # 获取每个测试用例的环境设置
+        case_environments = {}
+        for key, value in request.POST.items():
+            if key.startswith('case_environment_') and value:
+                case_id = key.replace('case_environment_', '')
+                case_environments[int(case_id)] = int(value)
+
         # Create a test run
         test_run = TestRun.objects.create(
-            name=f"Suite run: {test_suite.name}",
+            name=request.POST.get('name', f"Suite run: {test_suite.name}"),
             project=test_suite.project,
             test_suite=test_suite,
             environment=environment,
@@ -588,19 +599,25 @@ def test_suite_run(request, pk):
         )
 
         # Execute the test suite
-        results = execute_test_suite(test_suite, environment)
+        results = execute_test_suite(test_suite, environment, case_environments)
 
         # Create test results
         for result in results:
+            # 获取测试用例使用的环境
+            env_id = result.get('environment_id', environment.id)
+            test_env = get_object_or_404(Environment, id=env_id)
+
             TestResult.objects.create(
                 test_run=test_run,
                 test_case_id=result['test_case_id'],
+                environment=test_env,
                 status=result['status'],
                 response_time=result.get('response_time'),
                 response_status_code=result.get('response_status_code'),
                 response_headers=result.get('response_headers', {}),
                 response_body=result.get('response_body'),
-                error_message=result.get('error_message', '')
+                error_message=result.get('error_message', ''),
+                extracted_params=result.get('extracted_params', {})
             )
 
         # Update test run
@@ -614,7 +631,13 @@ def test_suite_run(request, pk):
         return redirect('test_run_detail', pk=test_run.pk)
 
     environments = Environment.objects.filter(project=test_suite.project)
-    return render(request, 'test_manager/test_suite_run.html', {'test_suite': test_suite, 'environments': environments})
+    test_suite_cases = TestSuiteCase.objects.filter(test_suite=test_suite).order_by('order')
+
+    return render(request, 'test_manager/test_suite_run.html', {
+        'test_suite': test_suite,
+        'environments': environments,
+        'test_suite_cases': test_suite_cases
+    })
 
 
 # Test Run views

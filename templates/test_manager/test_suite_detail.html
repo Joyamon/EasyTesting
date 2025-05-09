@@ -15,8 +15,6 @@
 </div>
 {% endblock %}
 
-{% csrf_token %}
-
 {% block content %}
 <div class="row">
     <div class="col-md-4 mb-4">
@@ -84,6 +82,7 @@
                                 <th>Name</th>
                                 <th>Method</th>
                                 <th>URL</th>
+                                <th>Environment</th>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -114,6 +113,18 @@
                                             {{ test_suite_case.test_case.request_url }}
                                         </code>
                                     </td>
+                                    <td>
+                                        <select class="form-select form-select-sm environment-select"
+                                                data-suite-id="{{ test_suite.id }}"
+                                                data-case-id="{{ test_suite_case.test_case.id }}">
+                                            <option value="">Default</option>
+                                            {% for env in environments %}
+                                                <option value="{{ env.id }}" {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
+                                                    {{ env.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
                                     <td class="text-end">
                                         <div class="btn-group">
                                             <a href="{% url 'test_case_detail' pk=test_suite_case.test_case.pk %}" class="btn btn-sm btn-outline-primary">
@@ -127,7 +138,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-4">
+                                    <td colspan="6" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="bi bi-info-circle me-2"></i> No test cases in this suite yet.
                                         </div>
@@ -160,7 +171,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Environment</th>
+                                <th>Default Environment</th>
                                 <th>Status</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>
@@ -230,6 +241,7 @@
                                     <th>Name</th>
                                     <th>Method</th>
                                     <th>URL</th>
+                                    <th>Environment</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -254,7 +266,18 @@
                                             </code>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-primary" onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
+                                            <select class="form-select form-select-sm add-environment-select"
+                                                    data-case-id="{{ test_case.id }}">
+                                                <option value="">Default</option>
+                                                {% for env in environments %}
+                                                    <option value="{{ env.id }}">{{ env.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-primary add-test-case-btn"
+                                                    data-suite-id="{{ test_suite.id }}"
+                                                    data-case-id="{{ test_case.id }}">
                                                 <i class="bi bi-plus-lg"></i> Add
                                             </button>
                                         </td>
@@ -289,101 +312,117 @@
 
 {% block extra_js %}
 <script>
-    function addTestCase(testSuiteId, testCaseId) {
-    // 获取CSRF令牌
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
+    document.addEventListener('DOMContentLoaded', function() {
+        // 为环境选择下拉框添加事件监听器
+        document.querySelectorAll('.environment-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const suiteId = this.getAttribute('data-suite-id');
+                const caseId = this.getAttribute('data-case-id');
+                const environmentId = this.value;
 
-    // 显示加载状态
-    const addButton = document.getElementById('addTestCaseModal').querySelector('.btn-primary');
-    const originalText = addButton.innerHTML;
-    addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-    addButton.disabled = true;
+                updateTestCaseEnvironment(suiteId, caseId, environmentId);
+            });
+        });
 
-    // 发送AJAX请求添加测试用例到套件
-    fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({
-            test_case_id: testCaseId,
-            order: document.querySelectorAll('#test-cases-list tr').length + 1
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Success:', data);
-        // 重新加载页面以显示更新后的测试用例
-        window.location.reload();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to add test case to suite. Please try again.');
-        // 恢复按钮状态
-        addButton.innerHTML = originalText;
-        addButton.disabled = false;
+        // 为添加测试用例按钮添加事件监听器
+        document.querySelectorAll('.add-test-case-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const suiteId = this.getAttribute('data-suite-id');
+                const caseId = this.getAttribute('data-case-id');
+                const environmentSelect = document.querySelector(`.add-environment-select[data-case-id="${caseId}"]`);
+                const environmentId = environmentSelect ? environmentSelect.value : '';
+
+                addTestCase(suiteId, caseId, environmentId);
+            });
+        });
     });
-}
 
-// 辅助函数：获取Cookie值
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-function removeTestCase(testSuiteId, testCaseId) {
-    if (confirm('Are you sure you want to remove this test case from the suite?')) {
-        // 获取CSRF令牌
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
-
-        // 显示加载状态
-        const removeButton = event.target.closest('button');
-        const originalHTML = removeButton.innerHTML;
-        removeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-        removeButton.disabled = true;
-
-        // 发送AJAX请求从套件中移除测试用例
-        fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
+    function updateTestCaseEnvironment(testSuiteId, testCaseId, environmentId) {
+        // 发送AJAX请求更新测试用例的环境
+        fetch(`/api/test-suites/${testSuiteId}/update_test_case_environment/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
             body: JSON.stringify({
-                test_case_id: testCaseId
+                test_case_id: testCaseId,
+                environment_id: environmentId
             })
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+                throw new Error('Network response was not ok');
             }
+            return response.json();
+        })
+        .then(data => {
+            // 显示成功消息
+            const toast = new bootstrap.Toast(document.getElementById('toast-container'));
+            document.getElementById('toast-body').textContent = 'Environment updated successfully';
+            toast.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update environment. Please try again.');
+        });
+    }
+
+    function addTestCase(testSuiteId, testCaseId, environmentId) {
+        // 发送AJAX请求添加测试用例到套件
+        fetch(`/api/test-suites/${testSuiteId}/add_test_case/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                test_case_id: testCaseId,
+                environment_id: environmentId,
+                order: document.querySelectorAll('#test-cases-list tr').length + 1
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
             // 重新加载页面以显示更新后的测试用例
             window.location.reload();
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to remove test case from suite. Please try again.');
-            // 恢复按钮状态
-            removeButton.innerHTML = originalHTML;
-            removeButton.disabled = false;
+            alert('Failed to add test case to suite. Please try again.');
         });
     }
-}
+
+    function removeTestCase(testSuiteId, testCaseId) {
+        if (confirm('Are you sure you want to remove this test case from the suite?')) {
+            // 发送AJAX请求从套件中移除测试用例
+            fetch(`/api/test-suites/${testSuiteId}/remove_test_case/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    test_case_id: testCaseId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // 重新加载页面以显示更新后的测试用例
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to remove test case from suite. Please try again.');
+            });
+        }
+    }
 </script>
 {% endblock %}

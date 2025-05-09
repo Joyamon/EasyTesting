@@ -5,101 +5,93 @@
 {% block header %}Run Test Suite: {{ test_suite.name }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <span>Test Suite Details</span>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h5 class="text-muted mb-2">Project</h5>
-                    <p>
-                        <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
-                            {{ test_suite.project.name }}
-                        </a>
-                    </p>
-                </div>
-
-                <div class="mb-3">
-                    <h5 class="text-muted mb-2">Test Cases</h5>
-                    <p>This suite contains {{ test_suite.test_cases.count }} test cases.</p>
-                </div>
-            </div>
-        </div>
-
+<div class="row">
+    <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <span>Run Test Suite</span>
+                <h5 class="mb-0">Run Configuration</h5>
             </div>
             <div class="card-body">
-                {% if test_suite.test_cases.count == 0 %}
-                    <div class="alert alert-warning">
-                        <div class="d-flex">
-                            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-                            <div>
-                                <strong>Warning:</strong> This test suite doesn't contain any test cases. Please add test cases before running the suite.
-                            </div>
+                <form method="post" action="{% url 'test_suite_run' pk=test_suite.pk %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="run-name" class="form-label">Run Name</label>
+                        <input type="text" class="form-control" id="run-name" name="name" value="Suite run: {{ test_suite.name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="default-environment" class="form-label">Default Environment</label>
+                        <select class="form-select" id="default-environment" name="environment">
+                            {% for env in environments %}
+                                <option value="{{ env.id }}">{{ env.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">This environment will be used for test cases that don't have a specific environment assigned.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">Test Cases</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Name</th>
+                                        <th>Method</th>
+                                        <th>Environment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for test_suite_case in test_suite_cases %}
+                                        <tr>
+                                            <td>{{ test_suite_case.order }}</td>
+                                            <td>{{ test_suite_case.test_case.name }}</td>
+                                            <td>
+                                                <span class="badge
+                                                    {% if test_suite_case.test_case.request_method == 'GET' %}bg-success{% endif %}
+                                                    {% if test_suite_case.test_case.request_method == 'POST' %}bg-primary{% endif %}
+                                                    {% if test_suite_case.test_case.request_method == 'PUT' %}bg-warning{% endif %}
+                                                    {% if test_suite_case.test_case.request_method == 'DELETE' %}bg-danger{% endif %}
+                                                    {% if test_suite_case.test_case.request_method == 'PATCH' %}bg-info{% endif %}
+                                                ">
+                                                    {{ test_suite_case.test_case.request_method }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="case_environment_{{ test_suite_case.test_case.id }}">
+                                                    <option value="">Use Default</option>
+                                                    {% for env in environments %}
+                                                        <option value="{{ env.id }}" {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
+                                                            {{ env.name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3">
+                                                <div class="text-muted">No test cases in this suite.</div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="text-center mt-3">
-                        <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> Add Test Cases
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Suite
                         </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-play-fill"></i> Run Test Suite
+                        </button>
                     </div>
-                {% else %}
-                    <form method="post">
-                        {% csrf_token %}
-
-                        <div class="mb-4">
-                            <label for="environment" class="form-label fw-medium">Select Environment</label>
-                            <select class="form-select form-select-lg" id="env_suite" name="environment" required>
-                                <option value="">Select an environment</option>
-                                {% for env in environments %}
-                                    <option value="{{ env.id }}">{{ env.name }} ({{ env.base_url }})</option>
-                                {% endfor %}
-                            </select>
-                            <div class="form-text">Choose the environment to run this test suite against</div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <div class="d-flex">
-                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                                <div>
-                                    <strong>Note:</strong> Running this test suite will create a new test run and execute all {{ test_suite.test_cases.count }} test cases against the selected environment.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Back to Test Suite
-                            </a>
-                            <button type="submit" class="btn btn-success px-4">
-                                <i class="bi bi-play-fill"></i> Run Suite
-                            </button>
-                        </div>
-                    </form>
-                {% endif %}
+                </form>
             </div>
         </div>
     </div>
 </div>
-        <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const select = document.getElementById('env_suite');
-            const STORAGE_KEY = 'selectedEnvironment';
-
-            // 页面加载时，自动选中上一次的选择
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                select.value = saved;
-            }
-
-            // 用户改变选择时，保存选择
-            select.addEventListener('change', function () {
-                localStorage.setItem(STORAGE_KEY, this.value);
-            });
-        });
-    </script>
 {% endblock %}

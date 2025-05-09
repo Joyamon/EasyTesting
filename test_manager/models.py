@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import User
 import json
 
@@ -76,6 +73,8 @@ class TestSuite(models.Model):
 class TestSuiteCase(models.Model):
     test_suite = models.ForeignKey(TestSuite, on_delete=models.CASCADE)
     test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='test_suite_cases')
     order = models.IntegerField(default=0)
 
     class Meta:
@@ -114,6 +113,7 @@ class TestResult(models.Model):
 
     test_run = models.ForeignKey(TestRun, on_delete=models.CASCADE, related_name='test_results')
     test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE, related_name='test_results')
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='test_results')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     response_time = models.FloatField(null=True, blank=True)  # in milliseconds
     response_status_code = models.IntegerField(null=True, blank=True)

@@ -90,12 +90,15 @@ class TestCaseViewSet(viewsets.ModelViewSet):
         test_result = TestResult.objects.create(
             test_run=test_run,
             test_case=test_case,
+            environment=environment,
             status=result['status'],
             response_time=result.get('response_time'),
             response_status_code=result.get('response_status_code'),
             response_headers=result.get('response_headers', {}),
             response_body=result.get('response_body'),
-            error_message=result.get('error_message', '')
+            error_message=result.get('error_message', ''),
+            extracted_params=result.get('extracted_params', {}),
+            validators=result.get('validators', [])
         )
 
         serializer = TestResultSerializer(test_result)
@@ -118,34 +121,55 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
     def add_test_case(self, request, pk=None):
         test_suite = self.get_object()
         test_case_id = request.data.get('test_case_id')
+        environment_id = request.data.get('environment_id')
         order = request.data.get('order', 0)
 
         if not test_case_id:
             return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            test_case = TestCase.objects.get(id=test_case_id)
-        except TestCase.DoesNotExist:
-            return Response({"error": "Test case not found"}, status=status.HTTP_404_NOT_FOUND)
+        test_case = get_object_or_404(TestCase, id=test_case_id)
 
-        # 检查测试用例是否已经在套件中
-        existing = TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).first()
-        if existing:
-            # 如果已存在，返回现有记录
-            serializer = TestSuiteCaseSerializer(existing)
-            return Response(serializer.data)
+        # Check if test case is already in the suite
+        if TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).exists():
+            return Response({"error": "Test case already in suite"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 创建新的关联
-        try:
-            test_suite_case = TestSuiteCase.objects.create(
-                test_suite=test_suite,
-                test_case=test_case,
-                order=order
-            )
-            serializer = TestSuiteCaseSerializer(test_suite_case)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # 创建测试套件用例关联，并设置环境（如果提供）
+        test_suite_case_data = {
+            'test_suite': test_suite,
+            'test_case': test_case,
+            'order': order
+        }
+
+        if environment_id:
+            environment = get_object_or_404(Environment, id=environment_id)
+            test_suite_case_data['environment'] = environment
+
+        test_suite_case = TestSuiteCase.objects.create(**test_suite_case_data)
+
+        serializer = TestSuiteCaseSerializer(test_suite_case)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def update_test_case_environment(self, request, pk=None):
+        test_suite = self.get_object()
+        test_case_id = request.data.get('test_case_id')
+        environment_id = request.data.get('environment_id')
+
+        if not test_case_id:
+            return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        test_suite_case = get_object_or_404(TestSuiteCase, test_suite=test_suite, test_case_id=test_case_id)
+
+        if environment_id:
+            environment = get_object_or_404(Environment, id=environment_id)
+            test_suite_case.environment = environment
+        else:
+            test_suite_case.environment = None
+
+        test_suite_case.save()
+
+        serializer = TestSuiteCaseSerializer(test_suite_case)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def remove_test_case(self, request, pk=None):
@@ -163,38 +187,51 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def run(self, request, pk=None):
         test_suite = self.get_object()
-        environment_id = request.data.get('environment_id')
+        default_environment_id = request.data.get('environment_id')
 
-        if not environment_id:
-            return Response({"error": "Environment ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not default_environment_id:
+            return Response({"error": "Default environment ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        environment = get_object_or_404(Environment, id=environment_id)
+        default_environment = get_object_or_404(Environment, id=default_environment_id)
+
+        # 获取每个测试用例的环境设置
+        case_environments = {}
+        for key, value in request.data.items():
+            if key.startswith('case_environment_') and value:
+                case_id = key.replace('case_environment_', '')
+                case_environments[int(case_id)] = int(value)
 
         # Create a test run
         test_run = TestRun.objects.create(
-            name=f"Suite run: {test_suite.name}",
+            name=request.data.get('name', f"Suite run: {test_suite.name}"),
             project=test_suite.project,
             test_suite=test_suite,
-            environment=environment,
+            environment=default_environment,  # 默认环境
             status='running',
             start_time=timezone.now(),
             created_by=request.user
         )
 
-        # Execute the test suite
-        results = execute_test_suite(test_suite, environment)
+        # Execute the test suite with custom environments
+        results = execute_test_suite(test_suite, default_environment, case_environments)
 
         # Create test results
         for result in results:
+            # 获取测试用例使用的环境
+            environment_id = result.get('environment_id', default_environment_id)
+            environment = get_object_or_404(Environment, id=environment_id)
+
             TestResult.objects.create(
                 test_run=test_run,
                 test_case_id=result['test_case_id'],
+                environment=environment,
                 status=result['status'],
                 response_time=result.get('response_time'),
                 response_status_code=result.get('response_status_code'),
                 response_headers=result.get('response_headers', {}),
                 response_body=result.get('response_body'),
-                error_message=result.get('error_message', '')
+                error_message=result.get('error_message', ''),
+                extracted_params=result.get('extracted_params', {})
             )
 
         # Update test run

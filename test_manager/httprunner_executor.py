@@ -1,7 +1,8 @@
+import json
 import time
 import logging
 import requests
-import json
+from urllib.parse import urljoin
 from jsonpath_ng import jsonpath, parse
 
 # 尝试导入 HTTPRunner，如果失败则记录错误但不中断执行
@@ -55,12 +56,16 @@ def execute_test_case(test_case, environment):
             f"Executing test case: {test_case.name} (ID: {test_case.id}) with environment: {environment.name} (ID: {environment.id})")
         logger.info(
             f"Request method: {test_case.request_method}, URL: {test_case.request_url}, Body format: {test_case.request_body_format}")
+
         start_time = time.time()
+
         # 直接使用 HTTP 请求执行测试
         result = _execute_with_requests(test_case, environment)
+
         # 计算响应时间
         end_time = time.time()
         result["response_time"] = (end_time - start_time) * 1000  # 转换为毫秒
+
         # 在处理响应后，添加参数提取逻辑
         try:
             extracted_params = {}
@@ -75,8 +80,7 @@ def execute_test_case(test_case, environment):
                             jsonpath_expr = parse(extract['path'])
                             matches = [match.value for match in jsonpath_expr.find(response_json)]
                             if matches:
-                                for match in matches:
-                                    extracted_params[extract['name']] = match
+                                extracted_params[extract['name']] = matches[0]
                         except Exception as e:
                             # 处理提取错误
                             logger.error(
@@ -88,32 +92,6 @@ def execute_test_case(test_case, environment):
             result['extracted_params'] = extracted_params
         except Exception as e:
             logger.error(f"Error extracting parameters: {e}")
-        # 断言结果
-        try:
-            validators = []
-            validation_rules = test_case.validation_rules
-            for rule in validation_rules:
-                for symbol, assert_list in rule.items():
-                    value = result['response_body']
-                    key = parse(assert_list[0]).find(value)
-                    for k in key:
-                        if result['response_body'][str(k.path)] == assert_list[1]:
-                            check_result = 'pass'
-                        else:
-                            check_result = 'failed'
-                        validators.append(
-                            {
-                                "check": assert_list[0],
-                                "expect": assert_list[1],
-                                "comparator": symbol,
-                                "check_value": assert_list[1],
-                                "check_result": check_result
-                            }
-                        )
-            result['validators'] = validators
-        except Exception as e:
-            # 处理提取错误
-            logger.error(f"Error validating response: {e}")
 
         return result
 
@@ -138,6 +116,7 @@ def _execute_with_requests(test_case, environment):
         base_url = environment.base_url.rstrip('/')
         request_url = test_case.request_url.lstrip('/')
         full_url = base_url + '/' + request_url
+        print(f"Full URL: {full_url}")
 
         logger.info(f"Executing direct HTTP request to: {full_url}")
 
@@ -274,11 +253,18 @@ def _execute_with_requests(test_case, environment):
         }
 
 
-def execute_test_suite(test_suite, environment):
+def execute_test_suite(test_suite, default_environment, case_environments=None):
     """
     Execute a test suite (multiple test cases) using direct HTTP requests
+
+    Args:
+        test_suite: TestSuite object
+        default_environment: Default Environment object to use
+        case_environments: Dict mapping test case IDs to environment IDs
     """
     results = []
+    case_environments = case_environments or {}
+    extracted_variables = {}  # 存储提取的变量，用于后续测试用例
 
     # 获取套件中的所有测试用例，按顺序排列
     test_suite_cases = test_suite.testsuitecase_set.all().order_by('order')
@@ -288,10 +274,34 @@ def execute_test_suite(test_suite, environment):
 
     for test_suite_case in test_suite_cases:
         test_case = test_suite_case.test_case
-        logger.info(f"Executing test case {test_case.name} (ID: {test_case.id}) from suite")
 
+        # 确定使用哪个环境
+        environment = default_environment
+        environment_id = default_environment.id
+
+        # 首先检查测试套件用例是否有指定环境
+        if test_suite_case.environment:
+            environment = test_suite_case.environment
+            environment_id = environment.id
+        # 然后检查运行时是否指定了环境
+        elif test_case.id in case_environments:
+            environment_id = case_environments[test_case.id]
+            from django.apps import apps
+            Environment = apps.get_model('test_manager', 'Environment')
+            environment = Environment.objects.get(id=environment_id)
+
+        logger.info(
+            f"Executing test case {test_case.name} (ID: {test_case.id}) from suite with environment: {environment.name} (ID: {environment.id})")
+
+        # 执行测试用例
         result = execute_test_case(test_case, environment)
         result['test_case_id'] = test_case.id
+        result['environment_id'] = environment_id
+
+        # 存储提取的变量
+        if 'extracted_params' in result and result['extracted_params']:
+            extracted_variables.update(result['extracted_params'])
+
         results.append(result)
 
         logger.info(f"Test case {test_case.name} execution result: {result['status']}")
