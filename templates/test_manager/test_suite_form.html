@@ -22,13 +22,32 @@
                     <div class="mb-4">
                         <label for="{{ form.project.id_for_label }}" class="form-label fw-medium">Project</label>
                         {{ form.project.errors }}
-                        <select class="form-select" id="{{ form.project.id_for_label }}" name="{{ form.project.html_name }}" required>
-                            <option value="">Select a project</option>
-                            {% for choice in form.project.field.choices %}
-                                <option value="{{ choice.0 }}" {% if form.project.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% if form.project.field.widget.input_type == 'hidden' %}
+                            {{ form.project }}
+                            <input type="text" class="form-control form-control-lg" value="{{ form.project.value|default:''|stringformat:'s' }}" disabled>
+                        {% else %}
+                            <select class="form-select" id="{{ form.project.id_for_label }}" name="{{ form.project.html_name }}" required>
+                                <option value="">Select a project</option>
+                                {% for choice in form.project.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if form.project.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        <div class="form-text">Select the project this test suite belongs to</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.group.id_for_label }}" class="form-label fw-medium">Group</label>
+                        {{ form.group.errors }}
+                        <select class="form-select" id="{{ form.group.id_for_label }}" name="{{ form.group.html_name }}">
+                            <option value="">No group</option>
+                            {% for choice in form.group.field.choices %}
+                                {% if choice.0 %}
+                                    <option value="{{ choice.0 }}" {% if form.group.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
-                        <div class="form-text">Select the project this test suite belongs to</div>
+                        <div class="form-text">Select a group for this test suite (optional)</div>
                     </div>
 
                     <div class="mb-4">

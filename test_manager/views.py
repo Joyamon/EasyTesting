@@ -1,15 +1,16 @@
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult, EmailConfig
+    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup
 )
 from .forms import (
     ProjectForm, EnvironmentForm, TestCaseForm, TestSuiteForm,
-    TestRunForm, EmailConfigForm, TestEmailForm
+    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
 
@@ -313,6 +314,8 @@ def environment_delete(request, pk):
 @login_required
 def test_case_list(request):
     project_id = request.GET.get('project')
+    group_id = request.GET.get('group')
+    search_query = request.GET.get('search', '')
 
     # 获取每页显示的记录数
     per_page = request.GET.get('per_page', 10)
@@ -322,22 +325,58 @@ def test_case_list(request):
         per_page = 10
 
     if project_id:
-        all_test_cases = TestCase.objects.filter(project_id=project_id).order_by('-created_at')
         project = get_object_or_404(Project, pk=project_id)
+
+        # 构建查询条件
+        query = Q(project=project)
+
+        # 如果指定了分组，则只显示该分组下的测试用例
+        if group_id:
+            group = get_object_or_404(TestCaseGroup, pk=group_id)
+            query &= Q(group=group)
+
+            # 获取当前分组的所有子分组
+            child_groups = TestCaseGroup.objects.filter(project=project, parent=group)
+        else:
+            # 获取项目的所有顶级分组
+            child_groups = TestCaseGroup.objects.filter(project=project, parent=None)
+
+        # 如果有搜索查询，添加搜索条件
+        if search_query:
+            query &= (Q(name__icontains=search_query) |
+                      Q(description__icontains=search_query) |
+                      Q(request_url__icontains=search_query))
+
+        all_test_cases = TestCase.objects.filter(query).order_by('-created_at')
         test_cases = paginate_queryset(request, all_test_cases, per_page)
+
         context = {
             'test_cases': test_cases,
             'project': project,
+            'current_group': group if group_id else None,
+            'child_groups': child_groups,
             'per_page': per_page,
-            'total_count': all_test_cases.count()
+            'total_count': all_test_cases.count(),
+            'search_query': search_query
         }
     else:
-        all_test_cases = TestCase.objects.all().order_by('-created_at')
+        # 构建查询条件
+        query = Q()
+
+        # 如果有搜索查询，添加搜索条件
+        if search_query:
+            query &= (Q(name__icontains=search_query) |
+                      Q(description__icontains=search_query) |
+                      Q(request_url__icontains=search_query))
+
+        all_test_cases = TestCase.objects.filter(query).order_by('-created_at')
         test_cases = paginate_queryset(request, all_test_cases, per_page)
+
         context = {
             'test_cases': test_cases,
             'per_page': per_page,
-            'total_count': all_test_cases.count()
+            'total_count': all_test_cases.count(),
+            'search_query': search_query
         }
 
     return render(request, 'test_manager/test_case_list.html', context)
@@ -462,6 +501,8 @@ def test_case_run(request, pk):
 @login_required
 def test_suite_list(request):
     project_id = request.GET.get('project')
+    group_id = request.GET.get('group')
+    search_query = request.GET.get('search', '')
 
     # 获取每页显示的记录数
     per_page = request.GET.get('per_page', 10)
@@ -471,22 +512,56 @@ def test_suite_list(request):
         per_page = 10
 
     if project_id:
-        all_test_suites = TestSuite.objects.filter(project_id=project_id).order_by('-created_at')
         project = get_object_or_404(Project, pk=project_id)
+
+        # 构建查询条件
+        query = Q(project=project)
+
+        # 如果指定了分组，则只显示该分组下的测试套件
+        if group_id:
+            group = get_object_or_404(TestSuiteGroup, pk=group_id)
+            query &= Q(group=group)
+
+            # 获取当前分组的所有子分组
+            child_groups = TestSuiteGroup.objects.filter(project=project, parent=group)
+        else:
+            # 获取项目的所有顶级分组
+            child_groups = TestSuiteGroup.objects.filter(project=project, parent=None)
+
+        # 如果有搜索查询，添加搜索条件
+        if search_query:
+            query &= (Q(name__icontains=search_query) |
+                      Q(description__icontains=search_query))
+
+        all_test_suites = TestSuite.objects.filter(query).order_by('-created_at')
         test_suites = paginate_queryset(request, all_test_suites, per_page)
+
         context = {
             'test_suites': test_suites,
             'project': project,
+            'current_group': group if group_id else None,
+            'child_groups': child_groups,
             'per_page': per_page,
-            'total_count': all_test_suites.count()
+            'total_count': all_test_suites.count(),
+            'search_query': search_query
         }
     else:
+        # 构建查询条件
+        query = Q()
+
+        # 如果有搜索查询，添加搜索条件
+        if search_query:
+            query &= (Q(name__icontains=search_query) |
+                      Q(description__icontains=search_query))
+
         all_test_suites = TestSuite.objects.all().order_by('-created_at')
         test_suites = paginate_queryset(request, all_test_suites, per_page)
+
         context = {
             'test_suites': test_suites,
             'per_page': per_page,
-            'total_count': all_test_suites.count()
+            'total_count': all_test_suites.count(),
+            'search_query': search_query
         }
 
     return render(request, 'test_manager/test_suite_list.html', context)
@@ -849,3 +924,209 @@ def email_config_activate(request, pk):
         messages.error(request, f"无法激活邮件配置: {message}")
 
     return redirect('email_config_list')
+
+
+# 测试用例分组视图
+@login_required
+def test_case_group_list(request):
+    project_id = request.GET.get('project')
+
+    if project_id:
+        project = get_object_or_404(Project, pk=project_id)
+        # 获取顶级分组
+        root_groups = TestCaseGroup.objects.filter(project=project, parent=None).order_by('name')
+        context = {
+            'project': project,
+            'root_groups': root_groups,
+        }
+    else:
+        # 获取所有项目的顶级分组
+        projects = Project.objects.all()
+        project_groups = []
+        for project in projects:
+            root_groups = TestCaseGroup.objects.filter(project=project, parent=None).order_by('name')
+            if root_groups.exists():
+                project_groups.append({
+                    'project': project,
+                    'root_groups': root_groups,
+                })
+
+        context = {
+            'project_groups': project_groups,
+        }
+
+    return render(request, 'test_manager/test_case_group_list.html', context)
+
+
+@login_required
+def test_case_group_create(request):
+    project_id = request.GET.get('project')
+    parent_id = request.GET.get('parent')
+
+    if not project_id:
+        messages.error(request, 'Project ID is required.')
+        return redirect('project_list')
+
+    project = get_object_or_404(Project, pk=project_id)
+
+    if request.method == 'POST':
+        form = TestCaseGroupForm(request.POST, project_id=project_id)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.created_by = request.user
+            group.save()
+            messages.success(request, 'Test case group created successfully.')
+            return redirect('test_case_list')
+    else:
+        initial = {'project': project}
+        if parent_id:
+            parent = get_object_or_404(TestCaseGroup, pk=parent_id)
+            initial['parent'] = parent
+
+        form = TestCaseGroupForm(initial=initial, project_id=project_id)
+
+    return render(request, 'test_manager/test_case_group_form.html', {
+        'form': form,
+        'title': 'Create Test Case Group',
+        'project': project,
+    })
+
+
+@login_required
+def test_case_group_edit(request, pk):
+    group = get_object_or_404(TestCaseGroup, pk=pk)
+    project = group.project
+
+    if request.method == 'POST':
+        form = TestCaseGroupForm(request.POST, instance=group, project_id=project.id)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Test case group updated successfully.')
+            return redirect('test_case_list')
+    else:
+        form = TestCaseGroupForm(instance=group, project_id=project.id)
+
+    return render(request, 'test_manager/test_case_group_form.html', {
+        'form': form,
+        'title': 'Edit Test Case Group',
+        'project': project,
+        'group': group,
+    })
+
+
+@login_required
+def test_case_group_delete(request, pk):
+    group = get_object_or_404(TestCaseGroup, pk=pk)
+    project_id = group.project.id
+
+    # 检查是否有子分组或测试用例
+    if TestCaseGroup.objects.filter(parent=group).exists() or TestCase.objects.filter(group=group).exists():
+        messages.warning(request, 'Cannot delete group with child groups or test cases.')
+    else:
+        group.delete()
+        messages.success(request, 'Test case group deleted successfully.')
+
+    return redirect('test_case_list')
+
+
+# 测试套件分组视图
+@login_required
+def test_suite_group_list(request):
+    project_id = request.GET.get('project')
+
+    if project_id:
+        project = get_object_or_404(Project, pk=project_id)
+        # 获取顶级分组
+        root_groups = TestSuiteGroup.objects.filter(project=project, parent=None).order_by('name')
+        context = {
+            'project': project,
+            'root_groups': root_groups,
+        }
+    else:
+        # 获取所有项目的顶级分组
+        projects = Project.objects.all()
+        project_groups = []
+        for project in projects:
+            root_groups = TestSuiteGroup.objects.filter(project=project, parent=None).order_by('name')
+            if root_groups.exists():
+                project_groups.append({
+                    'project': project,
+                    'root_groups': root_groups,
+                })
+
+        context = {
+            'project_groups': project_groups,
+        }
+
+    return render(request, 'test_manager/test_suite_group_list.html', context)
+
+
+@login_required
+def test_suite_group_create(request):
+    project_id = request.GET.get('project')
+    parent_id = request.GET.get('parent')
+
+    if not project_id:
+        messages.error(request, 'Project ID is required.')
+        return redirect('project_list')
+
+    project = get_object_or_404(Project, pk=project_id)
+
+    if request.method == 'POST':
+        form = TestSuiteGroupForm(request.POST, project_id=project_id)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.created_by = request.user
+            group.save()
+            messages.success(request, 'Test suite group created successfully.')
+            return redirect('test_suite_list')
+    else:
+        initial = {'project': project}
+        if parent_id:
+            parent = get_object_or_404(TestSuiteGroup, pk=parent_id)
+            initial['parent'] = parent
+
+        form = TestSuiteGroupForm(initial=initial, project_id=project_id)
+
+    return render(request, 'test_manager/test_suite_group_form.html', {
+        'form': form,
+        'title': 'Create Test Suite Group',
+        'project': project,
+    })
+
+
+@login_required
+def test_suite_group_edit(request, pk):
+    group = get_object_or_404(TestSuiteGroup, pk=pk)
+    project = group.project
+
+    if request.method == 'POST':
+        form = TestSuiteGroupForm(request.POST, instance=group, project_id=project.id)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Test suite group updated successfully.')
+            return redirect('test_suite_list')
+    else:
+        form = TestSuiteGroupForm(instance=group, project_id=project.id)
+
+    return render(request, 'test_manager/test_suite_group_form.html', {
+        'form': form,
+        'title': 'Edit Test Suite Group',
+        'project': project,
+        'group': group,
+    })
+
+
+@login_required
+def test_suite_group_delete(request, pk):
+    group = get_object_or_404(TestSuiteGroup, pk=pk)
+    project_id = group.project.id
+
+    # 检查是否有子分组或测试套件
+    if TestSuiteGroup.objects.filter(parent=group).exists() or TestSuite.objects.filter(group=group).exists():
+        messages.warning(request, 'Cannot delete group with child groups or test suites.')
+    else:
+        group.delete()
+        messages.success(request, 'Test suite group deleted successfully.')
+
+    return redirect('test_suite_list')

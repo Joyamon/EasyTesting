@@ -1,6 +1,6 @@
 from django import forms
 from .models import (
-    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig
+    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup
 )
 import json
 
@@ -82,7 +82,7 @@ class TestCaseForm(forms.ModelForm):
     class Meta:
         model = TestCase
         fields = [
-            'name', 'project', 'description', 'request_method',
+            'name', 'project','group', 'description', 'request_method',
             'request_url', 'expected_status_code', 'request_body_format'
         ]
         widgets = {
@@ -198,7 +198,7 @@ class TestCaseForm(forms.ModelForm):
 class TestSuiteForm(forms.ModelForm):
     class Meta:
         model = TestSuite
-        fields = ['name', 'project', 'description']
+        fields = ['name', 'project','group', 'description']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
         }
@@ -248,3 +248,79 @@ class EmailConfigForm(forms.ModelForm):
 class TestEmailForm(forms.Form):
     """测试邮件表单"""
     email = forms.EmailField(label="测试邮箱", help_text="用于接收测试邮件的邮箱地址")
+
+
+# 新增测试用例分组表单
+class TestCaseGroupForm(forms.ModelForm):
+    class Meta:
+        model = TestCaseGroup
+        fields = ['name', 'project', 'parent']
+        widgets = {
+            'parent': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        project_id = kwargs.pop('project_id', None)
+        super().__init__(*args, **kwargs)
+
+        if project_id:
+            self.fields['project'].initial = project_id
+            self.fields['project'].widget = forms.HiddenInput()
+            # 只显示当前项目的分组
+            self.fields['parent'].queryset = TestCaseGroup.objects.filter(project_id=project_id)
+
+        # 如果是编辑模式，排除自己及其子分组，防止循环引用
+        if self.instance.pk:
+            exclude_ids = [self.instance.pk]
+            children = TestCaseGroup.objects.filter(parent=self.instance)
+            for child in children:
+                exclude_ids.append(child.pk)
+
+                # 递归获取所有子分组
+                def get_child_ids(parent_id):
+                    child_groups = TestCaseGroup.objects.filter(parent_id=parent_id)
+                    for cg in child_groups:
+                        exclude_ids.append(cg.pk)
+                        get_child_ids(cg.pk)
+
+                get_child_ids(child.pk)
+
+            self.fields['parent'].queryset = self.fields['parent'].queryset.exclude(pk__in=exclude_ids)
+
+
+# 新增测试套件分组表单
+class TestSuiteGroupForm(forms.ModelForm):
+    class Meta:
+        model = TestSuiteGroup
+        fields = ['name', 'project', 'parent']
+        widgets = {
+            'parent': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        project_id = kwargs.pop('project_id', None)
+        super().__init__(*args, **kwargs)
+
+        if project_id:
+            self.fields['project'].initial = project_id
+            self.fields['project'].widget = forms.HiddenInput()
+            # 只显示当前项目的分组
+            self.fields['parent'].queryset = TestSuiteGroup.objects.filter(project_id=project_id)
+
+        # 如果是编辑模式，排除自己及其子分组，防止循环引用
+        if self.instance.pk:
+            exclude_ids = [self.instance.pk]
+            children = TestSuiteGroup.objects.filter(parent=self.instance)
+            for child in children:
+                exclude_ids.append(child.pk)
+
+                # 递归获取所有子分组
+                def get_child_ids(parent_id):
+                    child_groups = TestSuiteGroup.objects.filter(parent_id=parent_id)
+                    for cg in child_groups:
+                        exclude_ids.append(cg.pk)
+                        get_child_ids(cg.pk)
+
+                get_child_ids(child.pk)
+
+            self.fields['parent'].queryset = self.fields['parent'].queryset.exclude(pk__in=exclude_ids)

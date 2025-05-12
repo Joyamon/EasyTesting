@@ -5,62 +5,154 @@
 {% block header %}Test Suites{% endblock %}
 
 {% block header_buttons %}
-    <a href="{% url 'test_suite_create' %}" class="btn btn-primary">
+<div class="btn-group">
+    <a href="{% url 'test_suite_create' %}{% if project %}?project={{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> New Test Suite
     </a>
+    {% if project %}
+    <a href="{% url 'test_suite_group_create' %}?project={{ project.id }}{% if current_group %}&parent={{ current_group.id }}{% endif %}" class="btn btn-outline-primary">
+        <i class="bi bi-folder-plus"></i> New Group
+    </a>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block content %}
-    <div class="card">
-        <div class="card-body">
-            {% if project %}
-                <div class="alert alert-info mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <div>
-                            <strong>Filtered by Project:</strong> {{ project.name }}
-                            <a href="{% url 'test_suite_list' %}" class="btn btn-sm btn-outline-primary ms-3">
-                                <i class="bi bi-x-lg"></i> Clear Filter
-                            </a>
+<div class="card">
+    <div class="card-body">
+        {% if project %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    <strong>Filtered by Project:</strong> {{ project.name }}
+                    <a href="{% url 'test_suite_list' %}" class="btn btn-sm btn-outline-primary ms-3">
+                        <i class="bi bi-x-lg"></i> Clear Filter
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_group %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-folder-fill me-2"></i>
+                <div>
+                    <strong>Current Group:</strong> {{ current_group }}
+                    <a href="{% url 'test_suite_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary ms-3">
+                        <i class="bi bi-x-lg"></i> Clear Group Filter
+                    </a>
+                    <a href="{% url 'test_suite_group_edit' pk=current_group.id %}" class="btn btn-sm btn-outline-secondary ms-1">
+                        <i class="bi bi-pencil"></i> Edit Group
+                    </a>
+                    <a href="{% url 'test_suite_group_delete' pk=current_group.id %}" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Are you sure you want to delete this group?');">
+                        <i class="bi bi-trash"></i> Delete Group
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 搜索框 -->
+        <div class="mb-4">
+            <form method="get" class="d-flex">
+                {% if project %}
+                <input type="hidden" name="project" value="{{ project.id }}">
+                {% endif %}
+                {% if current_group %}
+                <input type="hidden" name="group" value="{{ current_group.id }}">
+                {% endif %}
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search test suites..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if project and child_groups %}
+        <!-- 显示子分组 -->
+        <div class="mb-4">
+            <h5 class="mb-3">Groups</h5>
+            <div class="row row-cols-1 row-cols-md-3 g-3">
+                {% for group in child_groups %}
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-folder fs-4 me-2 text-warning"></i>
+                                <h5 class="card-title mb-0">{{ group.name }}</h5>
+                            </div>
+                            <p class="card-text text-muted small">
+                                {{ group.test_suites.count }} test suites
+                                {% if group.children.count > 0 %}
+                                | {{ group.children.count }} sub-groups
+                                {% endif %}
+                            </p>
+                            <div class="d-flex justify-content-between mt-3">
+                                <a href="{% url 'test_suite_list' %}?project={{ project.id }}&group={{ group.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-folder2-open"></i> Open
+                                </a>
+                                <div>
+                                    <a href="{% url 'test_suite_group_edit' pk=group.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'test_suite_group_delete' pk=group.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this group?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Project</th>
+                        <th>Group</th>
                         <th>Test Cases</th>
                         <th>Created By</th>
                         <th>Created At</th>
                         <th class="text-end">Actions</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     {% for test_suite in test_suites %}
                         <tr>
                             <td>
-                                <a href="{% url 'test_suite_detail' pk=test_suite.pk %}"
-                                   class="fw-medium text-decoration-none text-dark">
+                                <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="fw-medium text-decoration-none text-dark">
                                     {{ test_suite.name }}
                                 </a>
                             </td>
                             <td>
-                                <a href="{% url 'project_detail' pk=test_suite.project.pk %}"
-                                   class="text-decoration-none">
+                                <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
                                     {{ test_suite.project.name }}
                                 </a>
+                            </td>
+                            <td>
+                                {% if test_suite.group %}
+                                <a href="{% url 'test_suite_list' %}?project={{ test_suite.project.id }}&group={{ test_suite.group.id }}" class="text-decoration-none">
+                                    <i class="bi bi-folder text-warning"></i> {{ test_suite.group.name }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark">{{ test_suite.test_cases.count }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
-                                          style="width: 30px; height: 30px;">
+                                    <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                                         {{ test_suite.created_by.username|first|upper }}
                                     </span>
                                     <span>{{ test_suite.created_by.username }}</span>
@@ -69,16 +161,13 @@
                             <td>{{ test_suite.created_at|date:"Y-m-d H:i" }}</td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}"
-                                       class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}"
-                                       class="btn btn-sm btn-outline-secondary">
+                                    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'test_suite_run' pk=test_suite.pk %}"
-                                       class="btn btn-sm btn-outline-success">
+                                    <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-play-fill"></i>
                                     </a>
                                 </div>
@@ -86,26 +175,25 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="7" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="bi bi-collection display-4 text-muted mb-3"></i>
                                     <h5>No test suites yet</h5>
                                     <p class="text-muted">Create your first test suite to get started</p>
-                                    <a href="{% url 'test_suite_create' %}" class="btn btn-primary mt-2">
+                                    <a href="{% url 'test_suite_create' %}{% if project %}?project={{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}" class="btn btn-primary mt-2">
                                         <i class="bi bi-plus-lg"></i> Create Test Suite
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% include 'pagination.html' with page_obj=test_suites %}
-
+                </tbody>
+            </table>
         </div>
+
+        {% include 'pagination.html' with page_obj=test_suites %}
     </div>
+</div>
 
 
 {% endblock %}

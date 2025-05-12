@@ -131,6 +131,52 @@
                 </a>
             </div>
             <div class="card-body">
+                <!-- Test Case Groups Section -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder me-2"></i> Test Case Groups
+                        </h5>
+                        <div>
+                            <a href="{% url 'test_case_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-folder2-open"></i> Browse Groups
+                            </a>
+                            <a href="{% url 'test_case_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-folder-plus"></i> New Group
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if test_case_groups %}
+                            <div class="list-group">
+                                {% for group in test_case_groups|slice:":5" %}
+                                    <a href="{% url 'test_case_list' %}?project={{ project.id }}&group={{ group.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-folder-fill text-warning me-2"></i>
+                                            {{ group.name }}
+                                            <span class="badge bg-light text-dark ms-2">{{ group.test_cases.count }} test cases</span>
+                                        </div>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            {% if test_case_groups.count > 5 %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'test_case_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                        View All Groups
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted mb-0">No test case groups yet</p>
+                                <a href="{% url 'test_case_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="bi bi-folder-plus"></i> Create Group
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -192,6 +238,52 @@
                 </a>
             </div>
             <div class="card-body">
+                <!-- Test Suite Groups Section -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder me-2"></i> Test Suite Groups
+                        </h5>
+                        <div>
+                            <a href="{% url 'test_suite_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-folder2-open"></i> Browse Groups
+                            </a>
+                            <a href="{% url 'test_suite_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-folder-plus"></i> New Group
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if test_suite_groups %}
+                            <div class="list-group">
+                                {% for group in test_suite_groups|slice:":5" %}
+                                    <a href="{% url 'test_suite_list' %}?project={{ project.id }}&group={{ group.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-folder-fill text-warning me-2"></i>
+                                            {{ group.name }}
+                                            <span class="badge bg-light text-dark ms-2">{{ group.test_suites.count }} test suites</span>
+                                        </div>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            {% if test_suite_groups.count > 5 %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'test_suite_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
+                                        View All Groups
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted mb-0">No test suite groups yet</p>
+                                <a href="{% url 'test_suite_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="bi bi-folder-plus"></i> Create Group
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>

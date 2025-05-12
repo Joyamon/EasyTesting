@@ -112,4 +112,15 @@ urlpatterns = [
     path('email-config/<int:pk>/delete/', views.email_config_delete, name='email_config_delete'),
     path('email-config/<int:pk>/test/', views.email_config_test, name='email_config_test'),
     path('email-config/<int:pk>/activate/', views.email_config_activate, name='email_config_activate'),
+
+    path('test-case-groups/', views.test_case_group_list, name='test_case_group_list'),
+    path('test-case-groups/create/', views.test_case_group_create, name='test_case_group_create'),
+    path('test-case-groups/<int:pk>/edit/', views.test_case_group_edit, name='test_case_group_edit'),
+    path('test-case-groups/<int:pk>/delete/', views.test_case_group_delete, name='test_case_group_delete'),
+
+    # 测试套件分组
+    path('test-suite-groups/', views.test_suite_group_list, name='test_suite_group_list'),
+    path('test-suite-groups/create/', views.test_suite_group_create, name='test_suite_group_create'),
+    path('test-suite-groups/<int:pk>/edit/', views.test_suite_group_edit, name='test_suite_group_edit'),
+    path('test-suite-groups/<int:pk>/delete/', views.test_suite_group_delete, name='test_suite_group_delete'),
 ]

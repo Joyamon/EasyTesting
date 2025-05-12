@@ -26,6 +26,25 @@ class Environment(models.Model):
         return f"{self.project.name} - {self.name}"
 
 
+# 测试用例分组
+class TestCaseGroup(models.Model):
+    name = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_case_groups')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_case_groups')
+
+    def __str__(self):
+        if self.parent:
+            return f"{self.parent} / {self.name}"
+        return self.name
+
+    class Meta:
+        unique_together = ('name', 'project', 'parent')
+        ordering = ['name']
+
+
 class TestCase(models.Model):
     REQUEST_BODY_FORMAT_CHOICES = [
         ('json', 'JSON'),
@@ -34,6 +53,8 @@ class TestCase(models.Model):
 
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_cases')
+    group = models.ForeignKey(TestCaseGroup, on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='test_cases')
     description = models.TextField(blank=True)
     request_method = models.CharField(max_length=10, choices=[
         ('GET', 'GET'),
@@ -57,9 +78,30 @@ class TestCase(models.Model):
         return self.name
 
 
+# 新增测试套件分组模型
+class TestSuiteGroup(models.Model):
+    name = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_suite_groups')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_suite_groups')
+
+    def __str__(self):
+        if self.parent:
+            return f"{self.parent} / {self.name}"
+        return self.name
+
+    class Meta:
+        unique_together = ('name', 'project', 'parent')
+        ordering = ['name']
+
+
 class TestSuite(models.Model):
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_suites')
+    group = models.ForeignKey(TestSuiteGroup, on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='test_suites')
     description = models.TextField(blank=True)
     test_cases = models.ManyToManyField(TestCase, through='TestSuiteCase')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -132,7 +174,7 @@ class TestResult(models.Model):
 
 from django.db import models
 from django.conf import settings
-from django.core.mail import  EmailMessage
+from django.core.mail import EmailMessage
 from django.core.exceptions import ValidationError
 import smtplib
 import ssl

@@ -35,3 +35,12 @@ def get_item(dictionary, key):
             return None
 
     return dictionary.get(key)
+
+
+@register.filter
+def multiply(value, arg):
+    """将值乘以参数"""
+    try:
+        return int(value) * int(arg)
+    except (ValueError, TypeError):
+        return 0
