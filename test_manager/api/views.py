@@ -132,8 +132,8 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         test_case = get_object_or_404(TestCase, id=test_case_id)
 
         # Check if test case is already in the suite
-        # if TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).exists():
-        #     return Response({"error": "Test case already in suite"}, status=status.HTTP_400_BAD_REQUEST)
+        if TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).exists():
+            return Response({"error": "Test case already in suite"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 创建测试套件用例关联，并设置环境（如果提供）
         test_suite_case_data = {
