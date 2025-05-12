@@ -94,7 +94,7 @@
                 <div class="mb-4">
                     <h5 class="text-muted mb-2">Headers</h5>
                     {% if test_case.request_headers %}
-                        <pre class="bg-light p-3 rounded"><code>{{ test_case.request_headers|pprint }}</code></pre>
+                        <code class="bg-light p-3 rounded">{{ test_case.request_headers|pprint }}</code>
                     {% else %}
                         <p class="text-muted">No headers specified</p>
                     {% endif %}
@@ -108,7 +108,7 @@
                 <div class="mb-4">
                     <h5 class="text-muted mb-2">Body</h5>
                     {% if test_case.request_body %}
-                        <pre class="bg-light p-3 rounded"><code>{{ test_case.request_body|pprint }}</code></pre>
+                        <code class="bg-light p-2 rounded">{{ test_case.request_body|pprint }}</code>
                     {% else %}
                         <p class="text-muted">No body specified</p>
                     {% endif %}
@@ -117,7 +117,7 @@
                 <div class="mb-4">
                     <h5 class="text-muted mb-2">Validation Rules</h5>
                     {% if test_case.validation_rules %}
-                        <pre class="bg-light p-3 rounded"><code>{{ test_case.validation_rules|pprint }}</code></pre>
+                        <code class="bg-light p-3 rounded">{{ test_case.validation_rules|pprint }}</code>
                     {% else %}
                         <p class="text-muted">No validation rules specified</p>
                     {% endif %}
