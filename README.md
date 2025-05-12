@@ -1,17 +1,17 @@
 # EasyTesting
 
-A comprehensive testing platform built with Django, Django REST Framework, SQLite, Bootstrap, and HTTPRunner.
+使用Django、Django REST框架、SQLite、Bootstrap和HTTPRunner构建的综合测试平台。
 
-## Features
+## 功能特点
 
-- Create and manage test projects
-- Define test environments with variables
-- Create API test cases with request details and validation rules
-- Organize test cases into test suites
-- Execute tests and view results
-- RESTful API for integration with other tools
+- 创建和管理测试项目
+- 使用变量定义测试环境
+- 使用请求详细信息和验证规则创建API测试用例
+- 将测试用例组织到测试套件中
+- 执行测试并查看结果
+- 用于与其他工具集成的RESTful API
 
-## Installation
+## 快速开始
 
 1. Clone the repository
 2. Create a virtual environment:
@@ -36,24 +36,65 @@ A comprehensive testing platform built with Django, Django REST Framework, SQLit
    python manage.py runserver
    \`\`\`
 
-## Usage
+## 使用
 
 1. Access the admin interface at http://localhost:8000/admin/
 2. Log in with your superuser credentials
 3. Create projects, environments, test cases, and test suites
 4. Execute tests and view results
 
-## API Documentation
+## 效果截图
 
-The platform provides a RESTful API for integration with other tools. The API endpoints are:
+### 注册
+<img src="static/pic/注册.png" />
 
-- `/api/projects/` - Manage projects
-- `/api/environments/` - Manage environments
-- `/api/test-cases/` - Manage test cases
-- `/api/test-suites/` - Manage test suites
-- `/api/test-runs/` - Manage test runs
-- `/api/test-results/` - View test results
+### 登录
+<img src="static/pic/登录.png" />
+
+### 面板
+<img src="static/pic/Dashboard.png" />
+
+### 项目
+<img src="static/pic/project.png" />
+
+### 项目详情
+<img src="static/pic/projectDetails.png" />
+
+### 环境
+<img src="static/pic/Environments.png" />
+
+### 测试用例
+<img src="static/pic/Test Cases .png" />
+
+### 测试用例详情
+<img src="static/pic/caseDetail.png" />
+
+### 测试套件
+<img src="static/pic/Test Suites .png" />
+
+### 测试套件详情
+<img src="static/pic/suiteDetail.png" />
+
+### 测试运行
+<img src="static/pic/Test Runs .png" />
+
+### 测试结果
+<img src="static/pic/testresultsDetail.png" />
+
+### 测试用例分组
+<img src="static/pic/All Test Case Groups .png" />
+
+### 测试套件分组
+<img src="static/pic/All Test Suite Groups  .png" />
+
+### 个人资料
+<img src="static/pic/个人资料.png" />
+
+### 修改密码
+<img src="static/pic/修改密码.png" />
+
+### 邮件配置列表
+<img src="static/pic/邮件配置列表.png" />
 
 ## License
 
-MIT
