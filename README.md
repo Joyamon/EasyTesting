@@ -97,4 +97,5 @@
 <img src="static/pic/邮件配置列表.png" />
 
 ## License
+This project is licensed under the MIT License.
 
