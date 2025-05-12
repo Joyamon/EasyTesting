@@ -533,7 +533,7 @@ def test_suite_detail(request, pk):
 
     # Get available test cases for this project that are not already in the suite
     test_case_ids_in_suite = all_test_suite_cases.values_list('test_case_id', flat=True)
-    available_test_cases = TestCase.objects.filter(project=test_suite.project).exclude(id__in=test_case_ids_in_suite)
+    project_test_cases = TestCase.objects.filter(project=test_suite.project)
 
     # 获取项目的所有环境
     environments = Environment.objects.filter(project=test_suite.project)
@@ -542,7 +542,7 @@ def test_suite_detail(request, pk):
         'test_suite': test_suite,
         'test_suite_cases': test_suite_cases,
         'test_runs': test_runs,
-        'available_test_cases': available_test_cases,
+        'project_test_cases': project_test_cases,
         'environments': environments,
         'per_page': per_page,
         'total_cases': all_test_suite_cases.count(),

@@ -244,7 +244,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    {% if available_test_cases %}
+                    {% if project_test_cases %}
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -257,7 +257,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for test_case in available_test_cases %}
+                                {% for test_case in project_test_cases %}
                                     <tr>
                                         <td>{{ test_case.name }}</td>
                                         <td>
@@ -303,8 +303,7 @@
                             <div class="d-flex">
                                 <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                                 <div>
-                                    <strong>No available test cases.</strong> All test cases for this project are
-                                    already in the suite or no test cases exist.
+                                    <strong>No available test cases.</strong> No test cases exist for this project.
                                 </div>
                             </div>
                         </div>
