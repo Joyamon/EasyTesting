@@ -244,60 +244,165 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    {% if project_test_cases %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Method</th>
-                                    <th>URL</th>
-                                    <th>Environment</th>
-                                    <th>Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for test_case in project_test_cases %}
-                                    <tr>
-                                        <td>{{ test_case.name }}</td>
-                                        <td>
-                                            <span class="badge
-                                                {% if test_case.request_method == 'GET' %}bg-success{% endif %}
-                                                {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
-                                                {% if test_case.request_method == 'PUT' %}bg-warning{% endif %}
-                                                {% if test_case.request_method == 'DELETE' %}bg-danger{% endif %}
-                                                {% if test_case.request_method == 'PATCH' %}bg-info{% endif %}
-                                            ">
-                                                {{ test_case.request_method }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
-                                                  style="max-width: 200px;">
-                                                {{ test_case.request_url }}
-                                            </code>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm add-environment-select"
-                                                    data-case-id="{{ test_case.id }}">
-                                                <option value="">Default</option>
-                                                {% for env in environments %}
-                                                    <option value="{{ env.id }}">{{ env.name }}</option>
-                                                {% endfor %}
-                                            </select>
-
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-primary"
-                                                    onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
-                                                <i class="bi bi-plus-lg"></i> Add
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                    {% if grouped_test_cases or ungrouped_test_cases %}
+                        <!-- 搜索框 -->
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="searchTestCase" placeholder="Search test cases...">
+                            </div>
                         </div>
+
+                        <!-- 分组测试用例 -->
+                        {% if grouped_test_cases %}
+                            <div class="accordion mb-3" id="testCaseGroupsAccordion">
+                                {% for group_id, group_data in grouped_test_cases.items %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading{{ group_id }}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse{{ group_id }}" aria-expanded="false"
+                                                    aria-controls="collapse{{ group_id }}">
+                                                <i class="bi bi-folder me-2"></i> {{ group_data.group.name }}
+                                                <span class="badge bg-secondary ms-2">{{ group_data.test_cases.count }}</span>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ group_id }}" class="accordion-collapse collapse"
+                                             aria-labelledby="heading{{ group_id }}" data-bs-parent="#testCaseGroupsAccordion">
+                                            <div class="accordion-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover mb-0">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Method</th>
+                                                            <th>URL</th>
+                                                            <th>Environment</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody class="test-case-list">
+                                                        {% for test_case in group_data.test_cases %}
+                                                            <tr class="test-case-item" data-name="{{ test_case.name|lower }}">
+                                                                <td>{{ test_case.name }}</td>
+                                                                <td>
+                                                                    <span class="badge
+                                                                        {% if test_case.request_method == 'GET' %}bg-success{% endif %}
+                                                                        {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
+                                                                        {% if test_case.request_method == 'PUT' %}bg-warning{% endif %}
+                                                                        {% if test_case.request_method == 'DELETE' %}bg-danger{% endif %}
+                                                                        {% if test_case.request_method == 'PATCH' %}bg-info{% endif %}
+                                                                    ">
+                                                                        {{ test_case.request_method }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                                                          style="max-width: 200px;">
+                                                                        {{ test_case.request_url }}
+                                                                    </code>
+                                                                </td>
+                                                                <td>
+                                                                    <select class="form-select form-select-sm add-environment-select"
+                                                                            data-case-id="{{ test_case.id }}">
+                                                                        <option value="">Default</option>
+                                                                        {% for env in environments %}
+                                                                            <option value="{{ env.id }}">{{ env.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    {% if test_case.id in added_test_case_ids %}
+                                                                        <button type="button" class="btn btn-sm btn-success" disabled>
+                                                                            <i class="bi bi-check-lg"></i> Added
+                                                                        </button>
+                                                                    {% else %}
+                                                                        <button type="button" class="btn btn-sm btn-primary"
+                                                                                onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
+                                                                            <i class="bi bi-plus-lg"></i> Add
+                                                                        </button>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- 未分组测试用例 -->
+                        {% if ungrouped_test_cases %}
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-file-earmark me-2"></i> Ungrouped Test Cases
+                                    <span class="badge bg-secondary ms-2">{{ ungrouped_test_cases|length }}</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Method</th>
+                                                <th>URL</th>
+                                                <th>Environment</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="test-case-list">
+                                            {% for test_case in ungrouped_test_cases %}
+                                                <tr class="test-case-item" data-name="{{ test_case.name|lower }}">
+                                                    <td>{{ test_case.name }}</td>
+                                                    <td>
+                                                        <span class="badge
+                                                            {% if test_case.request_method == 'GET' %}bg-success{% endif %}
+                                                            {% if test_case.request_method == 'POST' %}bg-primary{% endif %}
+                                                            {% if test_case.request_method == 'PUT' %}bg-warning{% endif %}
+                                                            {% if test_case.request_method == 'DELETE' %}bg-danger{% endif %}
+                                                            {% if test_case.request_method == 'PATCH' %}bg-info{% endif %}
+                                                        ">
+                                                            {{ test_case.request_method }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                                              style="max-width: 200px;">
+                                                            {{ test_case.request_url }}
+                                                        </code>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm add-environment-select"
+                                                                data-case-id="{{ test_case.id }}">
+                                                            <option value="">Default</option>
+                                                            {% for env in environments %}
+                                                                <option value="{{ env.id }}">{{ env.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        {% if test_case.id in added_test_case_ids %}
+                                                            <button type="button" class="btn btn-sm btn-success" disabled>
+                                                                <i class="bi bi-check-lg"></i> Added
+                                                            </button>
+                                                        {% else %}
+                                                            <button type="button" class="btn btn-sm btn-primary"
+                                                                    onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
+                                                                <i class="bi bi-plus-lg"></i> Add
+                                                            </button>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
                     {% else %}
                         <div class="alert alert-info">
                             <div class="d-flex">
@@ -329,8 +434,12 @@
             // 获取CSRF令牌
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
 
+            // 获取选择的环境
+            const environmentSelect = document.querySelector(`.add-environment-select[data-case-id="${testCaseId}"]`);
+            const environmentId = environmentSelect ? environmentSelect.value : '';
+
             // 显示加载状态
-            const addButton = document.getElementById('addTestCaseModal').querySelector('.btn-primary');
+            const addButton = event.target.closest('button');
             const originalText = addButton.innerHTML;
             addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
             addButton.disabled = true;
@@ -344,6 +453,7 @@
                 },
                 body: JSON.stringify({
                     test_case_id: testCaseId,
+                    environment_id: environmentId,
                     order: document.querySelectorAll('#test-cases-list tr').length + 1
                 })
             })
@@ -421,5 +531,38 @@
                     });
             }
         }
+
+        // 搜索功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchTestCase');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const testCaseItems = document.querySelectorAll('.test-case-item');
+
+                    testCaseItems.forEach(item => {
+                        const name = item.getAttribute('data-name');
+                        if (name.includes(searchTerm)) {
+                            item.style.display = '';
+
+                            // 如果在折叠面板内，展开该面板
+                            const accordionBody = item.closest('.accordion-collapse');
+                            if (accordionBody && searchTerm.length > 0) {
+                                accordionBody.classList.add('show');
+                            }
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    // 如果搜索框为空，折叠所有面板
+                    if (searchTerm === '') {
+                        document.querySelectorAll('.accordion-collapse').forEach(panel => {
+                            panel.classList.remove('show');
+                        });
+                    }
+                });
+            }
+        });
     </script>
 {% endblock %}

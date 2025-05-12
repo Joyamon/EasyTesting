@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import JsonResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import (
@@ -606,9 +607,27 @@ def test_suite_detail(request, pk):
     test_suite_cases = paginate_queryset(request, all_test_suite_cases, per_page)
     test_runs = paginate_queryset(request, all_test_runs, per_page)
 
-    # Get available test cases for this project that are not already in the suite
-    test_case_ids_in_suite = all_test_suite_cases.values_list('test_case_id', flat=True)
+    # 获取项目中的所有测试用例，而不仅仅是未添加到套件的测试用例
     project_test_cases = TestCase.objects.filter(project=test_suite.project)
+
+    # 获取项目中的所有测试用例分组
+    test_case_groups = TestCaseGroup.objects.filter(project=test_suite.project)
+
+    # 获取每个分组下的测试用例
+    grouped_test_cases = {}
+    for group in test_case_groups:
+        group_test_cases = TestCase.objects.filter(project=test_suite.project, group=group)
+        if group_test_cases.exists():
+            grouped_test_cases[group.id] = {
+                'group': group,
+                'test_cases': group_test_cases
+            }
+
+    # 获取未分组的测试用例
+    ungrouped_test_cases = TestCase.objects.filter(project=test_suite.project, group__isnull=True)
+
+    # 获取已添加到测试套件的测试用例ID列表
+    added_test_case_ids = TestSuiteCase.objects.filter(test_suite=test_suite).values_list('test_case_id', flat=True)
 
     # 获取项目的所有环境
     environments = Environment.objects.filter(project=test_suite.project)
@@ -618,6 +637,9 @@ def test_suite_detail(request, pk):
         'test_suite_cases': test_suite_cases,
         'test_runs': test_runs,
         'project_test_cases': project_test_cases,
+        'grouped_test_cases': grouped_test_cases,
+        'ungrouped_test_cases': ungrouped_test_cases,
+        'added_test_case_ids': list(added_test_case_ids),
         'environments': environments,
         'per_page': per_page,
         'total_cases': all_test_suite_cases.count(),
@@ -1130,3 +1152,78 @@ def test_suite_group_delete(request, pk):
         messages.success(request, 'Test suite group deleted successfully.')
 
     return redirect('test_suite_list')
+
+
+# 获取测试用例分组数据的API
+@login_required
+def get_test_case_groups_data(request, project_id):
+    """获取项目的测试用例分组数据，用于前端展示"""
+    project = get_object_or_404(Project, pk=project_id)
+
+    # 获取所有分组
+    groups = TestCaseGroup.objects.filter(project=project)
+
+    # 构建分组树
+    group_tree = []
+    group_dict = {}
+
+    # 先创建所有分组的字典
+    for group in groups:
+        group_data = {
+            'id': group.id,
+            'name': group.name,
+            'parent_id': group.parent_id,
+            'children': [],
+            'test_cases': []
+        }
+        group_dict[group.id] = group_data
+
+    # 构建分组树
+    for group_id, group_data in group_dict.items():
+        if group_data['parent_id'] is None:
+            # 顶级分组
+            group_tree.append(group_data)
+        else:
+            # 子分组
+            parent_data = group_dict.get(group_data['parent_id'])
+            if parent_data:
+                parent_data['children'].append(group_data)
+
+    # 获取每个分组下的测试用例
+    for group in groups:
+        test_cases = TestCase.objects.filter(project=project, group=group)
+        group_data = group_dict.get(group.id)
+        if group_data:
+            for test_case in test_cases:
+                group_data['test_cases'].append({
+                    'id': test_case.id,
+                    'name': test_case.name,
+                    'method': test_case.request_method,
+                    'url': test_case.request_url
+                })
+
+    # 获取未分组的测试用例
+    ungrouped_test_cases = TestCase.objects.filter(project=project, group__isnull=True)
+    ungrouped_data = {
+        'id': 0,
+        'name': 'Ungrouped',
+        'parent_id': None,
+        'children': [],
+        'test_cases': []
+    }
+
+    for test_case in ungrouped_test_cases:
+        ungrouped_data['test_cases'].append({
+            'id': test_case.id,
+            'name': test_case.name,
+            'method': test_case.request_method,
+            'url': test_case.request_url
+        })
+
+    # 如果有未分组的测试用例，添加到结果中
+    if ungrouped_data['test_cases']:
+        group_tree.append(ungrouped_data)
+
+    return JsonResponse({
+        'groups': group_tree
+    })
