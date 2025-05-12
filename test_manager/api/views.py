@@ -92,6 +92,8 @@ class TestCaseViewSet(viewsets.ModelViewSet):
             test_case=test_case,
             environment=environment,
             status=result['status'],
+            request_headers=result.get('request_headers', {}),  # 保存请求头
+            request_body=result.get('request_body'),  # 保存请求体
             response_time=result.get('response_time'),
             response_status_code=result.get('response_status_code'),
             response_headers=result.get('response_headers', {}),

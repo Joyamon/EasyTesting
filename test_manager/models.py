@@ -119,6 +119,8 @@ class TestResult(models.Model):
     response_status_code = models.IntegerField(null=True, blank=True)
     response_headers = models.JSONField(default=dict, blank=True)
     response_body = models.JSONField(default=dict, blank=True, null=True)
+    request_headers = models.JSONField(default=dict, blank=True)
+    request_body = models.JSONField(default=dict, blank=True, null=True)
     error_message = models.TextField(blank=True)
     extracted_params = models.JSONField(default=dict, blank=True)
     validators = models.JSONField(default=list, blank=True)

@@ -316,13 +316,13 @@
                                     <code class="bg-light px-3 py-2 rounded flex-grow-1">
                                         {{ result.environment.base_url }}{{ result.test_case.request_url }}</code>
                                 </div>
-
+                            {{ result.test_results.request_headers }}
                                 <h6 class="text-muted mb-2">Headers</h6>
-                                <code><pre class="bg-light p-3 rounded">{{ result.test_case.request_headers|pprint }}</pre></code>
+                                <code><pre class="bg-light p-3 rounded">{{ result.request_headers|pprint }}</pre></code>
 
                                 {% if result.test_case.request_body %}
                                     <h6 class="text-muted mb-2">Body</h6>
-                                    <code><pre class="bg-light p-3 rounded">{{ result.test_case.request_body|pprint }}</pre></code>
+                                    <code><pre class="bg-light p-3 rounded">{{ result.request_body|pprint }}</pre></code>
                                 {% endif %}
                             </div>
 

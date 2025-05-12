@@ -616,6 +616,8 @@ def test_suite_run(request, pk):
                 response_status_code=result.get('response_status_code'),
                 response_headers=result.get('response_headers', {}),
                 response_body=result.get('response_body'),
+                request_headers = result.get('request_headers', {}),
+                request_body=result.get('request_body'),
                 error_message=result.get('error_message', ''),
                 extracted_params=result.get('extracted_params', {})
             )

@@ -233,6 +233,8 @@ def execute_test_case(test_case, environment, variables=None):
         logger.exception(f"Error executing test case: {e}")
         return {
             "status": "error",
+            "request_headers": {},
+            "request_body": {},
             "response_time": 0,
             "response_status_code": None,
             "response_headers": {},
@@ -279,12 +281,15 @@ def _execute_with_requests(test_case, environment, variables=None):
 
         # 替换请求头中的变量
         headers = replace_variables(headers, variables)
-        print("Headers after variable replacement:", headers)
 
         kwargs = {
             "headers": headers,
             "timeout": 30
         }
+
+        # 保存原始请求头和请求体，用于结果记录
+        original_headers = headers.copy()
+        original_body = None
 
         # 根据请求体格式处理请求数据
         if hasattr(test_case, 'request_body') and test_case.request_body and test_case.request_method in ['POST', 'PUT',
@@ -299,8 +304,12 @@ def _execute_with_requests(test_case, environment, variables=None):
                     # 如果不是JSON，保持原样
                     pass
 
+            # 保存原始请求体（替换变量前）
+            original_body = request_body
+
             # 替换请求体中的变量
             request_body = replace_variables(request_body, variables)
+            print(f"##Request body after variable replacement: {request_body}")
 
             # 根据请求体格式设置请求参数
             if hasattr(test_case, 'request_body_format'):
@@ -487,6 +496,8 @@ def _execute_with_requests(test_case, environment, variables=None):
 
         return {
             "status": status,
+            "request_headers": original_headers,  # 保存原始请求头
+            "request_body": original_body,  # 保存原始请求体
             "response_status_code": response.status_code,
             "response_headers": dict(response.headers),
             "response_body": response_body,
@@ -498,6 +509,8 @@ def _execute_with_requests(test_case, environment, variables=None):
         logger.exception(f"HTTP request error: {e}")
         return {
             "status": "error",
+            "request_headers": headers if 'headers' in locals() else {},
+            "request_body": original_body if 'original_body' in locals() else {},
             "response_status_code": None,
             "response_headers": {},
             "response_body": {},
@@ -507,6 +520,8 @@ def _execute_with_requests(test_case, environment, variables=None):
         logger.exception(f"Unexpected error in direct HTTP request: {e}")
         return {
             "status": "error",
+            "request_headers": headers if 'headers' in locals() else {},
+            "request_body": original_body if 'original_body' in locals() else {},
             "response_status_code": None,
             "response_headers": {},
             "response_body": {},
