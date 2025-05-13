@@ -62,35 +62,17 @@ def dashboard(request):
         'skipped': TestResult.objects.filter(status='skipped').count(),
     }
 
-    # 模拟最近活动数据
-    recent_activities = [
-        {
-            'action': 'Test run completed',
-            'timestamp': timezone.now() - datetime.timedelta(hours=2),
-            'description': 'API Integration Test Suite completed successfully'
-        },
-        {
-            'action': 'Test case created',
-            'timestamp': timezone.now() - datetime.timedelta(hours=5),
-            'description': 'New test case "Login Authentication" added to Auth Project'
-        },
-        {
-            'action': 'Project updated',
-            'timestamp': timezone.now() - datetime.timedelta(days=1),
-            'description': 'Project "Payment Gateway" description and settings updated'
-        },
-        {
-            'action': 'Test run failed',
-            'timestamp': timezone.now() - datetime.timedelta(days=1, hours=6),
-            'description': 'Checkout Process Test Suite failed with 3 errors'
-        },
-        {
-            'action': 'Environment created',
-            'timestamp': timezone.now() - datetime.timedelta(days=2),
-            'description': 'New staging environment created for E-commerce Project'
-        },
-    ]
-
+    recent_activities =[]
+    activities = TestRun.objects.all().order_by('-created_at')
+    for activity in activities:
+        action = activity.name.split(': ')[0]
+        timestamp = activity.created_at
+        description = f"{activity.name} 执行结果为： {activity.status}"
+        recent_activities.append({
+            'action': action,
+            'timestamp': timestamp,
+            'description': description
+        })
     context = {
         'projects_count': projects_count,
         'test_cases_count': test_cases_count,

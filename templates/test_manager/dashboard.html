@@ -210,16 +210,16 @@
                         <li class="list-group-item">
                             <div class="d-flex">
                                 <div class="timeline-icon
-                                    {% if 'created' in activity.action %}bg-success
-                                    {% elif 'updated' in activity.action %}bg-primary
-                                    {% elif 'deleted' in activity.action %}bg-danger
-                                    {% elif 'run' in activity.action %}bg-warning
+                                    {% if 'completed' in activity.description %}bg-success
+                                    {% elif 'pending' in activity.description %}bg-primary
+                                    {% elif 'failed' in activity.description %}bg-danger
+                                    {% elif 'running' in activity.description %}bg-warning
                                     {% else %}bg-info{% endif %}">
                                     <i class="bi
-                                        {% if 'created' in activity.action %}bi-plus-lg
-                                        {% elif 'updated' in activity.action %}bi-pencil
-                                        {% elif 'deleted' in activity.action %}bi-trash
-                                        {% elif 'run' in activity.action %}bi-play
+                                        {% if 'completed' in activity.description %}bi-check-lg
+                                        {% elif 'pending' in activity.description %}bi-arrow-repeat
+                                        {% elif 'failed' in activity.description %}bi-exclamation-diamond
+                                        {% elif 'running' in activity.description %}bi-arrow-clockwise
                                         {% else %}bi-activity{% endif %}"></i>
                                 </div>
                                 <div class="ms-3">
