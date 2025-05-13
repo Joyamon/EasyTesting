@@ -167,9 +167,9 @@
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(function() {
             // Show a temporary tooltip or notification
-            alert('Copied to clipboard!');
+            alert('Base URL 已复制到剪切板');
         }, function(err) {
-            console.error('Could not copy text: ', err);
+            console.error('请重试: ', err);
         });
     }
 </script>

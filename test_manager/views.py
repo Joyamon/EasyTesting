@@ -480,7 +480,7 @@ def test_case_run(request, pk):
 
         messages.success(
             request,
-            f'Test case execution started. You can check the results in the test run details page.'
+            f'测试用例执行已开始。您可以在测试运行详情页中查看结果'
         )
         return redirect('test_run_detail', pk=test_run.pk)
 
@@ -700,7 +700,7 @@ def test_suite_run(request, pk):
 
         messages.success(
             request,
-            f'Test suite execution started. You can check the results in the test run details page.'
+            f'测试套件已开始执行。您可以在测试运行详情页中查看结果'
         )
         return redirect('test_run_detail', pk=test_run.pk)
 
