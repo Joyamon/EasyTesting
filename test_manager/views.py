@@ -5,6 +5,8 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+from .async_executor import execute_test_suite_async
 from .models import (
     Project, Environment, TestCase, TestSuite,
     TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup
@@ -665,8 +667,12 @@ def test_suite_edit(request, pk):
     return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': 'Edit Test Suite'})
 
 
+
 @login_required
 def test_suite_run(request, pk):
+    """
+    异步执行测试套件
+    """
     test_suite = get_object_or_404(TestSuite, pk=pk)
 
     if request.method == 'POST':
@@ -684,49 +690,31 @@ def test_suite_run(request, pk):
                 case_id = key.replace('case_environment_', '')
                 case_environments[int(case_id)] = int(value)
 
-        # Create a test run
+        # 创建测试运行记录
         test_run = TestRun.objects.create(
             name=request.POST.get('name', f"Suite run: {test_suite.name}"),
             project=test_suite.project,
             test_suite=test_suite,
             environment=environment,
-            status='running',
+            status='running',  # 初始状态为运行中
             start_time=timezone.now(),
             created_by=request.user
         )
 
-        # Execute the test suite
-        results = execute_test_suite(test_suite, environment, case_environments)
+        # 异步执行测试套件
+        execute_test_suite_async(
+            test_suite=test_suite,
+            environment=environment,
+            case_environments=case_environments,
+            test_run=test_run,
+            user=request.user,
+            execute_test_suite_func=execute_test_suite
+        )
 
-        # Create test results
-        for result in results:
-            # 获取测试用例使用的环境
-            env_id = result.get('environment_id', environment.id)
-            test_env = get_object_or_404(Environment, id=env_id)
-
-            TestResult.objects.create(
-                test_run=test_run,
-                test_case_id=result['test_case_id'],
-                environment=test_env,
-                status=result['status'],
-                response_time=result.get('response_time'),
-                response_status_code=result.get('response_status_code'),
-                response_headers=result.get('response_headers', {}),
-                response_body=result.get('response_body'),
-                request_headers = result.get('request_headers', {}),
-                request_body=result.get('request_body'),
-                error_message=result.get('error_message', ''),
-                extracted_params=result.get('extracted_params', {})
-            )
-
-        # Update test run
-        failed_results = [r for r in results if r['status'] != 'passed']
-        test_run.status = 'failed' if failed_results else 'completed'
-        test_run.end_time = timezone.now()
-        test_run.save()
-
-        messages.success(request,
-                         f'Test suite executed. {len(results) - len(failed_results)}/{len(results)} tests passed.')
+        messages.success(
+            request,
+            f'Test suite execution started. You can check the results in the test run details page.'
+        )
         return redirect('test_run_detail', pk=test_run.pk)
 
     environments = Environment.objects.filter(project=test_suite.project)

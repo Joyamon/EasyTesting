@@ -1,46 +1,41 @@
 from django import template
+from django.utils.safestring import mark_safe
 import json
+import pprint
 
 register = template.Library()
 
 
 @register.filter
 def pprint(value):
-    """
-    Pretty print JSON or dict objects
-    """
+    """Pretty print a JSON or dict object"""
     if isinstance(value, str):
         try:
-            value = json.loads(value)
-        except:
-            pass
-
-    if isinstance(value, (dict, list)):
-        return json.dumps(value, indent=2, ensure_ascii=False)
-    return value
+            # Try to parse as JSON
+            parsed = json.loads(value)
+            return json.dumps(parsed, indent=2, sort_keys=True)
+        except (ValueError, TypeError):
+            # If not JSON, return as is
+            return value
+    elif isinstance(value, (dict, list)):
+        # If already a dict or list, pretty print it
+        return json.dumps(value, indent=2, sort_keys=True)
+    else:
+        # For other types, use Python's pprint
+        return pprint.pformat(value)
 
 
 @register.filter
 def get_item(dictionary, key):
-    """
-    Get an item from a dictionary using the key
-    """
-    if not dictionary:
+    """Get an item from a dictionary using a key"""
+    if dictionary is None:
         return None
-
-    if isinstance(dictionary, str):
-        try:
-            dictionary = json.loads(dictionary)
-        except:
-            return None
-
     return dictionary.get(key)
 
 
 @register.filter
-def multiply(value, arg):
-    """将值乘以参数"""
-    try:
-        return int(value) * int(arg)
-    except (ValueError, TypeError):
+def percentage(value, total):
+    """Calculate percentage of value from total"""
+    if total == 0:
         return 0
+    return (value / total) * 100
