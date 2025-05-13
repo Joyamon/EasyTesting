@@ -45,3 +45,12 @@ def percentage(value, total):
     if total == 0:
         return 0
     return (value / total) * 100
+
+
+@register.filter
+def multiply(value, arg):
+    """将值乘以参数"""
+    try:
+        return int(value) * int(arg)
+    except (ValueError, TypeError):
+        return 0

@@ -179,11 +179,6 @@
                           <span class="badge bg-warning me-1">Error: {{ error_tests }}</span>
                           <span class="badge bg-secondary">Skipped: {{ skipped_tests }}</span>
                       </div>
-                      <div>
-                          <button class="btn btn-sm btn-outline-primary" onclick="exportResults()">
-                              <i class="bi bi-download"></i> Export Results
-                          </button>
-                      </div>
                   </div>
 
                   {% if test_run.status == 'running' %}
@@ -574,10 +569,7 @@
           const urlParams = new URLSearchParams(window.location.search);
           const status = urlParams.get('status');
 
-          // Export results function
-          window.exportResults = function() {
-              alert('Export functionality will be implemented in a future update.');
-          };
+
 
           // Fix for modal backdrop issues
           const detailsButtons = document.querySelectorAll('.details-btn');

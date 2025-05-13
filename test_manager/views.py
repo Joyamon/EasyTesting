@@ -488,7 +488,6 @@ def test_case_run(request, pk):
     return render(request, 'test_manager/test_case_run.html', {'test_case': test_case, 'environments': environments})
 
 
-
 # Test Suite views
 @login_required
 def test_suite_list(request):
@@ -656,7 +655,6 @@ def test_suite_edit(request, pk):
     return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': 'Edit Test Suite'})
 
 
-
 @login_required
 def test_suite_run(request, pk):
     """
@@ -757,15 +755,18 @@ def test_run_detail(request, pk):
 
     # 获取每页显示的记录数
     per_page = request.GET.get('per_page', 10)
+    status = request.GET.get('status', '')
     try:
         per_page = int(per_page)
     except ValueError:
         per_page = 10
 
     # 分页获取测试结果
-    all_test_results = TestResult.objects.filter(test_run=test_run)
+    if status:
+        all_test_results = TestResult.objects.filter(test_run=test_run, status=status)
+    else:
+        all_test_results = TestResult.objects.filter(test_run=test_run)
     test_results = paginate_queryset(request, all_test_results, per_page)
-    print("test_results:", test_results)
 
     # Calculate statistics
     total_tests = all_test_results.count()
