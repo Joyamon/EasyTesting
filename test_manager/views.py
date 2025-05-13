@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from .async_executor import execute_test_suite_async
+from .async_executor import execute_test_suite_async, execute_test_case_async
 from .models import (
     Project, Environment, TestCase, TestSuite,
     TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup
@@ -469,35 +469,24 @@ def test_case_run(request, pk):
             created_by=request.user
         )
 
-        # Execute the test case
-        result = execute_test_case(test_case, environment)
-
-        # Update test run
-        test_run.status = 'completed' if result['status'] == 'passed' else 'failed'
-        test_run.end_time = timezone.now()
-        test_run.save()
-
-        # Create test result
-        test_result = TestResult.objects.create(
-            test_run=test_run,
+        # 异步执行测试用例
+        execute_test_case_async(
             test_case=test_case,
             environment=environment,
-            status=result['status'],
-            response_time=result.get('response_time'),
-            response_status_code=result.get('response_status_code'),
-            response_headers=result.get('response_headers', {}),
-            response_body=result.get('response_body'),
-            error_message=result.get('error_message', ''),
-            extracted_params=result.get('extracted_params', {}),
-            validators=result.get('validators', [])
-
+            test_run=test_run,
+            user=request.user,
+            execute_test_case_func=execute_test_case
         )
 
-        messages.success(request, f'Test case executed. Result: {result["status"]}')
+        messages.success(
+            request,
+            f'Test case execution started. You can check the results in the test run details page.'
+        )
         return redirect('test_run_detail', pk=test_run.pk)
 
     environments = Environment.objects.filter(project=test_case.project)
     return render(request, 'test_manager/test_case_run.html', {'test_case': test_case, 'environments': environments})
+
 
 
 # Test Suite views
