@@ -512,11 +512,13 @@ def test_suite_list(request):
     except ValueError:
         per_page = 10
 
+    # 初始化查询条件
+    query = Q()
+
     if project_id:
         project = get_object_or_404(Project, pk=project_id)
-
-        # 构建查询条件
-        query = Q(project=project)
+        # 添加项目条件
+        query &= Q(project=project)
 
         # 如果指定了分组，则只显示该分组下的测试套件
         if group_id:
@@ -534,6 +536,7 @@ def test_suite_list(request):
             query &= (Q(name__icontains=search_query) |
                       Q(description__icontains=search_query))
 
+        # 应用查询条件
         all_test_suites = TestSuite.objects.filter(query).order_by('-created_at')
         test_suites = paginate_queryset(request, all_test_suites, per_page)
 
@@ -547,15 +550,12 @@ def test_suite_list(request):
             'search_query': search_query
         }
     else:
-        # 构建查询条件
-        query = Q()
-
         # 如果有搜索查询，添加搜索条件
         if search_query:
             query &= (Q(name__icontains=search_query) |
                       Q(description__icontains=search_query))
 
-        all_test_suites = TestSuite.objects.all().order_by('-created_at')
+        all_test_suites = TestSuite.objects.filter(query).order_by('-created_at')
         test_suites = paginate_queryset(request, all_test_suites, per_page)
 
         context = {
