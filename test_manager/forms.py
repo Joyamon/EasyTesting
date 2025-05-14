@@ -1,6 +1,6 @@
 from django import forms
 from .models import (
-    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup
+    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport
 )
 import json
 
@@ -28,7 +28,7 @@ class EnvironmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields['variables_json'].initial = json.dumps(self.instance.variables,ensure_ascii=False, indent=2)
+            self.fields['variables_json'].initial = json.dumps(self.instance.variables, ensure_ascii=False, indent=2)
 
     def clean_variables_json(self):
         variables_json = self.cleaned_data.get('variables_json')
@@ -82,7 +82,7 @@ class TestCaseForm(forms.ModelForm):
     class Meta:
         model = TestCase
         fields = [
-            'name', 'project','group', 'description', 'request_method',
+            'name', 'project', 'group', 'description', 'request_method',
             'request_url', 'expected_status_code', 'request_body_format'
         ]
         widgets = {
@@ -97,7 +97,8 @@ class TestCaseForm(forms.ModelForm):
             # 根据请求体格式初始化相应的字段
             if self.instance.request_body:
                 if self.instance.request_body_format == 'json':
-                    self.fields['request_body_json'].initial = json.dumps(self.instance.request_body,ensure_ascii=False, indent=2)
+                    self.fields['request_body_json'].initial = json.dumps(self.instance.request_body,
+                                                                          ensure_ascii=False, indent=2)
                 elif self.instance.request_body_format == 'form-data':
                     # 将字典转换为键值对格式
                     form_data_lines = []
@@ -105,8 +106,10 @@ class TestCaseForm(forms.ModelForm):
                         form_data_lines.append(f"{key}={value}")
                     self.fields['request_body_form_data'].initial = "\n".join(form_data_lines)
 
-            self.fields['validation_rules_json'].initial = json.dumps(self.instance.validation_rules,ensure_ascii=False, indent=2)
-            self.fields['extract_params_json'].initial = json.dumps(self.instance.extract_params, ensure_ascii=False,indent=2)
+            self.fields['validation_rules_json'].initial = json.dumps(self.instance.validation_rules,
+                                                                      ensure_ascii=False, indent=2)
+            self.fields['extract_params_json'].initial = json.dumps(self.instance.extract_params, ensure_ascii=False,
+                                                                    indent=2)
 
     def clean_request_headers_json(self):
         headers_json = self.cleaned_data.get('request_headers_json')
@@ -198,7 +201,7 @@ class TestCaseForm(forms.ModelForm):
 class TestSuiteForm(forms.ModelForm):
     class Meta:
         model = TestSuite
-        fields = ['name', 'project','group', 'description']
+        fields = ['name', 'project', 'group', 'description']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
         }
@@ -324,3 +327,19 @@ class TestSuiteGroupForm(forms.ModelForm):
                 get_child_ids(child.pk)
 
             self.fields['parent'].queryset = self.fields['parent'].queryset.exclude(pk__in=exclude_ids)
+
+
+class TestReportForm(forms.ModelForm):
+    class Meta:
+        model = TestReport
+        fields = ['name', 'description', 'report_format', 'is_public']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class GenerateReportForm(forms.Form):
+    name = forms.CharField(max_length=255)
+    description = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+    report_format = forms.ChoiceField(choices=TestReport.REPORT_FORMAT_CHOICES)
+    is_public = forms.BooleanField(required=False, initial=False)

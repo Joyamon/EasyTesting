@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib import admin
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult
+    TestSuiteCase, TestRun, TestResult, TestReport
 )
 
 
@@ -61,6 +61,14 @@ class TestResultAdmin(admin.ModelAdmin):
     search_fields = ('test_case__name', 'error_message')
     list_filter = ('test_run', 'status', 'created_at')
     list_per_page = 10
+
+
+@admin.register(TestReport)
+class TestReportAdmin(admin.ModelAdmin):
+    list_display = ('name', 'project', 'report_type', 'report_format', 'created_at')
+    search_fields = ('name', 'summary')
+    list_filter = ('project', 'report_type', 'created_at')
+    date_hierarchy = 'created_at'
 
 
 admin.site.site_header = '测试管理后台'

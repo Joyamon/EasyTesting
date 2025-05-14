@@ -1,3 +1,5 @@
+import uuid
+from django.urls import reverse
 from django.db import models
 from django.contrib.auth.models import User
 import json
@@ -143,6 +145,12 @@ class TestRun(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def duration(self):
+        if self.start_time and self.end_time:
+            return (self.end_time - self.start_time).total_seconds()
+        return None
 
 
 class TestResult(models.Model):
@@ -366,3 +374,82 @@ class EmailConfig(models.Model):
 
         settings.DEFAULT_FROM_EMAIL = f"{config.default_from_name} <{config.default_from_email}>"
         return True
+
+
+class TestSuiteRun(models.Model):
+    name = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_suite_runs')
+    test_suite = models.ForeignKey(TestSuite, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='test_suite_runs')
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='test_suite_runs')
+    status = models.CharField(max_length=20, choices=TestRun.STATUS_CHOICES, default='pending')
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_test_suite_runs')
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def duration(self):
+        if self.start_time and self.end_time:
+            return (self.end_time - self.start_time).total_seconds()
+        return None
+
+
+class TestReport(models.Model):
+    """测试报告模型"""
+    REPORT_TYPE_CHOICES = [
+        ('test_run', 'Test Run'),
+        ('test_suite_run', 'Test Suite Run'),
+        ('custom', 'Custom'),
+    ]
+
+    REPORT_FORMAT_CHOICES = [
+        ('html', 'HTML'),
+        ('pdf', 'PDF'),
+        ('json', 'JSON'),
+    ]
+
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='test_reports')
+    report_type = models.CharField(max_length=20, choices=REPORT_TYPE_CHOICES, default='test_run')
+    report_format = models.CharField(max_length=10, choices=REPORT_FORMAT_CHOICES, default='html')
+    content = models.TextField()
+    test_run = models.ForeignKey(TestRun, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
+    test_suite_run = models.ForeignKey(TestSuiteRun, on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='reports')
+    is_public = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('test_report_detail', kwargs={'pk': self.pk})
+
+    def get_delete_url(self):
+        return reverse('test_report_delete', kwargs={'pk': self.pk})
+
+    def get_summary(self):
+        """返回报告的摘要信息"""
+        if self.report_format == 'json':
+            try:
+                data = json.loads(self.content)
+                return {
+                    'total': data.get('total', 0),
+                    'passed': data.get('passed', 0),
+                    'failed': data.get('failed', 0),
+                    'error': data.get('error', 0),
+                    'skipped': data.get('skipped', 0),
+                    'success_rate': data.get('success_rate', '0%'),
+                }
+            except:
+                return {}
+        return {}

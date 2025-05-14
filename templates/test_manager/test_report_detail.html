@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-block justify-content-between align-items-center mb-4">
+        <h1>{{ report.name }}</h1>
+        <div class="btn-group">
+            <a href="{% url 'test_report_list' %}" class="btn btn-sm btn-secondary">返回列表</a>
+            <a href="{% url 'test_report_delete' report.pk %}" class="btn btn-sm btn-danger">删除报告</a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>项目:</strong> {{ report.project.name }}</p>
+                    <p><strong>描述:</strong> {{ report.description|default:"无" }}</p>
+                    <p><strong>报告类型:</strong>
+                        {% if report.report_type == 'test_run' %}
+                        单个测试用例
+                        {% elif report.report_type == 'test_suite_run' %}
+                        测试套件
+                        {% else %}
+                        自定义
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>格式:</strong> {{ report.report_format|upper }}</p>
+                    <p><strong>创建时间:</strong> {{ report.created_at|date:"Y-m-d H:i:s" }}</p>
+                    <p><strong>更新时间:</strong> {{ report.updated_at|date:"Y-m-d H:i:s" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">报告内容</h2>
+        </div>
+        <div class="card-body">
+            {% if report.report_format == 'html' %}
+                <div class="report-content">
+                    {{ report_content|safe }}
+                </div>
+            {% elif report.report_format == 'json' %}
+                <div class="report-json">
+                    <pre>{{ report_content|pprint }}</pre>
+                </div>
+            {% else %}
+                <div class="report-content">
+                    <pre>{{ report_content }}</pre>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .report-json pre {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+</style>
+{% endblock %}

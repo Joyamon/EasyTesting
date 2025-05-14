@@ -5,26 +5,25 @@
 {% block header %}Test Runs{% endblock %}
 
 {% block content %}
-    <div class="card">
-        <div class="card-body">
-            {% if project %}
-                <div class="alert alert-info mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <div>
-                            <strong>Filtered by Project:</strong> {{ project.name }}
-                            <a href="{% url 'test_run_list' %}" class="btn btn-sm btn-outline-primary ms-3">
-                                <i class="bi bi-x-lg"></i> Clear Filter
-                            </a>
-                        </div>
-                    </div>
+<div class="card">
+    <div class="card-body">
+        {% if project %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>
+                    <strong>Filtered by Project:</strong> {{ project.name }}
+                    <a href="{% url 'test_run_list' %}" class="btn btn-sm btn-outline-primary ms-3">
+                        <i class="bi bi-x-lg"></i> Clear Filter
+                    </a>
                 </div>
-            {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
-
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Project</th>
@@ -35,19 +34,17 @@
                         <th>Created By</th>
                         <th class="text-end">Actions</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     {% for test_run in test_runs %}
                         <tr>
                             <td>
-                                <a href="{% url 'test_run_detail' pk=test_run.pk %}"
-                                   class="fw-medium text-decoration-none text-dark">
+                                <a href="{% url 'test_run_detail' pk=test_run.pk %}" class="fw-medium text-decoration-none text-dark">
                                     {{ test_run.name }}
                                 </a>
                             </td>
                             <td>
-                                <a href="{% url 'project_detail' pk=test_run.project.pk %}"
-                                   class="text-decoration-none">
+                                <a href="{% url 'project_detail' pk=test_run.project.pk %}" class="text-decoration-none">
                                     {{ test_run.project.name }}
                                 </a>
                             </td>
@@ -67,12 +64,13 @@
                             <td>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</td>
                             <td>{{ test_run.created_by.username }}</td>
                             <td class="text-end">
-                                <a href="{% url 'test_run_detail' pk=test_run.pk %}"
-                                   class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'test_run_detail' pk=test_run.pk %}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'test_run_delete' pk=test_run.pk %}"
-                                   class="btn btn-sm btn-outline-danger">
+                                <a href="{% url 'generate_test_run_report' test_run.id %}" class="btn btn-sm btn-info" title="生成报告">
+                                   <i class="bi bi-file-earmark-text"></i>
+                                </a>
+                                <a href="{% url 'test_run_delete' pk=test_run.pk %}" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>
@@ -88,12 +86,11 @@
                             </td>
                         </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% include 'pagination.html' with page_obj=test_runs %}
-
-
+                </tbody>
+            </table>
         </div>
+
+        {% include 'pagination.html' with page_obj=test_runs %}
     </div>
+</div>
 {% endblock %}

@@ -1,16 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Run Test Suite: {{ test_suite.name }} - EasyTesting{% endblock %}
-
-{% block header %}Run Test Suite: {{ test_suite.name }}{% endblock %}
-
-{% block header_buttons %}
-    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left"></i> Back to Test Suite
-    </a>
-{% endblock %}
+{% block title %}测试套件运行{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>测试套件运行</h1>
+        <div>
+            {% if test_suite_run.status != 'PENDING' %}
+            <a href="{% url 'generate_test_suite_run_report' test_suite_run.id %}" class="btn btn-success">生成报告</a>
+            {% endif %}
+            <a href="{% url 'test_suite_detail' test_suite_run.test_suite.id %}" class="btn btn-outline-secondary">返回测试套件</a>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12 mb-4">
             <div class="card">
@@ -137,6 +140,7 @@
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

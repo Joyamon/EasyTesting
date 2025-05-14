@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -9,11 +10,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .async_executor import execute_test_suite_async, execute_test_case_async
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup
+    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, TestSuiteRun
 )
 from .forms import (
     ProjectForm, EnvironmentForm, TestCaseForm, TestSuiteForm,
-    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm
+    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm, GenerateReportForm
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
 
@@ -43,6 +44,7 @@ def dashboard(request):
     # Get recent test runs with pagination
     all_test_runs = TestRun.objects.order_by('-created_at')
     recent_test_runs = paginate_queryset(request, all_test_runs, 5)
+    report_count = TestReport.objects.count()
 
     # Get test run statistics
     test_run_stats = {
@@ -78,6 +80,7 @@ def dashboard(request):
         'test_cases_count': test_cases_count,
         'test_suites_count': test_suites_count,
         'test_runs_count': test_runs_count,
+        'report_count': report_count,
         'recent_test_runs': recent_test_runs,
         'test_run_stats': test_run_stats,
         'test_result_stats': test_result_stats,
@@ -1186,4 +1189,751 @@ def get_test_case_groups_data(request, project_id):
 
     return JsonResponse({
         'groups': group_tree
+    })
+
+
+@login_required
+def test_report_list(request):
+    """测试报告列表页面"""
+    project_id = request.GET.get('project')
+    search_query = request.GET.get('q', '')
+
+    reports = TestReport.objects.all()
+
+    if project_id:
+        reports = reports.filter(project_id=project_id)
+
+    if search_query:
+        reports = reports.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    # 分页
+    paginator = Paginator(reports, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 获取所有项目，用于筛选
+    projects = Project.objects.all()
+
+    context = {
+        'page_obj': page_obj,
+        'projects': projects,
+        'selected_project': project_id,
+        'search_query': search_query,
+    }
+
+    return render(request, 'test_manager/test_report_list.html', context)
+
+
+@login_required
+def test_report_detail(request, pk):
+    """测试报告详情页面"""
+    report = get_object_or_404(TestReport, pk=pk)
+
+    context = {
+        'report': report,
+    }
+
+    if report.report_format == 'html':
+        # 如果是HTML格式，直接渲染内容
+        context['report_content'] = report.content
+    elif report.report_format == 'json':
+        # 如果是JSON格式，解析并格式化显示
+        try:
+            context['report_content'] = json.loads(report.content)
+        except:
+            context['report_content'] = report.content
+    else:
+        context['report_content'] = report.content
+
+    return render(request, 'test_manager/test_report_detail.html', context)
+
+
+@login_required
+def test_report_delete(request, pk):
+    """删除测试报告"""
+    report = get_object_or_404(TestReport, pk=pk)
+
+    if request.method == 'POST':
+        project_id = report.project.id
+        report.delete()
+        messages.success(request, f'测试报告 "{report.name}" 已成功删除')
+        return redirect('test_report_list')
+
+    return render(request, 'test_manager/test_report_confirm_delete.html', {'report': report})
+
+
+@login_required
+def generate_test_run_report(request, pk):
+    """从测试运行生成测试报告"""
+    test_run = get_object_or_404(TestRun, pk=pk)
+
+    if request.method == 'POST':
+        form = GenerateReportForm(request.POST)
+        if form.is_valid():
+            # 创建测试报告
+            report = TestReport(
+                name=form.cleaned_data['name'],
+                description=form.cleaned_data['description'],
+                project=test_run.project,  # 直接使用test_run.project
+                report_type='test_run',
+                report_format=form.cleaned_data['report_format'],
+                test_run=test_run,
+                is_public=form.cleaned_data['is_public']
+            )
+
+            # 生成报告内容
+            if form.cleaned_data['report_format'] == 'json':
+                # 生成JSON格式的报告
+                content = {
+                    'id': str(test_run.id),
+                    'name': test_run.name,
+                    'project': {
+                        'id': str(test_run.project.id),
+                        'name': test_run.project.name,
+                    },
+                    'environment': {
+                        'id': str(test_run.environment.id),
+                        'name': test_run.environment.name,
+                        'base_url': test_run.environment.base_url,
+                    },
+                    'status': test_run.status,
+                    'start_time': test_run.start_time.isoformat() if test_run.start_time else None,
+                    'end_time': test_run.end_time.isoformat() if test_run.end_time else None,
+                    'duration': test_run.duration,
+                    'results': []
+                }
+
+                # 添加测试套件信息（如果有）
+                if test_run.test_suite:
+                    content['test_suite'] = {
+                        'id': str(test_run.test_suite.id),
+                        'name': test_run.test_suite.name,
+                    }
+
+                # 添加测试结果
+                for result in test_run.test_results.all():
+                    result_data = {
+                        'id': str(result.id),
+                        'status': result.status,
+                        'response_status_code': result.response_status_code,
+                        'response_time': result.response_time,
+                        'test_case': {
+                            'id': str(result.test_case.id),
+                            'name': result.test_case.name,
+                            'request_method': result.test_case.request_method,
+                            'request_url': result.test_case.request_url,
+                        }
+                    }
+
+                    # 添加可选字段
+                    if hasattr(result, 'response_headers') and result.response_headers:
+                        result_data['response_headers'] = result.response_headers
+
+                    if hasattr(result, 'response_body') and result.response_body:
+                        result_data['response_body'] = result.response_body
+
+                    if hasattr(result, 'request_headers') and result.request_headers:
+                        result_data['request_headers'] = result.request_headers
+
+                    if hasattr(result, 'request_body') and result.request_body:
+                        result_data['request_body'] = result.request_body
+
+                    if hasattr(result, 'error_message') and result.error_message:
+                        result_data['error_message'] = result.error_message
+
+                    content['results'].append(result_data)
+
+                report.content = json.dumps(content, indent=2)
+            else:
+                # 生成HTML格式的报告
+                html_content = f"""
+                <div class="test-report">
+                    <h1>{test_run.name} - 测试运行报告</h1>
+                    <div class="report-meta">
+                        <p><strong>项目:</strong> {test_run.project.name}</p>
+                        <p><strong>环境:</strong> {test_run.environment.name}</p>
+                        <p><strong>状态:</strong> <span class="status-{test_run.status.lower()}">{test_run.status}</span></p>
+                        <p><strong>开始时间:</strong> {test_run.start_time}</p>
+                        <p><strong>结束时间:</strong> {test_run.end_time}</p>
+                        <p><strong>持续时间:</strong> {test_run.duration} 秒</p>
+                """
+
+                # 添加测试套件信息（如果有）
+                if test_run.test_suite:
+                    html_content += f"""
+                        <p><strong>测试套件:</strong> {test_run.test_suite.name}</p>
+                    """
+
+                html_content += """
+                    </div>
+
+                    <h2>测试结果</h2>
+                """
+
+                # 添加测试结果
+                for result in test_run.test_results.all():
+                    html_content += f"""
+                    <div class="test-result">
+                        <h3>{result.test_case.name}</h3>
+                        <p><strong>状态:</strong> <span class="status-{result.status.lower()}">{result.status}</span></p>
+                        <p><strong>请求方法:</strong> {result.test_case.request_method}</p>
+                        <p><strong>请求URL:</strong> {result.test_case.request_url}</p>
+                        <p><strong>响应状态码:</strong> {result.response_status_code}</p>
+                        <p><strong>响应时间:</strong> {result.response_time} 毫秒</p>
+
+                        <div class="collapsible">
+                            <h4>请求头</h4>
+                            <pre>{json.dumps(result.request_headers, indent=2) if hasattr(result, 'request_headers') and result.request_headers else '无数据'}</pre>
+                        </div>
+
+                        <div class="collapsible">
+                            <h4>请求体</h4>
+                            <pre>{result.request_body if hasattr(result, 'request_body') and result.request_body else '无数据'}</pre>
+                        </div>
+
+                        <div class="collapsible">
+                            <h4>响应头</h4>
+                            <pre>{json.dumps(result.response_headers, indent=2) if hasattr(result, 'response_headers') and result.response_headers else '无数据'}</pre>
+                        </div>
+
+                        <div class="collapsible">
+                            <h4>响应体</h4>
+                            <pre>{result.response_body if hasattr(result, 'response_body') and result.response_body else '无数据'}</pre>
+                        </div>
+
+                        {f'<div class="error-message"><h4>错误信息</h4><pre>{result.error_message}</pre></div>' if hasattr(result, 'error_message') and result.error_message else ''}
+                    </div>
+                    """
+
+                html_content += """
+                </div>
+                <style>
+                    .test-report {
+                        font-family: Arial, sans-serif;
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                    .report-meta {
+                        background-color: #f5f5f5;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin-bottom: 20px;
+                    }
+                    .test-result {
+                        background-color: #f9f9f9;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin-bottom: 15px;
+                        border-left: 5px solid #ddd;
+                    }
+                    .collapsible {
+                        margin-top: 10px;
+                    }
+                    .collapsible h4 {
+                        cursor: pointer;
+                        background-color: #eee;
+                        padding: 8px;
+                        border-radius: 3px;
+                    }
+                    .collapsible pre {
+                        background-color: #f5f5f5;
+                        padding: 10px;
+                        border-radius: 3px;
+                        overflow-x: auto;
+                        white-space: pre-wrap;
+                    }
+                    .status-pass, .status-success, .status-completed {
+                        color: green;
+                        font-weight: bold;
+                    }
+                    .status-fail, .status-failure, .status-error, .status-failed {
+                        color: red;
+                        font-weight: bold;
+                    }
+                    .error-message {
+                        background-color: #ffeeee;
+                        padding: 10px;
+                        border-radius: 3px;
+                        margin-top: 10px;
+                    }
+                    .error-message h4 {
+                        color: red;
+                    }
+                </style>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const collapsibles = document.querySelectorAll('.collapsible h4');
+                        collapsibles.forEach(function(collapsible) {
+                            collapsible.addEventListener('click', function() {
+                                this.nextElementSibling.style.display = 
+                                    this.nextElementSibling.style.display === 'none' ? 'block' : 'none';
+                            });
+                            // 初始隐藏
+                            collapsible.nextElementSibling.style.display = 'none';
+                        });
+                    });
+                </script>
+                """
+
+                report.content = html_content
+
+            report.save()
+            messages.success(request, f'测试报告 "{report.name}" 已成功生成')
+            return redirect('test_report_detail', pk=report.pk)
+    else:
+        # 默认报告名称
+        default_name = f"{test_run.name} - 测试报告 - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        form = GenerateReportForm(initial={'name': default_name, 'report_format': 'html'})
+
+    return render(request, 'test_manager/generate_test_report.html', {
+        'form': form,
+        'test_run': test_run,
+    })
+
+
+@login_required
+def generate_test_suite_run_report(request, pk):
+    """从测试套件运行生成测试报告"""
+    test_suite_run = get_object_or_404(TestSuiteRun, pk=pk)
+
+    if request.method == 'POST':
+        form = GenerateReportForm(request.POST)
+        if form.is_valid():
+            # 创建测试报告
+            report = TestReport(
+                name=form.cleaned_data['name'],
+                description=form.cleaned_data['description'],
+                project=test_suite_run.project,
+                report_type='test_suite_run',
+                report_format=form.cleaned_data['report_format'],
+                test_suite_run=test_suite_run,
+                is_public=form.cleaned_data['is_public']
+            )
+
+            # 计算持续时间（如果可能）
+            duration = None
+            if test_suite_run.start_time and test_suite_run.end_time:
+                duration = (test_suite_run.end_time - test_suite_run.start_time).total_seconds()
+
+            # 生成报告内容
+            if form.cleaned_data['report_format'] == 'json':
+                # 生成JSON格式的报告
+                content = {
+                    'id': str(test_suite_run.id),
+                    'test_suite': {
+                        'id': str(test_suite_run.test_suite.id),
+                        'name': test_suite_run.test_suite.name,
+                    },
+                    'environment': {
+                        'id': str(test_suite_run.environment.id),
+                        'name': test_suite_run.environment.name,
+                        'base_url': test_suite_run.environment.base_url,
+                    },
+                    'status': test_suite_run.status,
+                    'start_time': test_suite_run.start_time.isoformat() if test_suite_run.start_time else None,
+                    'end_time': test_suite_run.end_time.isoformat() if test_suite_run.end_time else None,
+                    'duration': duration,
+                    'test_runs': []
+                }
+
+                # 添加测试运行
+                for test_run in test_suite_run.test_runs.all():
+                    # 计算测试运行的持续时间（如果可能）
+                    run_duration = None
+                    if test_run.start_time and test_run.end_time:
+                        run_duration = (test_run.end_time - test_run.start_time).total_seconds()
+
+                    run_data = {
+                        'id': str(test_run.id),
+                        'name': test_run.name,
+                        'status': test_run.status,
+                        'start_time': test_run.start_time.isoformat() if test_run.start_time else None,
+                        'end_time': test_run.end_time.isoformat() if test_run.end_time else None,
+                        'duration': run_duration,
+                        'results': []
+                    }
+
+                    # 添加测试结果
+                    for result in test_run.test_results.all():
+                        result_data = {
+                            'id': str(result.id),
+                            'status': result.status,
+                            'response_status_code': result.response_status_code,
+                            'response_time': result.response_time,
+                            'test_case': {
+                                'id': str(result.test_case.id),
+                                'name': result.test_case.name,
+                                'request_method': result.test_case.request_method,
+                                'request_url': result.test_case.request_url,
+                            }
+                        }
+
+                        if hasattr(result, 'error_message') and result.error_message:
+                            result_data['error_message'] = result.error_message
+
+                        run_data['results'].append(result_data)
+
+                    content['test_runs'].append(run_data)
+
+                # 计算统计信息
+                total_runs = len(content['test_runs'])
+                passed_runs = sum(1 for run in content['test_runs'] if run['status'] == 'completed')
+                failed_runs = sum(1 for run in content['test_runs'] if run['status'] == 'failed')
+                error_runs = sum(1 for run in content['test_runs'] if
+                                 run['status'] not in ['completed', 'failed', 'pending', 'running'])
+
+                content['summary'] = {
+                    'total': total_runs,
+                    'passed': passed_runs,
+                    'failed': failed_runs,
+                    'error': error_runs,
+                    'success_rate': f"{(passed_runs / total_runs * 100) if total_runs > 0 else 0:.2f}%"
+                }
+
+                report.content = json.dumps(content, indent=2)
+            else:
+                # 生成HTML格式的报告
+                # 计算统计信息
+                total_runs = test_suite_run.test_runs.count()
+                passed_runs = test_suite_run.test_runs.filter(status='completed').count()
+                failed_runs = test_suite_run.test_runs.filter(status='failed').count()
+                error_runs = test_suite_run.test_runs.exclude(
+                    status__in=['completed', 'failed', 'pending', 'running']).count()
+                success_rate = (passed_runs / total_runs * 100) if total_runs > 0 else 0
+
+                html_content = f"""
+                <div class="test-report">
+                    <h1>{test_suite_run.test_suite.name} - 测试套件运行报告</h1>
+                    <div class="report-meta">
+                        <p><strong>测试套件:</strong> {test_suite_run.test_suite.name}</p>
+                        <p><strong>环境:</strong> {test_suite_run.environment.name}</p>
+                        <p><strong>状态:</strong> <span class="status-{test_suite_run.status.lower()}">{test_suite_run.status}</span></p>
+                        <p><strong>开始时间:</strong> {test_suite_run.start_time}</p>
+                        <p><strong>结束时间:</strong> {test_suite_run.end_time}</p>
+                """
+
+                # 只有在有开始和结束时间时才显示持续时间
+                if duration is not None:
+                    html_content += f"""
+                        <p><strong>持续时间:</strong> {duration} 秒</p>
+                    """
+
+                html_content += """
+                    </div>
+
+                    <div class="summary">
+                        <h2>测试摘要</h2>
+                        <div class="summary-stats">
+                            <div class="stat">
+                                <div class="stat-value">{total_runs}</div>
+                                <div class="stat-label">总计</div>
+                            </div>
+                            <div class="stat stat-success">
+                                <div class="stat-value">{passed_runs}</div>
+                                <div class="stat-label">通过</div>
+                            </div>
+                            <div class="stat stat-failure">
+                                <div class="stat-value">{failed_runs}</div>
+                                <div class="stat-label">失败</div>
+                            </div>
+                            <div class="stat stat-error">
+                                <div class="stat-value">{error_runs}</div>
+                                <div class="stat-label">错误</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">{success_rate:.2f}%</div>
+                                <div class="stat-label">成功率</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>测试用例结果</h2>
+                    <table class="test-cases-table">
+                        <thead>
+                            <tr>
+                                <th>测试用例</th>
+                                <th>方法</th>
+                                <th>URL</th>
+                                <th>状态</th>
+                                <th>持续时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                """
+
+                for test_run in test_suite_run.test_runs.all():
+                    # 计算测试运行的持续时间（如果可能）
+                    run_duration = None
+                    if test_run.start_time and test_run.end_time:
+                        run_duration = (test_run.end_time - test_run.start_time).total_seconds()
+
+                    # 获取第一个测试结果（如果有）
+                    first_result = test_run.test_results.first()
+
+                    if first_result:
+                        html_content += f"""
+                        <tr class="test-case-row status-{test_run.status.lower()}">
+                            <td>{first_result.test_case.name}</td>
+                            <td>{first_result.test_case.request_method}</td>
+                            <td>{first_result.test_case.request_url}</td>
+                            <td><span class="status-badge status-{test_run.status.lower()}">{test_run.status}</span></td>
+                            <td>{run_duration} 秒</td>
+                        </tr>
+                        <tr class="test-case-details">
+                            <td colspan="5">
+                                <div class="details-content">
+                        """
+
+                        for result in test_run.test_results.all():
+                            html_content += f"""
+                                    <div class="result-item">
+                                        <h4>响应详情</h4>
+                                        <p><strong>状态码:</strong> {result.response_status_code}</p>
+                            """
+
+                            # 只有在有响应时间时才显示
+                            if result.response_time is not None:
+                                html_content += f"""
+                                        <p><strong>响应时间:</strong> {result.response_time} 毫秒</p>
+                                """
+
+                            html_content += f"""
+                                        <div class="collapsible">
+                                            <h5>请求头</h5>
+                                            <pre>{json.dumps(result.request_headers, indent=2) if hasattr(result, 'request_headers') and result.request_headers else '无数据'}</pre>
+                                        </div>
+
+                                        <div class="collapsible">
+                                            <h5>请求体</h5>
+                                            <pre>{result.request_body if hasattr(result, 'request_body') and result.request_body else '无数据'}</pre>
+                                        </div>
+
+                                        <div class="collapsible">
+                                            <h5>响应头</h5>
+                                            <pre>{json.dumps(result.response_headers, indent=2) if hasattr(result, 'response_headers') and result.response_headers else '无数据'}</pre>
+                                        </div>
+
+                                        <div class="collapsible">
+                                            <h5>响应体</h5>
+                                            <pre>{result.response_body if hasattr(result, 'response_body') and result.response_body else '无数据'}</pre>
+                                        </div>
+
+                                        {f'<div class="error-message"><h5>错误信息</h5><pre>{result.error_message}</pre></div>' if hasattr(result, 'error_message') and result.error_message else ''}
+                                    </div>
+                            """
+
+                        html_content += """
+                                </div>
+                            </td>
+                        </tr>
+                        """
+
+                html_content += """
+                        </tbody>
+                    </table>
+                </div>
+                <style>
+                    .test-report {
+                        font-family: Arial, sans-serif;
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                    .report-meta {
+                        background-color: #f5f5f5;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin-bottom: 20px;
+                    }
+                    .summary {
+                        margin-bottom: 30px;
+                    }
+                    .summary-stats {
+                        display: flex;
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                        margin-top: 15px;
+                    }
+                    .stat {
+                        background-color: #f5f5f5;
+                        border-radius: 5px;
+                        padding: 15px;
+                        text-align: center;
+                        flex: 1;
+                        min-width: 100px;
+                    }
+                    .stat-value {
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .stat-label {
+                        font-size: 14px;
+                        color: #666;
+                    }
+                    .stat-success {
+                        background-color: #e6f7e6;
+                    }
+                    .stat-success .stat-value {
+                        color: #2e7d32;
+                    }
+                    .stat-failure {
+                        background-color: #fde9e8;
+                    }
+                    .stat-failure .stat-value {
+                        color: #c62828;
+                    }
+                    .stat-error {
+                        background-color: #fff3e0;
+                    }
+                    .stat-error .stat-value {
+                        color: #e65100;
+                    }
+                    .test-cases-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    .test-cases-table th, .test-cases-table td {
+                        padding: 10px;
+                        text-align: left;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    .test-cases-table th {
+                        background-color: #f5f5f5;
+                        font-weight: bold;
+                    }
+                    .test-case-row {
+                        cursor: pointer;
+                    }
+                    .test-case-row:hover {
+                        background-color: #f9f9f9;
+                    }
+                    .test-case-row.status-completed {
+                        background-color: #f0fff0;
+                    }
+                    .test-case-row.status-failed {
+                        background-color: #fff0f0;
+                    }
+                    .test-case-row.status-error {
+                        background-color: #fffaf0;
+                    }
+                    .status-badge {
+                        display: inline-block;
+                        padding: 3px 8px;
+                        border-radius: 3px;
+                        font-size: 12px;
+                        font-weight: bold;
+                    }
+                    .status-badge.status-completed {
+                        background-color: #e6f7e6;
+                        color: #2e7d32;
+                    }
+                    .status-badge.status-failed {
+                        background-color: #fde9e8;
+                        color: #c62828;
+                    }
+                    .status-badge.status-error {
+                        background-color: #fff3e0;
+                        color: #e65100;
+                    }
+                    .test-case-details {
+                        display: none;
+                    }
+                    .details-content {
+                        padding: 15px;
+                        background-color: #f9f9f9;
+                    }
+                    .result-item {
+                        margin-bottom: 15px;
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid #eee;
+                    }
+                    .result-item:last-child {
+                        margin-bottom: 0;
+                        padding-bottom: 0;
+                        border-bottom: none;
+                    }
+                    .collapsible {
+                        margin-top: 10px;
+                    }
+                    .collapsible h5 {
+                        cursor: pointer;
+                        background-color: #eee;
+                        padding: 8px;
+                        border-radius: 3px;
+                        margin: 0;
+                    }
+                    .collapsible pre {
+                        background-color: #f5f5f5;
+                        padding: 10px;
+                        border-radius: 3px;
+                        overflow-x: auto;
+                        white-space: pre-wrap;
+                        margin-top: 5px;
+                    }
+                    .status-pass, .status-success, .status-completed, .status-passed {
+                        color: green;
+                        font-weight: bold;
+                    }
+                    .status-fail, .status-failure, .status-error, .status-failed {
+                        color: red;
+                        font-weight: bold;
+                    }
+                    .error-message {
+                        background-color: #ffeeee;
+                        padding: 10px;
+                        border-radius: 3px;
+                        margin-top: 10px;
+                    }
+                    .error-message h5 {
+                        color: red;
+                        margin-top: 0;
+                    }
+                </style>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // 折叠/展开详情
+                        const testCaseRows = document.querySelectorAll('.test-case-row');
+                        testCaseRows.forEach(function(row) {
+                            row.addEventListener('click', function() {
+                                const detailsRow = this.nextElementSibling;
+                                detailsRow.style.display = 
+                                    detailsRow.style.display === 'table-row' ? 'none' : 'table-row';
+                            });
+                        });
+
+                        // 折叠/展开可折叠内容
+                        const collapsibles = document.querySelectorAll('.collapsible h5');
+                        collapsibles.forEach(function(collapsible) {
+                            collapsible.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                this.nextElementSibling.style.display = 
+                                    this.nextElementSibling.style.display === 'none' ? 'block' : 'none';
+                            });
+                            // 初始隐藏
+                            collapsible.nextElementSibling.style.display = 'none';
+                        });
+                    });
+                </script>
+                """
+
+                report.content = html_content
+
+            report.save()
+            messages.success(request, f'测试报告 "{report.name}" 已成功生成')
+            return redirect('test_report_detail', pk=report.pk)
+    else:
+        # 默认报告名称
+        default_name = f"{test_suite_run.test_suite.name} - 测试报告 - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        form = GenerateReportForm(initial={'name': default_name, 'report_format': 'html'})
+
+    return render(request, 'test_manager/generate_test_report.html', {
+        'form': form,
+        'test_suite_run': test_suite_run,
     })

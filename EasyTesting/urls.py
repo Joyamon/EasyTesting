@@ -123,4 +123,13 @@ urlpatterns = [
     path('test-suite-groups/create/', views.test_suite_group_create, name='test_suite_group_create'),
     path('test-suite-groups/<int:pk>/edit/', views.test_suite_group_edit, name='test_suite_group_edit'),
     path('test-suite-groups/<int:pk>/delete/', views.test_suite_group_delete, name='test_suite_group_delete'),
+
+ # 测试报告
+    path('reports/', views.test_report_list, name='test_report_list'),
+    path('reports/<int:pk>/', views.test_report_detail, name='test_report_detail'),
+    path('reports/<int:pk>/delete/', views.test_report_delete, name='test_report_delete'),
+    path('test-runs/<int:pk>/generate-report/', views.generate_test_run_report, name='generate_test_run_report'),
+    path('test-suite-runs/<int:pk>/generate-report/', views.generate_test_suite_run_report,
+         name='generate_test_suite_run_report'),
+
 ]
