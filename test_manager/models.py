@@ -424,6 +424,7 @@ class TestReport(models.Model):
     test_suite_run = models.ForeignKey(TestSuiteRun, on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name='reports')
     is_public = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_reports')
 
     class Meta:
         ordering = ['-created_at']
