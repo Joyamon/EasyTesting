@@ -7,9 +7,8 @@
 
     <div class="card">
         <div class="card-body">
-         <form method="get" class="row g-3">
+         <form method="get" class="d-flex">
                 <div class="col-md-4">
-                    <label for="project" class="form-label">项目</label>
                     <select name="project" id="project" class="form-select">
                         <option value="">所有项目</option>
                         {% for project in projects %}
@@ -18,13 +17,14 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label for="q" class="form-label">搜索</label>
+                <div class="col-md-4">
                     <input type="text" name="q" id="q" class="form-control" placeholder="搜索报告名称或描述"
                            value="{{ search_query }}">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">筛选</button>
+                    <button type="submit" class="btn btn-primary ">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
             </form>
             {% if page_obj %}
