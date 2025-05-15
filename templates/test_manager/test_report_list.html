@@ -33,10 +33,11 @@
                         <thead>
                         <tr>
                             <th>名称</th>
+                            <th>描述</th>
                             <th>项目</th>
                             <th>报告类型</th>
                             <th>格式</th>
-                            <th>创建时间</th>
+                            <th>生成时间</th>
                             <th>操作</th>
                         </tr>
                         </thead>
@@ -46,6 +47,7 @@
                                 <td>
                                     <a href="{% url 'test_report_detail' report.id %}">{{ report.name }}</a>
                                 </td>
+                                <td>{{ report.description }}</td>
                                 <td>{{ report.project.name }}</td>
                                 <td>
                                     {% if report.report_type == 'test_run' %}
