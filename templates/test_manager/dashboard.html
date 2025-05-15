@@ -350,21 +350,24 @@
                 projects: generateData({{ projects_count }} -10, 2, 7),
                 testCases: generateData({{ test_cases_count }} -20, 5, 7),
                 testSuites: generateData({{ test_suites_count }} -8, 2, 7),
-                testRuns: generateData({{ test_runs_count }} -15, 4, 7)
+                testRuns: generateData({{ test_runs_count }} -15, 4, 7),
+                testReports: generateData({{ test_reports_count }} -10, 3, 7)
             };
 
             const monthData = {
                 projects: generateData({{ projects_count }} -20, 2, 30),
                 testCases: generateData({{ test_cases_count }} -50, 5, 30),
                 testSuites: generateData({{ test_suites_count }} -15, 2, 30),
-                testRuns: generateData({{ test_runs_count }} -30, 4, 30)
+                testRuns: generateData({{ test_runs_count }} -30, 4, 30),
+                testReports: generateData({{ test_reports_count }} -20, 3, 30)
             };
 
             const yearData = {
                 projects: generateData({{ projects_count }} -30, 3, 12),
                 testCases: generateData({{ test_cases_count }} -100, 10, 12),
                 testSuites: generateData({{ test_suites_count }} -20, 3, 12),
-                testRuns: generateData({{ test_runs_count }} -50, 8, 12)
+                testRuns: generateData({{ test_runs_count }} -50, 8, 12),
+                testReports: generateData({{ test_reports_count }} -30, 5, 12)
             };
 
             // 创建图表配置
@@ -402,6 +405,14 @@
                             data: weekData.testRuns,
                             borderColor: 'rgba(153, 102, 255, 1)',
                             backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Test Reports',
+                            data: weekData.testReports,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
                             tension: 0.4,
                             fill: true
                         }
@@ -457,18 +468,22 @@
                         growthTrendsChart.data.datasets[1].data = weekData.testCases;
                         growthTrendsChart.data.datasets[2].data = weekData.testSuites;
                         growthTrendsChart.data.datasets[3].data = weekData.testRuns;
+                        growthTrendsChart.data.datasets[4].data = weekData.testReports;
+
                     } else if (period === 'month') {
                         growthTrendsChart.data.labels = monthLabels;
                         growthTrendsChart.data.datasets[0].data = monthData.projects;
                         growthTrendsChart.data.datasets[1].data = monthData.testCases;
                         growthTrendsChart.data.datasets[2].data = monthData.testSuites;
                         growthTrendsChart.data.datasets[3].data = monthData.testRuns;
+                        growthTrendsChart.data.datasets[4].data = monthData.testReports;
                     } else if (period === 'year') {
                         growthTrendsChart.data.labels = yearLabels;
                         growthTrendsChart.data.datasets[0].data = yearData.projects;
                         growthTrendsChart.data.datasets[1].data = yearData.testCases;
                         growthTrendsChart.data.datasets[2].data = yearData.testSuites;
                         growthTrendsChart.data.datasets[3].data = yearData.testRuns;
+                        growthTrendsChart.data.datasets[4].data = yearData.testReports;
                     }
 
                     // 更新图表
