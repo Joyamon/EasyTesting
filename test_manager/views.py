@@ -64,7 +64,7 @@ def dashboard(request):
         'skipped': TestResult.objects.filter(status='skipped').count(),
     }
 
-    recent_activities =[]
+    recent_activities = []
     activities = TestRun.objects.all().order_by('-created_at')
     for activity in activities:
         action = activity.name.split(': ')[0]
@@ -186,10 +186,13 @@ def project_delete(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if project.test_runs.exists() or project.test_suites.exists() or project.test_cases.exists():
         messages.warning(request, 'Cannot delete project with associated test cases, test suites, or test runs.')
-    else:
+        return redirect('project_list')
+    if request.method == 'POST':
         project.delete()
         messages.success(request, 'Project deleted successfully.')
-    return redirect('project_list')
+        return redirect('project_list')
+
+    return render(request, 'test_manager/test_project_confirm_delete.html', {'project': project})
 
 
 # Environment views
@@ -292,10 +295,13 @@ def environment_delete(request, pk):
     environment = get_object_or_404(Environment, pk=pk)
     if environment.test_runs.exists():
         messages.warning(request, 'Cannot delete environment with associated test runs.')
-    else:
+        return redirect('environment_list')
+    if request.method == 'POST':
         environment.delete()
         messages.success(request, 'Environment deleted successfully.')
-    return redirect('environment_list')
+        return redirect('environment_list')
+
+    return render(request, 'test_manager/test_environment_confirm_delete.html', {'environment': environment})
 
 
 # Test Case views
