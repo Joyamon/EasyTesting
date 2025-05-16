@@ -423,8 +423,9 @@ class TestReport(models.Model):
     test_run = models.ForeignKey(TestRun, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
     test_suite_run = models.ForeignKey(TestSuiteRun, on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name='reports')
+    test_results = models.ForeignKey(TestResult,on_delete=models.SET_NULL, null=True, blank=True, related_name='reports')
     is_public = models.BooleanField(default=False)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_reports')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE,null=True, blank=True, related_name='created_test_reports')
 
     class Meta:
         ordering = ['-created_at']
