@@ -784,9 +784,11 @@ def test_run_detail(request, pk):
 @login_required
 def test_run_delete(request, pk):
     test_run = get_object_or_404(TestRun, pk=pk)
-    test_run.delete()
-    messages.success(request, 'TestRun deleted successfully.')
-    return redirect('test_run_list')
+    if request.method == 'POST':
+        test_run.delete()
+        messages.success(request, 'TestRun deleted successfully.')
+        return redirect('test_run_list')
+    return render(request, 'test_manager/test_run_confirm_delete.html', {'test_run': test_run})
 
 
 from django.shortcuts import render, redirect, get_object_or_404
