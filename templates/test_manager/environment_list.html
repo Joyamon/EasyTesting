@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Environments - EasyTesting{% endblock %}
+{% block title %}环境 - EasyTesting{% endblock %}
 
-{% block header %}Environments{% endblock %}
+{% block header %}环境{% endblock %}
 
 {% block header_buttons %}
 <a href="{% url 'environment_create' %}" class="btn btn-primary">
-    <i class="bi bi-plus-lg"></i> New Environment
+    <i class="bi bi-plus-lg"></i> 新增环境
 </a>
 {% endblock %}
 
@@ -18,9 +18,9 @@
             <div class="d-flex align-items-center">
                 <i class="bi bi-info-circle-fill me-2"></i>
                 <div>
-                    <strong>Filtered by Project:</strong> {{ project.name }}
+                    <strong>按项目筛选:</strong> {{ project.name }}
                     <a href="{% url 'environment_list' %}" class="btn btn-sm btn-outline-primary ms-3">
-                        <i class="bi bi-x-lg"></i> Clear Filter
+                        <i class="bi bi-x-lg"></i> 清除筛选
                     </a>
                 </div>
             </div>
@@ -31,11 +31,11 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Project</th>
-                        <th>Base URL</th>
-                        <th>Created At</th>
-                        <th class="text-end">Actions</th>
+                        <th>名称</th>
+                        <th>项目</th>
+                        <th>域名</th>
+                        <th>创建时间</th>
+                        <th class="text-end">操作</th>
                     </tr>
                 </thead>
                 <tbody>

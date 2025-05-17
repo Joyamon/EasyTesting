@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
-{% block title %}Test Run: {{ test_run.name }} - EasyTesting{% endblock %}
+{% block title %}测试运行: {{ test_run.name }} - EasyTesting{% endblock %}
 
-{% block header %}Test Run: {{ test_run.name }}{% endblock %}
+{% block header %}测试运行: {{ test_run.name }}{% endblock %}
 
 {% block header_buttons %}
     {% if test_run.test_suite %}
         <a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}" class="btn btn-outline-primary">
-            <i class="bi bi-collection"></i> View Test Suite
+            <i class="bi bi-collection"></i> 查看测试套件
         </a>
     {% endif %}
 
     {% if test_run.status == 'running' %}
         <button id="refreshButton" class="btn btn-outline-info">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
+            <i class="bi bi-arrow-clockwise"></i> 刷新
         </button>
     {% endif %}
 {% endblock %}
@@ -24,11 +24,11 @@
         <div class="col-md-4 mb-4">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Test Run Details</h5>
+                    <h5 class="card-title mb-0">运行详情</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
-                        <h6 class="text-muted mb-2">Project</h6>
+                        <h6 class="text-muted mb-2">项目</h6>
                         <p>
                             <a href="{% url 'project_detail' pk=test_run.project.pk %}" class="text-decoration-none">
                                 <i class="bi bi-folder"></i> {{ test_run.project.name }}
@@ -37,7 +37,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="text-muted mb-2">Environment</h6>
+                        <h6 class="text-muted mb-2">环境</h6>
                         <p>
                             <a href="{% url 'environment_detail' pk=test_run.environment.pk %}"
                                class="text-decoration-none">
@@ -48,7 +48,7 @@
 
                     {% if test_run.test_suite %}
                         <div class="mb-4">
-                            <h6 class="text-muted mb-2">Test Suite</h6>
+                            <h6 class="text-muted mb-2">测试套件</h6>
                             <p>
                                 <a href="{% url 'test_suite_detail' pk=test_run.test_suite.pk %}"
                                    class="text-decoration-none">
@@ -59,7 +59,7 @@
                     {% endif %}
 
                     <div class="mb-4">
-                        <h6 class="text-muted mb-2">Status</h6>
+                        <h6 class="text-muted mb-2">状态</h6>
                         <p>
                             {% if test_run.status == 'completed' %}
                                 <span class="badge bg-success">Completed</span>
@@ -78,7 +78,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="text-muted mb-2">Created By</h6>
+                        <h6 class="text-muted mb-2">创建人</h6>
                         <div class="d-flex align-items-center">
                       <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
                             style="width: 30px; height: 30px;">
@@ -89,18 +89,18 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="text-muted mb-2">Created At</h6>
+                        <h6 class="text-muted mb-2">创建时间</h6>
                         <p>{{ test_run.created_at|date:"Y-m-d H:i" }}</p>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <h6 class="text-muted mb-2">Start Time</h6>
+                            <h6 class="text-muted mb-2">开始时间</h6>
                             <p>{{ test_run.start_time|date:"Y-m-d H:i"|default:"-" }}</p>
                         </div>
 
                         <div class="col-md-6">
-                            <h6 class="text-muted mb-2">End Time</h6>
+                            <h6 class="text-muted mb-2">结束时间</h6>
                             <p>{{ test_run.end_time|date:"Y-m-d H:i"|default:"-" }}</p>
                         </div>
                     </div>
@@ -111,14 +111,14 @@
         <div class="col-md-8 mb-4">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Test Results Summary</h5>
+                    <h5 class="card-title mb-0">运行结果</h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-md-3 mb-3">
                             <div class="card bg-light border-0 shadow-sm h-100">
                                 <div class="card-body text-center">
-                                    <h6 class="text-muted mb-2">Total Tests</h6>
+                                    <h6 class="text-muted mb-2">总计</h6>
                                     <h2 class="mb-0">{{ total_tests }}</h2>
                                 </div>
                             </div>
@@ -203,7 +203,7 @@
         <div class="col-md-12 mb-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Test Results</h5>
+                    <h5 class="card-title mb-0">测试结果</h5>
                     <div class="btn-group">
                         <a href="?page={{ page_obj.number }}{% if per_page %}&per_page={{ per_page }}{% endif %}"
                            class="btn btn-sm {% if not request.GET.status %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
@@ -227,14 +227,14 @@
                         <table class="table table-hover" id="results-table">
                             <thead>
                             <tr>
-                                <th>Test Case</th>
-                                <th>Method</th>
+                                <th>测试用例</th>
+                                <th>请求方法</th>
                                 <th>URL</th>
-                                <th>Environment</th>
-                                <th>Status</th>
-                                <th>Response Time</th>
-                                <th>Response Status</th>
-                                <th class="text-end">Actions</th>
+                                <th>环境</th>
+                                <th>状态</th>
+                                <th>响应时间</th>
+                                <th>响应状态</th>
+                                <th class="text-end">操作</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -284,7 +284,7 @@
                                     <td class="text-end">
                                         <button type="button" class="btn btn-sm btn-outline-primary details-btn"
                                                 data-bs-toggle="modal" data-bs-target="#resultModal{{ result.id }}">
-                                            <i class="bi bi-eye"></i> Details
+                                            <i class="bi bi-eye"></i> 详情
                                         </button>
                                     </td>
                                 </tr>
@@ -292,7 +292,7 @@
                                 <tr>
                                     <td colspan="8" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test results found.
+                                            <i class="bi bi-info-circle me-2"></i> 暂无测试结果
                                         </div>
                                     </td>
                                 </tr>
@@ -315,8 +315,8 @@
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="resultModalLabel{{ result.id }}">Test
-                                Result: {{ result.test_case.name }}</h5>
+                            <h5 class="modal-title" id="resultModalLabel{{ result.id }}">测试结果:
+                                 {{ result.test_case.name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -325,19 +325,19 @@
                                     <button class="nav-link active" id="overview-tab{{ result.id }}"
                                             data-bs-toggle="tab"
                                             data-bs-target="#overview{{ result.id }}" type="button" role="tab"
-                                            aria-controls="overview{{ result.id }}" aria-selected="true">Overview
+                                            aria-controls="overview{{ result.id }}" aria-selected="true">全览
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="request-tab{{ result.id }}" data-bs-toggle="tab"
                                             data-bs-target="#request{{ result.id }}" type="button" role="tab"
-                                            aria-controls="request{{ result.id }}" aria-selected="false">Request
+                                            aria-controls="request{{ result.id }}" aria-selected="false">请求
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="response-tab{{ result.id }}" data-bs-toggle="tab"
                                             data-bs-target="#response{{ result.id }}" type="button" role="tab"
-                                            aria-controls="response{{ result.id }}" aria-selected="false">Response
+                                            aria-controls="response{{ result.id }}" aria-selected="false">响应
                                     </button>
                                 </li>
                                 {% if result.validators %}
@@ -345,7 +345,7 @@
                                         <button class="nav-link" id="validators-tab{{ result.id }}" data-bs-toggle="tab"
                                                 data-bs-target="#validators{{ result.id }}" type="button" role="tab"
                                                 aria-controls="validators{{ result.id }}" aria-selected="false">
-                                            Validators
+                                            断言
                                         </button>
                                     </li>
                                 {% endif %}
@@ -353,8 +353,8 @@
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link" id="extracted-tab{{ result.id }}" data-bs-toggle="tab"
                                                 data-bs-target="#extracted{{ result.id }}" type="button" role="tab"
-                                                aria-controls="extracted{{ result.id }}" aria-selected="false">Extracted
-                                            Params
+                                                aria-controls="extracted{{ result.id }}" aria-selected="false">提取参数
+
                                         </button>
                                     </li>
                                 {% endif %}
@@ -368,7 +368,7 @@
                                             <div class="col-lg-12">
                                                 <table class="table">
                                                     <tr>
-                                                        <th width="30%">Status:</th>
+                                                        <th width="30%">状态:</th>
                                                         <td>
                                                             {% if result.status == 'passed' %}
                                                                 <span class="badge bg-success">Passed</span>
@@ -382,7 +382,7 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Method:</th>
+                                                        <th>请求方式:</th>
                                                         <td>
                                                           <span class="badge
                                                               {% if result.test_case.request_method == 'GET' %}bg-success{% endif %}
@@ -404,15 +404,15 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Environment:</th>
+                                                        <th>环境:</th>
                                                         <td>{{ result.environment.name }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <th width="40%">Response Time:</th>
+                                                        <th width="40%">响应时间:</th>
                                                         <td>{{ result.response_time|floatformat:2 }} ms</td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Response Status:</th>
+                                                        <th>响应状态码:</th>
                                                         <td>
                                                           <span class="badge {% if result.response_status_code == result.test_case.expected_status_code %}bg-success{% else %}bg-danger{% endif %}">
                                                               {{ result.response_status_code }}
@@ -420,11 +420,11 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Expected Status:</th>
+                                                        <th>预期状态码:</th>
                                                         <td>{{ result.test_case.expected_status_code }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Created At:</th>
+                                                        <th>创建时间:</th>
                                                         <td>{{ result.created_at|date:"Y-m-d H:i" }}</td>
                                                     </tr>
                                                 </table>
@@ -433,7 +433,7 @@
 
                                         {% if result.error_message %}
                                             <div class="alert alert-danger mt-3">
-                                                <h6 class="alert-heading">Error Message:</h6>
+                                                <h6 class="alert-heading">错误信息:</h6>
                                                 <pre class="mb-0">{{ result.error_message }}</pre>
                                             </div>
                                         {% endif %}
@@ -443,17 +443,17 @@
                               <div class="tab-pane fade" id="request{{ result.id }}" role="tabpanel"
                                    aria-labelledby="request-tab{{ result.id }}">
                                   <div class="mb-4">
-                                      <h6 class="text-muted mb-2">Request URL</h6>
+                                      <h6 class="text-muted mb-2">请求 URL</h6>
                                       <div class="input-group mb-3">
                                           <span class="input-group-text">{{ result.test_case.request_method }}</span>
                                           <input type="text" class="form-control" value="{{ result.environment.base_url }}{{ result.test_case.request_url }}" readonly>
                                       </div>
 
-                                        <h6 class="text-muted mb-2">Headers</h6>
+                                        <h6 class="text-muted mb-2">请求头</h6>
                                         <code class="bg-light p-3 rounded">{{ result.request_headers|pprint }}</code>
 
                                       {% if result.request_body %}
-                                          <h6 class="text-muted mb-2">Body</h6>
+                                          <h6 class="text-muted mb-2">请求体</h6>
                                           <pre class="bg-light p-3 rounded"><code>{{ result.request_body|pprint }}</code></pre>
                                       {% endif %}
                                   </div>
@@ -462,18 +462,18 @@
                                 <div class="tab-pane fade" id="response{{ result.id }}" role="tabpanel"
                                      aria-labelledby="response-tab{{ result.id }}">
                                     <div class="mb-4">
-                                        <h6 class="text-muted mb-2">Response Status</h6>
+                                        <h6 class="text-muted mb-2">响应状态码</h6>
                                         <p>
                                           <span class="badge {% if result.response_status_code == result.test_case.expected_status_code %}bg-success{% else %}bg-danger{% endif %}">
                                               {{ result.response_status_code }}
                                           </span>
-                                            <span class="ms-2">Response Time: {{ result.response_time|floatformat:2 }} ms</span>
+                                            <span class="ms-2">响应时间: {{ result.response_time|floatformat:2 }} ms</span>
                                         </p>
 
-                                        <h6 class="text-muted mb-2">Headers</h6>
+                                        <h6 class="text-muted mb-2">响应头</h6>
                                         <pre class="bg-light p-3 rounded"><code>{{ result.response_headers|pprint }}</code></pre>
 
-                                        <h6 class="text-muted mb-2">Body</h6>
+                                        <h6 class="text-muted mb-2">响应体</h6>
                                         <pre class="bg-light p-3 rounded"><code>{{ result.response_body|pprint }}</code></pre>
                                     </div>
                                 </div>
@@ -482,7 +482,7 @@
                                     <div class="tab-pane fade" id="validators{{ result.id }}" role="tabpanel"
                                          aria-labelledby="validators-tab{{ result.id }}">
                                         <div class="mb-4">
-                                            <h6 class="text-muted mb-2">Validators</h6>
+                                            <h6 class="text-muted mb-2">断言</h6>
                                             <div class="table-responsive">
                                                 <table class="table table-sm table-bordered">
                                                     <thead class="table-light">
@@ -521,15 +521,15 @@
                                     <div class="tab-pane fade" id="extracted{{ result.id }}" role="tabpanel"
                                          aria-labelledby="extracted-tab{{ result.id }}">
                                         <div class="mb-4">
-                                            <h6 class="text-muted mb-2">Extracted Parameters</h6>
+                                            <h6 class="text-muted mb-2">提取参数</h6>
                                             <div class="table-responsive">
                                                 <table class="table table-sm table-bordered">
                                                     <thead class="table-light">
                                                     <tr>
-                                                        <th>Parameter Name</th>
-                                                        <th>JSON Path</th>
-                                                        <th>Description</th>
-                                                        <th>Extracted Value</th>
+                                                        <th>参数名称</th>
+                                                        <th>提取表达式</th>
+                                                        <th>描述</th>
+                                                        <th>提取结果</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -542,14 +542,14 @@
                                                                 {% if result.extracted_params|get_item:item.name %}
                                                                     <code>{{ result.extracted_params|get_item:item.name }}</code>
                                                                 {% else %}
-                                                                    <span class="text-muted">No value extracted</span>
+                                                                    <span class="text-muted">暂无提取结果</span>
                                                                 {% endif %}
                                                             </td>
                                                         </tr>
                                                     {% empty %}
                                                         <tr>
-                                                            <td colspan="4" class="text-center text-muted">No parameters
-                                                                extracted
+                                                            <td colspan="4" class="text-center text-muted">暂无提取参数
+
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
@@ -562,7 +562,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                         </div>
                     </div>
                 </div>

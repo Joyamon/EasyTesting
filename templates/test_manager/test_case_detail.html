@@ -2,15 +2,15 @@
 
 {% block title %}{{ test_case.name }} - EasyTesting{% endblock %}
 
-{% block header %}Test Case: {{ test_case.name }}{% endblock %}
+{% block header %}测试用例: {{ test_case.name }}{% endblock %}
 
 {% block header_buttons %}
 <div class="btn-group">
     <a href="{% url 'test_case_edit' pk=test_case.pk %}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i> Edit
+        <i class="bi bi-pencil"></i> 编辑
     </a>
     <a href="{% url 'test_case_run' pk=test_case.pk %}" class="btn btn-success">
-        <i class="bi bi-play-fill"></i> Run Test
+        <i class="bi bi-play-fill"></i> 运行
     </a>
 </div>
 {% endblock %}
@@ -20,14 +20,14 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Test Case Details</span>
+                <span>测试用例详情</span>
                 <a href="{% url 'test_case_edit' pk=test_case.pk %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i>
                 </a>
             </div>
             <div class="card-body">
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Project</h5>
+                    <h5 class="text-muted mb-2">项目</h5>
                     <p>
                         <a href="{% url 'project_detail' pk=test_case.project.pk %}" class="text-decoration-none">
                             {{ test_case.project.name }}
@@ -36,13 +36,13 @@
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Description</h5>
+                    <h5 class="text-muted mb-2">描述</h5>
                     <p>{{ test_case.description|default:"No description provided" }}</p>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <h5 class="text-muted mb-2">Created By</h5>
+                        <h5 class="text-muted mb-2">创建人</h5>
                         <div class="d-flex align-items-center">
                             <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
                                 {{ test_case.created_by.username|first|upper }}
@@ -52,12 +52,12 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <h5 class="text-muted mb-2">Created At</h5>
+                        <h5 class="text-muted mb-2">创建时间</h5>
                         <p class="mb-0">{{ test_case.created_at|date:"Y-m-d H:i" }}</p>
                     </div>
 
                     <div class="col-md-6">
-                        <h5 class="text-muted mb-2">Last Updated</h5>
+                        <h5 class="text-muted mb-2">更新时间</h5>
                         <p class="mb-0">{{ test_case.updated_at|date:"Y-m-d H:i" }}</p>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header">
-                <span>Request Details</span>
+                <span>请求详情</span>
             </div>
             <div class="card-body">
                 <div class="mb-4">
@@ -86,40 +86,40 @@
                         <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ test_case.request_url }}</code>
                     </div>
                     <div class="d-flex align-items-center">
-                        <span class="badge bg-light text-dark me-2">Expected Status:</span>
+                        <span class="badge bg-light text-dark me-2">预期状态码:</span>
                         <span class="badge bg-secondary">{{ test_case.expected_status_code }}</span>
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Headers</h5>
+                    <h5 class="text-muted mb-2">请求头</h5>
                     {% if test_case.request_headers %}
                         <code class="bg-light p-3 rounded">{{ test_case.request_headers|pprint }}</code>
                     {% else %}
-                        <p class="text-muted">No headers specified</p>
+                        <p class="text-muted">暂时没有请求头</p>
                     {% endif %}
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Body Format</h5>
+                    <h5 class="text-muted mb-2">请求体格式</h5>
                     <span class="badge bg-info">{{ test_case.get_request_body_format_display }}</span>
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Body</h5>
+                    <h5 class="text-muted mb-2">请求体</h5>
                     {% if test_case.request_body %}
                         <code class="bg-light p-2 rounded">{{ test_case.request_body|pprint }}</code>
                     {% else %}
-                        <p class="text-muted">No body specified</p>
+                        <p class="text-muted">暂时没有请求体</p>
                     {% endif %}
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Validation Rules</h5>
+                    <h5 class="text-muted mb-2">断言</h5>
                     {% if test_case.validation_rules %}
                         <code class="bg-light p-3 rounded">{{ test_case.validation_rules|pprint }}</code>
                     {% else %}
-                        <p class="text-muted">No validation rules specified</p>
+                        <p class="text-muted">暂时没有断言</p>
                     {% endif %}
                 </div>
             </div>
@@ -131,9 +131,9 @@
     <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Recent Test Results</span>
+                <span>最近运行结果</span>
                 <a href="{% url 'test_case_run' pk=test_case.pk %}" class="btn btn-sm btn-success">
-                    <i class="bi bi-play-fill"></i> Run Test
+                    <i class="bi bi-play-fill"></i> 运行
                 </a>
             </div>
             <div class="card-body">
@@ -141,13 +141,13 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Test Run</th>
-                                <th>Environment</th>
-                                <th>Status</th>
-                                <th>Response Time</th>
-                                <th>Response Status</th>
-                                <th>Created At</th>
-                                <th class="text-end">Actions</th>
+                                <th>名称</th>
+                                <th>环境</th>
+                                <th>状态</th>
+                                <th>响应时间</th>
+                                <th>响应状态</th>
+                                <th>创建时间</th>
+                                <th class="text-end">操作</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}Test Runs - EasyTesting{% endblock %}
+{% block title %}测试运行 - EasyTesting{% endblock %}
 
-{% block header %}Test Runs{% endblock %}
+{% block header %}测试运行{% endblock %}
 
 {% block content %}
 <div class="card">
@@ -12,9 +12,9 @@
             <div class="d-flex align-items-center">
                 <i class="bi bi-info-circle-fill me-2"></i>
                 <div>
-                    <strong>Filtered by Project:</strong> {{ project.name }}
+                    <strong>过滤项目:</strong> {{ project.name }}
                     <a href="{% url 'test_run_list' %}" class="btn btn-sm btn-outline-primary ms-3">
-                        <i class="bi bi-x-lg"></i> Clear Filter
+                        <i class="bi bi-x-lg"></i>清除过滤
                     </a>
                 </div>
             </div>
@@ -25,14 +25,14 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Project</th>
-                        <th>Environment</th>
-                        <th>Status</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Created By</th>
-                        <th class="text-end">Actions</th>
+                        <th>名称</th>
+                        <th>项目</th>
+                        <th>环境</th>
+                        <th>状态</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>创建人</th>
+                        <th class="text-end">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,8 +80,8 @@
                             <td colspan="8" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="bi bi-play-circle display-4 text-muted mb-3"></i>
-                                    <h5>No test runs yet</h5>
-                                    <p class="text-muted">Run a test case or test suite to get started</p>
+                                    <h5>暂无测试运行</h5>
+                                    <p class="text-muted">运行测试用例或测试套件</p>
                                 </div>
                             </td>
                         </tr>

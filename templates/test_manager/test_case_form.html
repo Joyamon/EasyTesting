@@ -14,54 +14,53 @@
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label for="{{ form.name.id_for_label }}" class="form-label fw-medium">Test Case Name</label>
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-medium">测试用例名称</label>
                             {{ form.name.errors }}
-                            <input type="text" class="form-control form-control-lg" id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" required placeholder="Enter test case name">
-                            <div class="form-text">Choose a descriptive name for this test case</div>
+                            <input type="text" class="form-control form-control-lg" id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" required placeholder="输入测试用例名称">
+                            <div class="form-text">测试用例名称</div>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="{{ form.project.id_for_label }}" class="form-label fw-medium">Project</label>
+                            <label for="{{ form.project.id_for_label }}" class="form-label fw-medium">项目</label>
                             {{ form.project.errors }}
                             {% if form.project.field.widget.input_type == 'hidden' %}
                                 {{ form.project }}
                                 <input type="text" class="form-control form-control-lg" value="{{ form.project.value|default:''|stringformat:'s' }}" disabled>
                             {% else %}
                                 <select class="form-select form-select-lg" id="{{ form.project.id_for_label }}" name="{{ form.project.html_name }}" required>
-                                    <option value="">Select a project</option>
                                     {% for choice in form.project.field.choices %}
                                         <option value="{{ choice.0 }}" {% if form.project.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
                                     {% endfor %}
                                 </select>
                             {% endif %}
-                            <div class="form-text">Select the project this test case belongs to</div>
+                            <div class="form-text">选择测试用例关联的项目</div>
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.group.id_for_label }}" class="form-label fw-medium">Group</label>
+                        <label for="{{ form.group.id_for_label }}" class="form-label fw-medium">分组</label>
                         {{ form.group.errors }}
                         <select class="form-select" id="{{ form.group.id_for_label }}" name="{{ form.group.html_name }}">
-                            <option value="">No group</option>
+                            <option value="">暂无分组</option>
                             {% for choice in form.group.field.choices %}
                                 {% if choice.0 %}
                                     <option value="{{ choice.0 }}" {% if form.group.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        <div class="form-text">Select a group for this test case (optional)</div>
+                        <div class="form-text">选择测试用例的分组 (可选)</div>
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">Description</label>
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">描述</label>
                         {{ form.description.errors }}
-                        <textarea class="form-control" id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}" rows="3" placeholder="Describe the purpose of this test case">{{ form.description.value|default:'' }}</textarea>
-                        <div class="form-text">Provide details about what this test case is testing</div>
+                        <textarea class="form-control" id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}" rows="3" placeholder="描述测试用例...">{{ form.description.value|default:'' }}</textarea>
+                        <div class="form-text">描述测试用例</div>
                     </div>
 
                     <div class="row mb-4">
                         <div class="col-md-3">
-                            <label for="{{ form.request_method.id_for_label }}" class="form-label fw-medium">Request Method</label>
+                            <label for="{{ form.request_method.id_for_label }}" class="form-label fw-medium">请求方式</label>
                             {{ form.request_method.errors }}
                             <select class="form-select" id="{{ form.request_method.id_for_label }}" name="{{ form.request_method.html_name }}" required>
                                 {% for choice in form.request_method.field.choices %}
@@ -71,14 +70,14 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="{{ form.request_url.id_for_label }}" class="form-label fw-medium">Request URL</label>
+                            <label for="{{ form.request_url.id_for_label }}" class="form-label fw-medium">请求 URL</label>
                             {{ form.request_url.errors }}
                             <input type="text" class="form-control" id="{{ form.request_url.id_for_label }}" name="{{ form.request_url.html_name }}" value="{{ form.request_url.value|default:'' }}" required placeholder="/api/endpoint">
-                            <div class="form-text">The URL path relative to the environment's base URL</div>
+                            <div class="form-text">url路径</div>
                         </div>
 
                         <div class="col-md-3">
-                            <label for="{{ form.expected_status_code.id_for_label }}" class="form-label fw-medium">Expected Status Code</label>
+                            <label for="{{ form.expected_status_code.id_for_label }}" class="form-label fw-medium">预期状态码</label>
                             {{ form.expected_status_code.errors }}
                             <input type="number" class="form-control" id="{{ form.expected_status_code.id_for_label }}" name="{{ form.expected_status_code.html_name }}" value="{{ form.expected_status_code.value|default:'200' }}" required>
                         </div>
@@ -87,7 +86,7 @@
                     <!-- 添加URL参数表格 -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-medium mb-0">Query Parameters</label>
+                            <label class="form-label fw-medium mb-0">请求参数</label>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-params-table">
                                 <i class="bi bi-chevron-down" id="toggle-params-icon"></i>
                             </button>
@@ -134,7 +133,7 @@
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-medium mb-0">Request Headers</label>
+                            <label class="form-label fw-medium mb-0">请求头</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="headers-preset-btn">
                                     Presets <i class="bi bi-chevron-down"></i>
@@ -189,11 +188,11 @@
                         <!-- 隐藏的原始文本区域，用于表单提交 -->
                         {{ form.request_headers_json.errors }}
                         <textarea class="form-control d-none" id="{{ form.request_headers_json.id_for_label }}" name="{{ form.request_headers_json.html_name }}">{{ form.request_headers_json.value|default:"" }}</textarea>
-                        <div class="form-text mt-2">Enter headers as JSON, e.g. {"Content-Type": "application/json"}</div>
+                        <div class="form-text mt-2">输入JSON格式的请求头, 例如 {"Content-Type": "application/json"}</div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Request Body Format</label>
+                        <label class="form-label fw-medium">请求体格式</label>
                         {{ form.request_body_format.errors }}
                         <div class="d-flex">
                             <div class="form-check me-4">
@@ -212,14 +211,14 @@
                     </div>
 
                     <div id="json_body_container" class="mb-4" {% if form.request_body_format.value == 'form-data' %}style="display: none;"{% endif %}>
-                        <label for="{{ form.request_body_json.id_for_label }}" class="form-label fw-medium">Request Body (JSON)</label>
+                        <label for="{{ form.request_body_json.id_for_label }}" class="form-label fw-medium">请求体 (JSON)</label>
                         {{ form.request_body_json.errors }}
                         <textarea class="form-control font-monospace" id="{{ form.request_body_json.id_for_label }}" name="{{ form.request_body_json.html_name }}" rows="6" placeholder='{"name": "Test User", "email": "test@example.com"}'>{{ form.request_body_json.value|default:"" }}</textarea>
                         <div class="form-text">{{ form.request_body_json.help_text }}</div>
                     </div>
 
                     <div id="form_data_container" class="mb-4" {% if form.request_body_format.value != 'form-data' %}style="display: none;"{% endif %}>
-                        <label class="form-label fw-medium">Request Body (Form Data)</label>
+                        <label class="form-label fw-medium">请求体 (Form Data)</label>
                         {{ form.request_body_form_data.errors }}
 
                         <div class="card">
@@ -261,13 +260,13 @@
 
                         <!-- 隐藏的原始文本区域，用于表单提交 -->
                         <textarea class="form-control d-none" id="{{ form.request_body_form_data.id_for_label }}" name="{{ form.request_body_form_data.html_name }}">{{ form.request_body_form_data.value|default:"" }}</textarea>
-                        <div class="form-text mt-2">Enter form data as key=value pairs, one per line (e.g., key=value)</div>
+                        <div class="form-text mt-2">输入form-data格式的数据，每行一个参数，格式为key=value 例如, key=value)</div>
                     </div>
 
                     <!-- 添加提取参数表格 -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-medium mb-0">Extract Parameters</label>
+                            <label class="form-label fw-medium mb-0">提取参数</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="extract-preset-btn">
                                     Presets <i class="bi bi-chevron-down"></i>
@@ -322,13 +321,13 @@
                         <!-- 隐藏的原始文本区域，用于表单提交 -->
                         {{ form.extract_params_json.errors }}
                         <textarea class="form-control d-none" id="{{ form.extract_params_json.id_for_label }}" name="{{ form.extract_params_json.html_name }}">{{ form.extract_params_json.value|default:"" }}</textarea>
-                        <div class="form-text mt-2">Define parameters to extract from the response using JSONPath expressions</div>
+                        <div class="form-text mt-2">输入json格式的提取参数，, 例如, [{"name": "token", "path": "$.data.token"}]</div>
                     </div>
 
                     <!-- 验证规则表格 -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-medium mb-0">Validation Rules</label>
+                            <label class="form-label fw-medium mb-0">断言</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="validation-preset-btn">
                                     Presets <i class="bi bi-chevron-down"></i>
@@ -384,15 +383,15 @@
                         <!-- 隐藏的原始文本区域，用于表单提交 -->
                         {{ form.validation_rules_json.errors }}
                         <textarea class="form-control d-none" id="{{ form.validation_rules_json.id_for_label }}" name="{{ form.validation_rules_json.html_name }}">{{ form.validation_rules_json.value|default:"" }}</textarea>
-                        <div class="form-text mt-2">Define validation rules to verify the response using JSONPath expressions</div>
+                        <div class="form-text mt-2">输入json格式的验证规则, 例如, [{"eq": ["$.data.id", 1]}]</div>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{% if request.GET.project %}{% url 'project_detail' pk=request.GET.project %}{% else %}{% url 'test_case_list' %}{% endif %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Cancel
+                            <i class="bi bi-arrow-left"></i> 取消
                         </a>
                         <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg"></i> Save Test Case
+                            <i class="bi bi-check-lg"></i> 保存
                         </button>
                     </div>
                 </form>

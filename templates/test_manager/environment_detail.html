@@ -2,15 +2,15 @@
 
 {% block title %}{{ environment.name }} - EasyTesting{% endblock %}
 
-{% block header %}Environment: {{ environment.name }}{% endblock %}
+{% block header %}环境变量详情: {{ environment.name }}{% endblock %}
 
 {% block header_buttons %}
 <div class="btn-group">
     <a href="{% url 'environment_edit' pk=environment.pk %}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i> Edit
+        <i class="bi bi-pencil"></i> 编辑
     </a>
     <a href="{% url 'project_detail' pk=environment.project.pk %}" class="btn btn-outline-primary">
-        <i class="bi bi-folder"></i> View Project
+        <i class="bi bi-folder"></i> 查看项目
     </a>
 </div>
 {% endblock %}
@@ -20,14 +20,14 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Environment Details</span>
+                <span>环境变量详情</span>
                 <a href="{% url 'environment_edit' pk=environment.pk %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i>
                 </a>
             </div>
             <div class="card-body">
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Project</h5>
+                    <h5 class="text-muted mb-2">项目</h5>
                     <p>
                         <a href="{% url 'project_detail' pk=environment.project.pk %}" class="text-decoration-none">
                             {{ environment.project.name }}
@@ -36,7 +36,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Base URL</h5>
+                    <h5 class="text-muted mb-2">域名</h5>
                     <div class="d-flex align-items-center">
                         <code class="bg-light px-3 py-2 rounded flex-grow-1">{{ environment.base_url }}</code>
                         <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ environment.base_url }}')">
@@ -46,12 +46,12 @@
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Created At</h5>
+                    <h5 class="text-muted mb-2">创建时间</h5>
                     <p>{{ environment.created_at|date:"Y-m-d H:i" }}</p>
                 </div>
 
                 <div class="mb-4">
-                    <h5 class="text-muted mb-2">Last Updated</h5>
+                    <h5 class="text-muted mb-2">更新时间</h5>
                     <p>{{ environment.updated_at|date:"Y-m-d H:i" }}</p>
                 </div>
             </div>
@@ -61,7 +61,7 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header">
-                <span>Environment Variables</span>
+                <span>环境变量</span>
             </div>
             <div class="card-body">
                 {% if environment.variables %}
@@ -86,10 +86,10 @@
                 {% else %}
                     <div class="text-center py-4">
                         <div class="text-muted">
-                            <i class="bi bi-info-circle me-2"></i> No variables defined.
+                            <i class="bi bi-info-circle me-2"></i> 暂时没有环境变量
                         </div>
                         <a href="{% url 'environment_edit' pk=environment.pk %}" class="btn btn-sm btn-outline-primary mt-2">
-                            Add Variables
+                            新增环境变量
                         </a>
                     </div>
                 {% endif %}
@@ -102,9 +102,9 @@
     <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Recent Test Runs with this Environment</span>
+                <span>最近与此环境关联的测试运行</span>
                 <a href="{% url 'test_run_list' %}?environment={{ environment.pk }}" class="btn btn-sm btn-outline-primary">
-                    View All
+                    查看全部
                 </a>
             </div>
             <div class="card-body">
@@ -112,12 +112,12 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Project</th>
-                                <th>Status</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th class="text-end">Actions</th>
+                                <th>名称</th>
+                                <th>项目</th>
+                                <th>状态</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th class="text-end">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,7 +148,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test runs yet with this environment.
+                                            <i class="bi bi-info-circle me-2"></i> 没有与此环境关联的测试运行
                                         </div>
                                     </td>
                                 </tr>

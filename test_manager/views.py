@@ -118,7 +118,7 @@ def project_create(request):
             project = form.save(commit=False)
             project.created_by = request.user
             project.save()
-            messages.success(request, 'Project created successfully.')
+            messages.success(request, '项目创建成功')
             return redirect('project_detail', pk=project.pk)
     else:
         form = ProjectForm()
@@ -172,7 +172,7 @@ def project_edit(request, pk):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Project updated successfully.')
+            messages.success(request, '项目更新成功')
             return redirect('project_detail', pk=project.pk)
     else:
         form = ProjectForm(instance=project)
@@ -185,11 +185,11 @@ def project_delete(request, pk):
     # 删除项目时，检查该项目是否存在关联的测试用例、测试套件或测试运行
     project = get_object_or_404(Project, pk=pk)
     if project.test_runs.exists() or project.test_suites.exists() or project.test_cases.exists():
-        messages.warning(request, 'Cannot delete project with associated test cases, test suites, or test runs.')
+        messages.warning(request, '无法删除具有关联测试用例、测试套件或测试运行的项目')
         return redirect('project_list')
     if request.method == 'POST':
         project.delete()
-        messages.success(request, 'Project deleted successfully.')
+        messages.success(request, '项目删除成功')
         return redirect('project_list')
 
     return render(request, 'test_manager/test_project_confirm_delete.html', {'project': project})
@@ -237,7 +237,7 @@ def environment_create(request):
         form = EnvironmentForm(request.POST)
         if form.is_valid():
             environment = form.save()
-            messages.success(request, 'Environment created successfully.')
+            messages.success(request, '新增环境成功')
             return redirect('environment_detail', pk=environment.pk)
     else:
         initial = {}
@@ -245,7 +245,7 @@ def environment_create(request):
             initial['project'] = project_id
         form = EnvironmentForm(initial=initial)
 
-    return render(request, 'test_manager/environment_form.html', {'form': form, 'title': 'Create Environment'})
+    return render(request, 'test_manager/environment_form.html', {'form': form, 'title': '新增环境'})
 
 
 @login_required
@@ -281,12 +281,12 @@ def environment_edit(request, pk):
         form = EnvironmentForm(request.POST, instance=environment)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Environment updated successfully.')
+            messages.success(request, '编辑环境成功')
             return redirect('environment_detail', pk=environment.pk)
     else:
         form = EnvironmentForm(instance=environment)
 
-    return render(request, 'test_manager/environment_form.html', {'form': form, 'title': 'Edit Environment'})
+    return render(request, 'test_manager/environment_form.html', {'form': form, 'title': '编辑环境'})
 
 
 @login_required
@@ -294,11 +294,11 @@ def environment_delete(request, pk):
     # 删除环境时，检查该环境是否存在关联的测试运行
     environment = get_object_or_404(Environment, pk=pk)
     if environment.test_runs.exists():
-        messages.warning(request, 'Cannot delete environment with associated test runs.')
+        messages.warning(request, '不能删除关联测试运行的环境')
         return redirect('environment_list')
     if request.method == 'POST':
         environment.delete()
-        messages.success(request, 'Environment deleted successfully.')
+        messages.success(request, '环境删除成功')
         return redirect('environment_list')
 
     return render(request, 'test_manager/test_environment_confirm_delete.html', {'environment': environment})
@@ -386,7 +386,7 @@ def test_case_create(request):
             test_case = form.save(commit=False)
             test_case.created_by = request.user
             test_case.save()
-            messages.success(request, 'Test case created successfully.')
+            messages.success(request, '测试用例新增成功')
             return redirect('test_case_detail', pk=test_case.pk)
     else:
         initial = {}
@@ -394,7 +394,7 @@ def test_case_create(request):
             initial['project'] = project_id
         form = TestCaseForm(initial=initial)
 
-    return render(request, 'test_manager/test_case_form.html', {'form': form, 'title': 'Create Test Case'})
+    return render(request, 'test_manager/test_case_form.html', {'form': form, 'title': '新增测试用例'})
 
 
 @login_required
@@ -430,12 +430,12 @@ def test_case_edit(request, pk):
         form = TestCaseForm(request.POST, instance=test_case)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Test case updated successfully.')
+            messages.success(request, '测试用例更新成功')
             return redirect('test_case_detail', pk=test_case.pk)
     else:
         form = TestCaseForm(instance=test_case)
 
-    return render(request, 'test_manager/test_case_form.html', {'form': form, 'title': 'Edit Test Case'})
+    return render(request, 'test_manager/test_case_form.html', {'form': form, 'title': '编辑测试用例'})
 
 
 @login_required
@@ -445,7 +445,7 @@ def test_case_run(request, pk):
     if request.method == 'POST':
         environment_id = request.POST.get('environment')
         if not environment_id:
-            messages.error(request, 'Environment is required.')
+            messages.error(request, '请先选择环境')
             return redirect('test_case_detail', pk=test_case.pk)
 
         environment = get_object_or_404(Environment, pk=environment_id)
@@ -559,7 +559,7 @@ def test_suite_create(request):
             test_suite = form.save(commit=False)
             test_suite.created_by = request.user
             test_suite.save()
-            messages.success(request, 'Test suite created successfully.')
+            messages.success(request, '测试套件创建成功')
             return redirect('test_suite_detail', pk=test_suite.pk)
     else:
         initial = {}
@@ -567,7 +567,7 @@ def test_suite_create(request):
             initial['project'] = project_id
         form = TestSuiteForm(initial=initial)
 
-    return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': 'Create Test Suite'})
+    return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': '新增测试套件'})
 
 
 @login_required
@@ -638,12 +638,12 @@ def test_suite_edit(request, pk):
         form = TestSuiteForm(request.POST, instance=test_suite)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Test suite updated successfully.')
+            messages.success(request, '更新测试套件成功')
             return redirect('test_suite_detail', pk=test_suite.pk)
     else:
         form = TestSuiteForm(instance=test_suite)
 
-    return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': 'Edit Test Suite'})
+    return render(request, 'test_manager/test_suite_form.html', {'form': form, 'title': '编辑测试套件'})
 
 
 @login_required
@@ -656,7 +656,7 @@ def test_suite_run(request, pk):
     if request.method == 'POST':
         environment_id = request.POST.get('environment')
         if not environment_id:
-            messages.error(request, 'Environment is required.')
+            messages.error(request, '请先选择一个环境')
             return redirect('test_suite_detail', pk=test_suite.pk)
 
         environment = get_object_or_404(Environment, pk=environment_id)
@@ -786,7 +786,7 @@ def test_run_delete(request, pk):
     test_run = get_object_or_404(TestRun, pk=pk)
     if request.method == 'POST':
         test_run.delete()
-        messages.success(request, 'TestRun deleted successfully.')
+        messages.success(request, '测试运行删除成功')
         return redirect('test_run_list')
     return render(request, 'test_manager/test_run_confirm_delete.html', {'test_run': test_run})
 
@@ -980,7 +980,7 @@ def test_case_group_create(request):
 
     return render(request, 'test_manager/test_case_group_form.html', {
         'form': form,
-        'title': 'Create Test Case Group',
+        'title': '新增测试用例分组',
         'project': project,
     })
 
@@ -1001,7 +1001,7 @@ def test_case_group_edit(request, pk):
 
     return render(request, 'test_manager/test_case_group_form.html', {
         'form': form,
-        'title': 'Edit Test Case Group',
+        'title': '编辑测试用例分组',
         'project': project,
         'group': group,
     })
@@ -1083,7 +1083,7 @@ def test_suite_group_create(request):
 
     return render(request, 'test_manager/test_suite_group_form.html', {
         'form': form,
-        'title': 'Create Test Suite Group',
+        'title': '创建测试套件分组',
         'project': project,
     })
 
@@ -1104,7 +1104,7 @@ def test_suite_group_edit(request, pk):
 
     return render(request, 'test_manager/test_suite_group_form.html', {
         'form': form,
-        'title': 'Edit Test Suite Group',
+        'title': '编辑测试套件分组',
         'project': project,
         'group': group,
     })

@@ -18,7 +18,7 @@ class EnvironmentForm(forms.ModelForm):
     variables_json = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 4}),
         required=False,
-        help_text='Enter variables as JSON, e.g., {"key1": "value1", "key2": "value2"}'
+        help_text='输入json类型的环境变量, 例如., {"key1": "value1", "key2": "value2"}'
     )
 
     class Meta:
@@ -81,7 +81,7 @@ class TestCaseForm(forms.ModelForm):
 
     class Meta:
         model = TestCase
-        fields = [
+        fields =  [
             'name', 'project', 'group', 'description', 'request_method',
             'request_url', 'expected_status_code', 'request_body_format'
         ]

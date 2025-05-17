@@ -2,15 +2,15 @@
 
 {% block title %}{{ test_suite.name }} - EasyTesting{% endblock %}
 
-{% block header %}Test Suite: {{ test_suite.name }}{% endblock %}
+{% block header %}测试套件: {{ test_suite.name }}{% endblock %}
 
 {% block header_buttons %}
     <div class="btn-group">
         <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-outline-secondary">
-            <i class="bi bi-pencil"></i> Edit
+            <i class="bi bi-pencil"></i> 编辑
         </a>
         <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-success">
-            <i class="bi bi-play-fill"></i> Run Suite
+            <i class="bi bi-play-fill"></i> 运行
         </a>
     </div>
 {% endblock %}
@@ -20,14 +20,14 @@
         <div class="col-md-4 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Test Suite Details</span>
+                    <span>测试套件详情</span>
                     <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-pencil"></i>
                     </a>
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
-                        <h5 class="text-muted mb-2">Project</h5>
+                        <h5 class="text-muted mb-2">项目</h5>
                         <p>
                             <a href="{% url 'project_detail' pk=test_suite.project.pk %}" class="text-decoration-none">
                                 {{ test_suite.project.name }}
@@ -36,13 +36,13 @@
                     </div>
 
                     <div class="mb-4">
-                        <h5 class="text-muted mb-2">Description</h5>
+                        <h5 class="text-muted mb-2">描述</h5>
                         <p>{{ test_suite.description|default:"No description provided" }}</p>
                     </div>
 
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <h5 class="text-muted mb-2">Created By</h5>
+                            <h5 class="text-muted mb-2">创建人</h5>
                             <div class="d-flex align-items-center">
                             <span class="avatar avatar-sm bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
                                   style="width: 30px; height: 30px;">
@@ -53,12 +53,12 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <h5 class="text-muted mb-2">Created At</h5>
+                            <h5 class="text-muted mb-2">创建时间</h5>
                             <p class="mb-0">{{ test_suite.created_at|date:"Y-m-d H:i" }}</p>
                         </div>
 
                         <div class="col-md-6">
-                            <h5 class="text-muted mb-2">Last Updated</h5>
+                            <h5 class="text-muted mb-2">更新时间</h5>
                             <p class="mb-0">{{ test_suite.updated_at|date:"Y-m-d H:i" }}</p>
                         </div>
                     </div>
@@ -69,10 +69,10 @@
         <div class="col-md-8 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Test Cases</span>
+                    <span>测试用例</span>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                             data-bs-target="#addTestCaseModal">
-                        <i class="bi bi-plus-lg"></i> Add Test Case
+                        <i class="bi bi-plus-lg"></i> 添加测试用例
                     </button>
                 </div>
                 <div class="card-body">
@@ -81,11 +81,11 @@
                             <thead>
                             <tr>
                                 <th>Order</th>
-                                <th>Name</th>
-                                <th>Method</th>
+                                <th>名称</th>
+                                <th>请求方式</th>
                                 <th>URL</th>
-                                <th>Environment</th>
-                                <th class="text-end">Actions</th>
+                                <th>环境</th>
+                                <th class="text-end">操作</th>
                             </tr>
                             </thead>
                             <tbody id="test-cases-list">
@@ -121,7 +121,7 @@
                                         <select class="form-select form-select-sm environment-select"
                                                 data-suite-id="{{ test_suite.id }}"
                                                 data-case-id="{{ test_suite_case.test_case.id }}">
-                                            <option value="">Default</option>
+                                            <option value="">默认</option>
                                             {% for env in environments %}
                                                 <option value="{{ env.id }}"
                                                         {% if test_suite_case.environment.id == env.id %}selected{% endif %}>
@@ -147,11 +147,11 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test cases in this suite yet.
+                                            <i class="bi bi-info-circle me-2"></i> 套件中还没有测试用例
                                         </div>
                                         <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal"
                                                 data-bs-target="#addTestCaseModal">
-                                            <i class="bi bi-plus-lg"></i> Add Test Case
+                                            <i class="bi bi-plus-lg"></i> 添加测试用例
                                         </button>
                                     </td>
                                 </tr>
@@ -168,9 +168,9 @@
         <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Recent Test Runs</span>
+                    <span>最近测试运行</span>
                     <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-success">
-                        <i class="bi bi-play-fill"></i> Run Suite
+                        <i class="bi bi-play-fill"></i> 运行
                     </a>
                 </div>
                 <div class="card-body">
@@ -178,13 +178,13 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Default Environment</th>
-                                <th>Status</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Created By</th>
-                                <th class="text-end">Actions</th>
+                                <th>名称</th>
+                                <th>默认环境</th>
+                                <th>状态</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th>创建时间</th>
+                                <th class="text-end">操作</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -217,11 +217,11 @@
                                 <tr>
                                     <td colspan="7" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test runs yet.
+                                            <i class="bi bi-info-circle me-2"></i> 暂时没有测试运行记录
                                         </div>
                                         <a href="{% url 'test_suite_run' pk=test_suite.pk %}"
                                            class="btn btn-sm btn-success mt-2">
-                                            <i class="bi bi-play-fill"></i> Run Suite Now
+                                            <i class="bi bi-play-fill"></i> 立即运行
                                         </a>
                                     </td>
                                 </tr>
@@ -240,7 +240,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addTestCaseModalLabel">Add Test Case to Suite</h5>
+                    <h5 class="modal-title" id="addTestCaseModalLabel">添加测试用例</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -249,7 +249,7 @@
                         <div class="mb-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" class="form-control" id="searchTestCase" placeholder="Search test cases...">
+                                <input type="text" class="form-control" id="searchTestCase" placeholder="输入测试用例...">
                             </div>
                         </div>
 
@@ -273,11 +273,11 @@
                                                     <table class="table table-hover mb-0">
                                                         <thead>
                                                         <tr>
-                                                            <th>Name</th>
-                                                            <th>Method</th>
+                                                            <th>名称</th>
+                                                            <th>请求方式</th>
                                                             <th>URL</th>
-                                                            <th>Environment</th>
-                                                            <th>Actions</th>
+                                                            <th>环境</th>
+                                                            <th>操作</th>
                                                         </tr>
                                                         </thead>
                                                         <tbody class="test-case-list">
@@ -313,12 +313,12 @@
                                                                 <td>
                                                                     {% if test_case.id in added_test_case_ids %}
                                                                         <button type="button" class="btn btn-sm btn-success" disabled>
-                                                                            <i class="bi bi-check-lg"></i> Added
+                                                                            <i class="bi bi-check-lg"></i> 已添加
                                                                         </button>
                                                                     {% else %}
                                                                         <button type="button" class="btn btn-sm btn-primary"
                                                                                 onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
-                                                                            <i class="bi bi-plus-lg"></i> Add
+                                                                            <i class="bi bi-plus-lg"></i> 添加
                                                                         </button>
                                                                     {% endif %}
                                                                 </td>
@@ -338,7 +338,7 @@
                         {% if ungrouped_test_cases %}
                             <div class="card">
                                 <div class="card-header">
-                                    <i class="bi bi-file-earmark me-2"></i> Ungrouped Test Cases
+                                    <i class="bi bi-file-earmark me-2"></i> 未分组测试用例
                                     <span class="badge bg-secondary ms-2">{{ ungrouped_test_cases|length }}</span>
                                 </div>
                                 <div class="card-body p-0">
@@ -346,11 +346,11 @@
                                         <table class="table table-hover mb-0">
                                             <thead>
                                             <tr>
-                                                <th>Name</th>
-                                                <th>Method</th>
+                                                <th>名称</th>
+                                                <th>请求方法</th>
                                                 <th>URL</th>
-                                                <th>Environment</th>
-                                                <th>Actions</th>
+                                                <th>环境</th>
+                                                <th>操作</th>
                                             </tr>
                                             </thead>
                                             <tbody class="test-case-list">
@@ -377,7 +377,7 @@
                                                     <td>
                                                         <select class="form-select form-select-sm add-environment-select"
                                                                 data-case-id="{{ test_case.id }}">
-                                                            <option value="">Default</option>
+                                                            <option value="">默认</option>
                                                             {% for env in environments %}
                                                                 <option value="{{ env.id }}">{{ env.name }}</option>
                                                             {% endfor %}
@@ -386,12 +386,12 @@
                                                     <td>
                                                         {% if test_case.id in added_test_case_ids %}
                                                             <button type="button" class="btn btn-sm btn-success" disabled>
-                                                                <i class="bi bi-check-lg"></i> Added
+                                                                <i class="bi bi-check-lg"></i> 已添加
                                                             </button>
                                                         {% else %}
                                                             <button type="button" class="btn btn-sm btn-primary"
                                                                     onclick="addTestCase({{ test_suite.id }}, {{ test_case.id }})">
-                                                                <i class="bi bi-plus-lg"></i> Add
+                                                                <i class="bi bi-plus-lg"></i> 添加
                                                             </button>
                                                         {% endif %}
                                                     </td>
@@ -408,20 +408,20 @@
                             <div class="d-flex">
                                 <i class="bi bi-info-circle-fill me-2 fs-5"></i>
                                 <div>
-                                    <strong>No available test cases.</strong> No test cases exist for this project.
+                                    <strong>没有可用的测试用例</strong> 项目暂不存在测试用例。
                                 </div>
                             </div>
                         </div>
                         <div class="text-center mt-3">
                             <a href="{% url 'test_case_create' %}?project={{ test_suite.project.id }}"
                                class="btn btn-primary">
-                                <i class="bi bi-plus-lg"></i> Create New Test Case
+                                <i class="bi bi-plus-lg"></i> 新增测试用例
                             </a>
                         </div>
                     {% endif %}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>

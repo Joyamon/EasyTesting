@@ -8,35 +8,35 @@
         <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <span>Run Configuration</span>
+                    <span>运行配置</span>
                 </div>
                 <div class="card-body">
                     <form method="post" action="{% url 'test_suite_run' pk=test_suite.pk %}">
                         {% csrf_token %}
 
                         <div class="mb-3">
-                            <label for="name" class="form-label">Test Run Name</label>
+                            <label for="name" class="form-label">名称</label>
                             <input type="text" class="form-control" id="name" name="name"
                                    value="Suite run: {{ test_suite.name }}" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="environment" class="form-label">Default Environment</label>
+                            <label for="environment" class="form-label">默认环境</label>
                             <select class="form-select" id="environment" name="environment" required>
-                                <option value="">Select Environment</option>
+                                <option value="">选择环境</option>
                                 {% for env in environments %}
                                     <option value="{{ env.id }}">{{ env.name }}</option>
                                 {% endfor %}
                             </select>
-                            <div class="form-text">This environment will be used for test cases without a specific environment.</div>
+                            <div class="form-text">默认环境将用于没有指定环境的测试用例</div>
                         </div>
 
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Test Cases</h5>
+                                <h5 class="mb-0">测试用例</h5>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="showAdvancedOptions">
-                                    <label class="form-check-label" for="showAdvancedOptions">Show Advanced Options</label>
+                                    <label class="form-check-label" for="showAdvancedOptions">高级</label>
                                 </div>
                             </div>
 
@@ -45,11 +45,11 @@
                                     <thead>
                                     <tr>
                                         <th>Order</th>
-                                        <th>Test Case</th>
-                                        <th>Method</th>
+                                        <th>测试用例</th>
+                                        <th>请求方法</th>
                                         <th>URL</th>
-                                        <th class="advanced-option" style="display: none;">Environment</th>
-                                        <th class="advanced-option" style="display: none;">Extract Parameters</th>
+                                        <th class="advanced-option" style="display: none;">环境</th>
+                                        <th class="advanced-option" style="display: none;">提取参数</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -82,7 +82,7 @@
                                             <td class="advanced-option" style="display: none;">
                                                 <select class="form-select form-select-sm"
                                                         name="case_environment_{{ test_suite_case.test_case.id }}">
-                                                    <option value="">Use Default</option>
+                                                    <option value="">默认使用</option>
                                                     {% for env in environments %}
                                                         <option value="{{ env.id }}"
                                                             {% if test_suite_case.environment and test_suite_case.environment.id == env.id %}selected{% endif %}>
@@ -102,7 +102,7 @@
                                                         {% endfor %}
                                                     </div>
                                                 {% else %}
-                                                    <span class="text-muted small">No parameters to extract</span>
+                                                    <span class="text-muted small">暂无提取参数</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -110,7 +110,7 @@
                                         <tr>
                                             <td colspan="6" class="text-center py-4">
                                                 <div class="text-muted">
-                                                    <i class="bi bi-info-circle me-2"></i> No test cases in this suite.
+                                                    <i class="bi bi-info-circle me-2"></i> 暂无用例
                                                 </div>
                                             </td>
                                         </tr>
@@ -122,7 +122,7 @@
 
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-play-fill"></i> Run Test Suite
+                                <i class="bi bi-play-fill"></i> 运行
                             </button>
                         </div>
                     </form>

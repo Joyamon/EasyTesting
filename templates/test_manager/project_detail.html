@@ -15,7 +15,7 @@
     <ul class="dropdown-menu dropdown-menu-end">
         <li>
             <a class="dropdown-item" href="{% url 'environment_create' %}?project={{ project.pk }}">
-                <i class="bi bi-gear"></i> 环境变量
+                <i class="bi bi-gear"></i> 环境
             </a>
         </li>
         <li>
@@ -76,9 +76,9 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>环境变量</span>
+                <span>环境</span>
                 <a href="{% url 'environment_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-plus-lg"></i> 添加环境变量
+                    <i class="bi bi-plus-lg"></i> 添加环境
                 </a>
             </div>
             <div class="card-body">
@@ -108,7 +108,7 @@
                                 <tr>
                                     <td colspan="3" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> 没有环境变量
+                                            <i class="bi bi-info-circle me-2"></i> 没有环境
                                         </div>
                                     </td>
                                 </tr>
@@ -135,14 +135,14 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="bi bi-folder me-2"></i> 测试分组
+                            <i class="bi bi-folder me-2"></i> 测试用例分组
                         </h5>
                         <div>
                             <a href="{% url 'test_case_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-folder2-open"></i> 查看测试分组
+                                <i class="bi bi-folder2-open"></i> 查看测试用例分组
                             </a>
                             <a href="{% url 'test_case_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-folder-plus"></i> 新增测试分组
+                                <i class="bi bi-folder-plus"></i> 新增测试用例分组
                             </a>
                         </div>
                     </div>
@@ -163,15 +163,15 @@
                             {% if test_case_groups.count > 5 %}
                                 <div class="text-center mt-3">
                                     <a href="{% url 'test_case_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
-                                        查看全部 测试分组
+                                        查看全部测试用例分组
                                     </a>
                                 </div>
                             {% endif %}
                         {% else %}
                             <div class="text-center py-3">
-                                <p class="text-muted mb-0">暂时没有测试分组</p>
+                                <p class="text-muted mb-0">暂时没有测试用例分组</p>
                                 <a href="{% url 'test_case_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary mt-2">
-                                    <i class="bi bi-folder-plus"></i> 新增测试分组
+                                    <i class="bi bi-folder-plus"></i> 新增测试用例分组
                                 </a>
                             </div>
                         {% endif %}
@@ -217,7 +217,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test cases yet.
+                                            <i class="bi bi-info-circle me-2"></i> 暂时没有测试用例
                                         </div>
                                     </td>
                                 </tr>
@@ -232,9 +232,9 @@
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Test Suites</span>
+                <span>测试套件</span>
                 <a href="{% url 'test_suite_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-plus-lg"></i> Add Test Suite
+                    <i class="bi bi-plus-lg"></i> 新增测试套件
                 </a>
             </div>
             <div class="card-body">
@@ -242,14 +242,14 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="bi bi-folder me-2"></i> Test Suite Groups
+                            <i class="bi bi-folder me-2"></i> 测试套件分组
                         </h5>
                         <div>
                             <a href="{% url 'test_suite_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-folder2-open"></i> Browse Groups
+                                <i class="bi bi-folder2-open"></i> 查看测试套件分钟
                             </a>
                             <a href="{% url 'test_suite_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-folder-plus"></i> New Group
+                                <i class="bi bi-folder-plus"></i> 新增测试套件分组
                             </a>
                         </div>
                     </div>
@@ -261,7 +261,7 @@
                                         <div>
                                             <i class="bi bi-folder-fill text-warning me-2"></i>
                                             {{ group.name }}
-                                            <span class="badge bg-light text-dark ms-2">{{ group.test_suites.count }} test suites</span>
+                                            <span class="badge bg-light text-dark ms-2">{{ group.test_suites.count }} 测试套件s</span>
                                         </div>
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
@@ -270,15 +270,15 @@
                             {% if test_suite_groups.count > 5 %}
                                 <div class="text-center mt-3">
                                     <a href="{% url 'test_suite_group_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary">
-                                        View All Groups
+                                        查看全部测试套件分组
                                     </a>
                                 </div>
                             {% endif %}
                         {% else %}
                             <div class="text-center py-3">
-                                <p class="text-muted mb-0">No test suite groups yet</p>
+                                <p class="text-muted mb-0">暂时没有测试套件分组</p>
                                 <a href="{% url 'test_suite_group_create' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary mt-2">
-                                    <i class="bi bi-folder-plus"></i> Create Group
+                                    <i class="bi bi-folder-plus"></i> 新增测试套件分组
                                 </a>
                             </div>
                         {% endif %}
@@ -288,9 +288,9 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th class="text-end">Actions</th>
+                                <th>测试套件名称</th>
+                                <th>描述</th>
+                                <th class="text-end">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -308,7 +308,7 @@
                                 <tr>
                                     <td colspan="3" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test suites yet.
+                                            <i class="bi bi-info-circle me-2"></i> 暂时没有测试套件
                                         </div>
                                     </td>
                                 </tr>
@@ -325,9 +325,9 @@
     <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Recent Test Runs</span>
+                <span>最近测试运行</span>
                 <a href="{% url 'test_run_list' %}?project={{ project.pk }}" class="btn btn-sm btn-outline-primary">
-                    View All
+                    查看全部
                 </a>
             </div>
             <div class="card-body">
@@ -335,12 +335,12 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Environment</th>
-                                <th>Status</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th class="text-end">Actions</th>
+                                <th>名称</th>
+                                <th>环境</th>
+                                <th>状态</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th class="text-end">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -371,7 +371,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-4">
                                         <div class="text-muted">
-                                            <i class="bi bi-info-circle me-2"></i> No test runs yet.
+                                            <i class="bi bi-info-circle me-2"></i> 暂时没有测试运行
                                         </div>
                                     </td>
                                 </tr>
