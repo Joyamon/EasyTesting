@@ -2,6 +2,12 @@
 
 使用Django、Django REST框架、SQLite、Bootstrap和HTTPRunner构建的综合测试平台。
 
+## 推荐版本
+- python3.9 
+- Django==4.2.11 
+- djangorestframework==3.15.2
+- httprunner==4.3.0
+
 ## 功能特点
 
 - 创建和管理测试项目

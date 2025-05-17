@@ -404,8 +404,8 @@ def _execute_with_requests(test_case, environment, variables=None):
 
             for rule in validation_rules:
                 # 简单实现一些基本的验证规则
-                if "eq" in rule:
-                    path, expected = rule["eq"]
+                if "Equal" in rule:
+                    path, expected = rule["Equal"]
                     # 替换预期值中的变量
                     expected = replace_variables(expected, variables)
 
