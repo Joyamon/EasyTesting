@@ -1289,7 +1289,8 @@ def generate_test_run_report(request, pk):
                 report_type='test_run',
                 report_format=form.cleaned_data['report_format'],
                 test_run=test_run,
-                is_public=form.cleaned_data['is_public']
+                is_public=form.cleaned_data['is_public'],
+                created_by=request.user
             )
 
             # 生成报告内容

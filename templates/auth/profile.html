@@ -93,7 +93,7 @@
                 <div class="mb-4">
                     <h6 class="text-muted mb-3">最近活动</h6>
                     <div class="list-group">
-                        {% for run in user.created_test_runs.all|slice:":5" %}
+                        {% for run in user.created_test_runs.all|dictsortreversed:"created_at"|slice:5 %}
                             <div class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ run.name }}</h6>
