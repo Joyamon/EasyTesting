@@ -177,7 +177,7 @@ def project_edit(request, pk):
     else:
         form = ProjectForm(instance=project)
 
-    return render(request, 'test_manager/project_form.html', {'form': form, 'title': 'Edit Project'})
+    return render(request, 'test_manager/project_form.html', {'form': form, 'title': '编辑项目'})
 
 
 @login_required
