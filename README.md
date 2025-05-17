@@ -102,6 +102,10 @@
 ### 邮件配置列表
 <img src="static/pic/邮件配置列表.png" />
 
+
+### 觉得项目不错，请作者喝一杯咖啡
+<img src="static/pic/pay.jpg" width="300" />
+
 ## License
 This project is licensed under the MIT License.
 

@@ -123,7 +123,7 @@ def project_create(request):
     else:
         form = ProjectForm()
 
-    return render(request, 'test_manager/project_form.html', {'form': form, 'title': 'Create Project'})
+    return render(request, 'test_manager/project_form.html', {'form': form, 'title': '新增项目'})
 
 
 @login_required

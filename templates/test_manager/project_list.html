@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Projects - EasyTesting{% endblock %}
+{% block title %}项目列表 - EasyTesting{% endblock %}
 
-{% block header %}Projects{% endblock %}
+{% block header %}项目列表{% endblock %}
 
 {% block header_buttons %}
 <a href="{% url 'project_create' %}" class="btn btn-primary">
-    <i class="bi bi-plus-lg"></i> New Project
+    <i class="bi bi-plus-lg"></i> 新增项目
 </a>
 {% endblock %}
 
@@ -19,11 +19,11 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Created By</th>
-                        <th>Created At</th>
-                        <th class="text-end">Actions</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                        <th>创建人</th>
+                        <th>创建时间</th>
+                        <th class="text-end">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,10 +63,10 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="py-5">
                                     <i class="bi bi-folder-x display-4 text-muted mb-3"></i>
-                                    <h5>No projects yet</h5>
-                                    <p class="text-muted">Create your first project to get started</p>
+                                    <h5>没有项目</h5>
+                                    <p class="text-muted">创建你的第一个项目吧</p>
                                     <a href="{% url 'project_create' %}" class="btn btn-primary mt-2">
-                                        <i class="bi bi-plus-lg"></i> Create Project
+                                        <i class="bi bi-plus-lg"></i> 新增项目
                                     </a>
                                 </div>
                             </td>
