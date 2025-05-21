@@ -1,16 +1,10 @@
 from django.apps import AppConfig
 
-# class TestManagerConfig(AppConfig):
-#     default_auto_field = "django.db.models.BigAutoField"
-#     name = "test_manager"
-
-
-from django.apps import AppConfig
-
 
 class TestManagerConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'test_manager'
+    verbose_name = "测试管理"
 
     def ready(self):
         """应用启动时执行的操作"""
@@ -22,5 +16,4 @@ class TestManagerConfig(AppConfig):
             from test_manager.models import EmailConfig
             EmailConfig.apply_active_config()
         except:
-            # 在应用首次安装时，表可能尚未创建
             pass

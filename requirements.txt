@@ -2,3 +2,4 @@ Django==4.2.11
 djangorestframework==3.15.2
 httprunner==4.3.0
 jsonpath-ng==1.7.0
+django-simpleui==2025.5.17

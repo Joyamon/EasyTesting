@@ -71,6 +71,6 @@ class TestReportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
-admin.site.site_header = '测试管理后台'
-admin.site.site_title = '测试管理后台'
-admin.site.index_title = '测试管理后台'
+admin.site.site_header = 'EastTesting测试管理后台'
+admin.site.site_title = 'EastTesting测试管理后台'
+admin.site.index_title = 'EastTesting测试管理后台'

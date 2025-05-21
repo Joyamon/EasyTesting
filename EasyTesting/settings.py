@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "simpleui",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -150,3 +151,20 @@ EMAIL_HOST_PASSWORD = 'umbclibpysdzffii'  # SMTP 密码
 DEFAULT_FROM_EMAIL = '1210777805@qq.com'  # 默认发件人
 
 SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'
+# simpleui 设置
+SIMPLEUI_LOGO = "../static/svg/test.svg"
+# 隐藏右侧SimpleUI广告链接和使用分析
+SIMPLEUI_HOME_INFO = False
+SIMPLEUI_ANALYSIS = False
+
+# 设置默认主题，指向主题css文件名。Admin Lte风格
+# SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
+
+# 设置默认主题，指向主题css文件名。Element-ui风格
+# SIMPLEUI_DEFAULT_THEME = 'element.css'
+
+# 设置默认主题，指向主题css文件名。layui风格
+SIMPLEUI_DEFAULT_THEME = 'layui.css'
+
+# 设置默认主题，指向主题css文件名。紫色风格
+# SIMPLEUI_DEFAULT_THEME = 'purple.css'

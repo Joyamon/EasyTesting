@@ -15,6 +15,11 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+        verbose_name = "项目"
+        verbose_name_plural = verbose_name
+
 
 class Environment(models.Model):
     name = models.CharField(max_length=100)
@@ -26,6 +31,10 @@ class Environment(models.Model):
 
     def __str__(self):
         return f"{self.project.name} - {self.name}"
+
+    class Meta:
+        verbose_name = "环境"
+        verbose_name_plural = verbose_name
 
 
 # 测试用例分组
@@ -45,6 +54,8 @@ class TestCaseGroup(models.Model):
     class Meta:
         unique_together = ('name', 'project', 'parent')
         ordering = ['name']
+        verbose_name = "用例分组"
+        verbose_name_plural = verbose_name
 
 
 class TestCase(models.Model):
@@ -79,6 +90,10 @@ class TestCase(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = "测试用例"
+        verbose_name_plural = verbose_name
+
 
 # 新增测试套件分组模型
 class TestSuiteGroup(models.Model):
@@ -97,6 +112,8 @@ class TestSuiteGroup(models.Model):
     class Meta:
         unique_together = ('name', 'project', 'parent')
         ordering = ['name']
+        verbose_name = "套件分组"
+        verbose_name_plural = verbose_name
 
 
 class TestSuite(models.Model):
@@ -112,6 +129,10 @@ class TestSuite(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = "测试套件"
+        verbose_name_plural = verbose_name
 
 
 class TestSuiteCase(models.Model):
@@ -152,6 +173,10 @@ class TestRun(models.Model):
             return (self.end_time - self.start_time).total_seconds()
         return None
 
+    class Meta:
+        verbose_name = "测试运行"
+        verbose_name_plural = verbose_name
+
 
 class TestResult(models.Model):
     STATUS_CHOICES = [
@@ -178,6 +203,10 @@ class TestResult(models.Model):
 
     def __str__(self):
         return f"{self.test_case.name} - {self.status}"
+
+    class Meta:
+        verbose_name = "测试结果"
+        verbose_name_plural = verbose_name
 
 
 from django.db import models
@@ -431,6 +460,8 @@ class TestReport(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = "测试报告"
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return self.name
