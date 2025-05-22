@@ -168,3 +168,79 @@ SIMPLEUI_DEFAULT_THEME = 'layui.css'
 
 # 设置默认主题，指向主题css文件名。紫色风格
 # SIMPLEUI_DEFAULT_THEME = 'purple.css'
+
+
+import time
+
+SIMPLEUI_CONFIG = {
+    'system_keep': False,
+    'menu_display': ['测试管理', '用户&设置'],  # 开启排序和过滤功能, 不填此字段为默认排序和全部显示, 空列表[] 为全部不显示.
+    'dynamic': True,  # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时动态展示菜单内容
+    'menus': [
+        {
+            'app': 'test_manager',
+            'name': '测试管理',
+            'icon': 'fas fa-user-shield',
+            'models': [{
+                'name': '项目',
+                'icon': 'fa el-icon-folder',
+                'url': '/admin/test_manager/project/'
+            },
+                {
+                    'name': '环境',
+                    'icon': 'fa el-icon-s-tools',
+                    'url': '/admin/test_manager/environment/'
+                },
+                {
+                    'name': '测试用例',
+                    'icon': 'fa el-icon-suitcase-1',
+                    'url': '/admin/test_manager/testcase/'
+                },
+                {
+                    'name': '测试套件',
+                    'icon': 'fa el-icon-suitcase',
+                    'url': '/admin/test_manager/testsuite/'
+                },
+                {
+                    'name': '测试用例分组',
+                    'icon': 'fa el-icon-postcard',
+                    'url': '/admin/test_manager/testcasegroup/'
+                },
+                {
+                    'name': '测试套件分组',
+                    'icon': 'fa el-icon-postcard',
+                    'url': '/admin/test_manager/testsuitegroup/'
+                },
+                {
+                    'name': '运行结果',
+                    'icon': 'fa el-icon-truck',
+                    'url': '/admin/test_manager/testresult/'
+                },
+                {
+                    'name': '测试报告',
+                    'icon': 'fa fa-file',
+                    'url': '/admin/test_manager/testreport/'
+                },
+
+            ]
+        }, {
+            'name': '用户&设置',
+            'icon': 'fa fa-desktop',
+            'models': [{
+                'name': '用户',
+                'icon': 'fa fa-user',
+                'url': 'auth/user/'
+            },
+                {
+                    'name': '用户分组',
+                    'icon': 'fa fa-user-group',
+                    'url': 'auth/group/'
+                },
+                {
+                    'name': '邮件配置',
+                    'icon': 'fa el-icon-message',
+                    'url': '/admin/test_manager/emailconfig/'
+                },
+            ]
+        }]
+}

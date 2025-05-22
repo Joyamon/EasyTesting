@@ -103,6 +103,9 @@
 <img src="static/pic/邮件配置列表.png" />
 
 
+### 测试管理后台
+<img src="static/pic/后台管理.png" />
+
 ### 觉得项目不错，请作者喝一杯咖啡
 <img src="static/pic/pay.jpg" width="300" />
 
