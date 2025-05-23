@@ -381,19 +381,19 @@
                     <li class="nav-item">
                         <a class="nav-link {% if '/projects/' in request.path %}active{% endif %}"
                            href="{% url 'project_list' %}">
-                            <i class="bi bi-folder" style="color: cornflowerblue"></i> 项目
+                            <i class="bi bi-projector-fill" style="color: cornflowerblue"></i> 项目
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if '/environments/' in request.path %}active{% endif %}"
                            href="{% url 'environment_list' %}">
-                            <i class="bi bi-gear" style="color: cornflowerblue"></i> 环境
+                            <i class="bi bi-gear-fill" style="color: cornflowerblue"></i> 环境
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if '/test-cases/' in request.path %}active{% endif %}"
                            href="{% url 'test_case_list' %}">
-                            <i class="bi bi-file-earmark-code" style="color: cornflowerblue"></i> 测试用例
+                            <i class="bi bi-briefcase-fill" style="color: cornflowerblue"></i> 测试用例
                         </a>
                     </li>
                     <li class="nav-item">
@@ -405,13 +405,13 @@
                     <li class="nav-item">
                         <a class="nav-link {% if '/test-runs/' in request.path %}active{% endif %}"
                            href="{% url 'test_run_list' %}">
-                            <i class="bi bi-play-circle" style="color: cornflowerblue"></i> 测试运行
+                            <i class="bi bi-play-circle-fill" style="color: cornflowerblue"></i> 测试运行
                         </a>
                     </li>
                     <!-- Test Case Groups -->
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'test_case_group_list' %}">
-                            <i class="bi bi-folder me-2" style="color: cornflowerblue"></i>
+                            <i class="bi bi-collection-fill me-2" style="color: cornflowerblue"></i>
                             <span>测试用例分组</span>
                         </a>
                     </li>
@@ -419,14 +419,14 @@
                     <!-- Test Suite Groups -->
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'test_suite_group_list' %}">
-                            <i class="bi bi-folder me-2" style="color: cornflowerblue"></i>
+                            <i class="bi bi-collection-fill me-2" style="color: cornflowerblue"></i>
                             <span>测试套件分组</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if '/test-reports/' in request.path %}active{% endif %}"
                            href="{% url 'test_report_list' %}">
-                            <i class="bi bi-collection-fill" style="color: cornflowerblue"></i> 测试报告
+                            <i class="bi bi-reply-all-fill" style="color: cornflowerblue"></i> 测试报告
                         </a>
                     </li>
                     {% if user.is_authenticated %}
@@ -437,12 +437,12 @@
                             <li class="nav-item">
                                 <a class="nav-link {% if '/profile/' in request.path %}active{% endif %}"
                                    href="{% url 'profile' %}">
-                                    <i class="bi bi-person" style="color: cornflowerblue"></i> 个人资料
+                                    <i class="bi bi-person-fill" style="color: cornflowerblue"></i> 个人资料
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'password_change' %}">
-                                    <i class="bi bi-lock" style="color: cornflowerblue"></i> 修改密码
+                                    <i class="bi bi-lock-fill" style="color: cornflowerblue"></i> 修改密码
                                 </a>
                             </li>
 
@@ -457,7 +457,7 @@
                             </h6>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'admin:index' %}" target="_blank">
-                                    <i class="bi bi-gear" style="color: cornflowerblue"></i> 管理后台
+                                    <i class="bi bi-laptop-fill" style="color: cornflowerblue"></i> 管理后台
                                 </a>
                             </li>
 
