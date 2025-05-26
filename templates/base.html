@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EasyTesting{% endblock %}</title>
-{#    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">#}
-    <link href="{% static 'css/bootstrap.min.css'  %} " rel="stylesheet">
+    {#    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">#}
+    <link href="{% static 'css/bootstrap.min.css' %} " rel="stylesheet">
     <link rel="stylesheet" href="/static/css/custom.css">
-{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">#}
+    {#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">#}
     <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'svg/test.svg' %}">
     <style>
@@ -320,6 +320,41 @@
             font-weight: 600;
             margin-right: 0.5rem;
         }
+
+        .floating-ball-wrapper {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .floating-ball {
+            position: absolute;
+            left: 95vw;
+            top: 80vh;
+            width: 50px;
+            height: 50px;
+            background: #0d6efd;
+            border-radius: 50%;
+            cursor: grab;
+            transition: box-shadow 0.3s, transform 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            pointer-events: auto;
+            user-select: none;
+        }
+
+        .floating-ball:active {
+            cursor: grabbing;
+        }
+
+        .floating-ball:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            transform: scale(1.08);
+        }
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -489,7 +524,38 @@
             {% block header_buttons %}{% endblock %}
         </div>
     </div>
-
+    <!--悬浮球 -->
+    <div class="floating-ball-wrapper">
+        <div class="floating-ball shadow" title="点击查看文档">
+            <i class="bi bi-file-earmark text-white"></i>
+        </div>
+    </div>
+    <!--弹窗 -->
+    <div class="modal fade" id="floatingBallModal" tabindex="-1" aria-labelledby="floatingBallModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="floatingBallModalLabel">EasyTesting文档</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="stat-card">
+                        <i class="bi bi-file-earmark-text-fill">
+                            <a href="https://gitee.com/joyamon/easy-testing/blob/master/README.md"
+                               target="_blank">EasyTesting README.md</a>
+                        </i>
+                        <i class="bi bi-file-earmark-text-fill">
+                            <a href="https://gitee.com/joyamon/easy-testing" target="_blank">EasyTesting项目源码 </a>
+                        </i>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
     {% block content %}{% endblock %}
 </main>
 
@@ -520,6 +586,53 @@
                 }
             }, 5000);
         });
+    });
+</script>
+
+<script>
+    // 必须在DOM加载完毕后执行
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    const ball = document.querySelector('.floating-ball');
+    let isDragging = false, offsetX = 0, offsetY = 0, moved = false;
+
+    ball.addEventListener('mousedown', function (e) {
+        isDragging = true;
+        moved = false;
+        const rect = ball.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        ball.style.transition = 'none';
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!isDragging) return;
+        moved = true;
+        const left = e.clientX - offsetX;
+        const top = e.clientY - offsetY;
+        ball.style.left = left + 'px';
+        ball.style.top = top + 'px';
+    });
+
+    document.addEventListener('mouseup', function (e) {
+        if (isDragging) {
+            isDragging = false;
+            ball.style.transition = 'box-shadow 0.3s, transform 0.3s';
+            document.body.style.userSelect = '';
+        }
+    });
+
+    ball.addEventListener('click', function (e) {
+        if (!moved) {
+            const myModal = new bootstrap.Modal(document.getElementById('floatingBallModal'));
+            myModal.show();
+        }
     });
 </script>
 {% block extra_js %}{% endblock %}
