@@ -33,7 +33,7 @@
    python -m venv venv
    source venv/bin/activate 
    ```
-3. 按照依赖:
+3. 安装依赖:
    ```
    pip install -r requirements.txt
    ```
