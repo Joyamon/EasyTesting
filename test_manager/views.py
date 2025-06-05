@@ -1,6 +1,6 @@
 import datetime
 import json
-
+import ast
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
@@ -8,13 +8,14 @@ from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .async_executor import execute_test_suite_async, execute_test_case_async
+from .gen_data import auto_gen_data
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, TestSuiteRun
+    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, TestSuiteRun, MockData
 )
 from .forms import (
     ProjectForm, EnvironmentForm, TestCaseForm, TestSuiteForm,
-    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm, GenerateReportForm
+    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm, GenerateReportForm, MockDataForm
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
 
@@ -1946,3 +1947,43 @@ def generate_test_suite_run_report(request, pk):
         'form': form,
         'test_suite_run': test_suite_run,
     })
+
+
+@login_required
+def mock_data_generator(request):
+    data_list = request.POST.get('data')
+    num = request.POST.get('num')
+    if request.method == 'POST':
+        form = MockDataForm(request.POST)
+        if form.is_valid():
+            mock_data = form.save(commit=False)
+            mock_data.data = auto_gen_data(fields=ast.literal_eval(data_list), num=int(num))
+            mock_data.created_by = request.user
+            mock_data.save()
+            messages.success(request, '数据生成成功')
+            return redirect('mock-data-list')
+    else:
+
+        form = MockDataForm()
+    return render(request, 'test_manager/mock_data_form.html', {'form': form, 'title': '生成数据'})
+
+
+def mock_data_list(request):
+    all_mock_data = MockData.objects.all().order_by('-created_at')
+    # 获取每页显示的记录数
+    per_page = request.GET.get('per_page', 10)
+    try:
+        per_page = int(per_page)
+    except ValueError:
+        per_page = 10
+    mock_data_list = paginate_queryset(request, all_mock_data, per_page)
+    return render(request, 'test_manager/mock_data.html', {'mock_data_list': mock_data_list})
+
+
+def mock_data_delete(request, pk):
+    mock_data = get_object_or_404(MockData, pk=pk)
+    if request.method == 'POST':
+        mock_data.delete()
+        messages.success(request, '数据删除成功')
+        return redirect('mock-data-list')
+    return render(request, 'test_manager/mock_data_delete.html', {'mock_data': mock_data})

@@ -464,6 +464,12 @@
                             <i class="bi bi-reply-all-fill" style="color: cornflowerblue"></i> 测试报告
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/test-reports/' in request.path %}active{% endif %}"
+                           href="{% url 'mock-data-list' %}">
+                            <i class="bi bi-clipboard-data-fill" style="color: cornflowerblue"></i> mock数据
+                        </a>
+                    </li>
                     {% if user.is_authenticated %}
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                             <span>用户&设置</span>
@@ -560,6 +566,34 @@
                             </a>
                         </i>
                     </div>
+                    <div class="modal-body">
+                        <div class="form-text">数据生成规则</div>
+
+                        <code class="bg-light px-2 py-md-2 rounded">
+                            string:随机英文字母、数字组合，可根据 length 指定长度
+                            integer:在 min/max 范围内随机生成
+                            float:指定精度随机生成
+                            email:生成格式化邮箱，如 nameXXXX@test.com
+                            datetime/date:随机生成日期时间
+                            enum/bool:随机选择或取 true/false
+
+                        </code>
+                        <div class="form-text">示例</div>
+                        <code class="bg-light px-2 py-1 rounded">
+                            [
+                                {"name": "age", "type": "integer", "min": 18, "max": 60, "required": False},
+                                {"name": "email", "type": "string", "format": "email", "required": True},
+                                {"name": "address", "type": "address", "required": False},
+                                {"name": "phone", "type": "phone", "required": False},
+                                {"name": "url", "type": "url", "required": False},
+                                {"name": "city", "type": "city", "required": False},
+                                {"name": "job", "type": "job", "required": False},
+                                {"name": "company", "type": "company", "required": False},
+                                {"name": "username", "type": "username", "required": False},
+                            ]
+
+                        </code>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
@@ -646,21 +680,21 @@
         }
     });
 </script>
-<script>
-    fetch('https://gitee.com/api/v5/repos/Joyamon/easy-testing')
-        .then(response => response.json())      // 把响应转为JSON对象
-        .then(data => {
-            // 找到指定的HTML元素
-            const starCountElement = document.getElementById('star-count');
-            // 渲染star数量
-            starCountElement.textContent = data.stargazers_count;     // 处理返回的数据
-        })
-        .catch(error => {
-            console.error('请求失败:', error);
-        });
-
-
-</script>
+{#<script>#}
+{#    fetch('https://gitee.com/api/v5/repos/Joyamon/easy-testing')#}
+{#        .then(response => response.json())      // 把响应转为JSON对象#}
+{#        .then(data => {#}
+{#            // 找到指定的HTML元素#}
+{#            const starCountElement = document.getElementById('star-count');#}
+{#            // 渲染star数量#}
+{#            starCountElement.textContent = data.stargazers_count;     // 处理返回的数据#}
+{#        })#}
+{#        .catch(error => {#}
+{#            console.error('请求失败:', error);#}
+{#        });#}
+{##}
+{##}
+{#</script>#}
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,6 +1,8 @@
+from typing import List
+
 from django import forms
 from .models import (
-    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport
+    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, MockData
 )
 import json
 
@@ -18,7 +20,7 @@ class EnvironmentForm(forms.ModelForm):
     variables_json = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 4}),
         required=False,
-        help_text='输入json类型的环境变量, 例如., {"key1": "value1", "key2": "value2"}'
+        help_text='输入json类型的环境变量, 例如., [value1,value2,...]'
     )
 
     class Meta:
@@ -28,7 +30,7 @@ class EnvironmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields['variables_json'].initial = json.dumps(self.instance.variables, ensure_ascii=False, indent=2)
+            self.fields['variables_json'].initial = List[self.instance.variables]
 
     def clean_variables_json(self):
         variables_json = self.cleaned_data.get('variables_json')
@@ -343,3 +345,37 @@ class GenerateReportForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
     report_format = forms.ChoiceField(choices=TestReport.REPORT_FORMAT_CHOICES)
     is_public = forms.BooleanField(required=False, initial=False)
+
+
+class MockDataForm(forms.ModelForm):
+    variables_json = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False,
+        help_text='输入List类型的环境变量, 例如., [value1,value2,value3 ...]'
+    )
+
+    class Meta:
+        model = MockData
+        fields = ['aim', 'data', 'description']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['variables_json'].initial = json.dumps(self.instance.variables, ensure_ascii=False, indent=2)
+
+    def clean_variables_json(self):
+        variables_json = self.cleaned_data.get('variables_json')
+        if not variables_json:
+            return {}
+
+        try:
+            return json.loads(variables_json)
+        except json.JSONDecodeError:
+            raise forms.ValidationError('Invalid JSON format')
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.variables = self.cleaned_data.get('variables_json', {})
+        if commit:
+            instance.save()
+        return instance

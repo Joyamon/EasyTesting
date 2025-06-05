@@ -143,6 +143,9 @@
 ### 悬浮球
 <img src="static/pic/悬浮球.png" />
 
+### mock数据
+  <img src="static/pic/mock数据.png" />
+
 ### 觉得项目不错，请作者喝一杯咖啡
 
 <img src="static/pic/pay.jpg" width="300" />
