@@ -533,6 +533,9 @@ class MockData(models.Model):
 
     def __str__(self):
         return self.description
+    @property
+    def count_data(self):
+        return len(json.loads(self.data))
 
     class Meta:
         verbose_name = "模拟数据"

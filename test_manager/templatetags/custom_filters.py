@@ -1,5 +1,5 @@
 import re
-
+import ast
 from django import template
 from django.utils.safestring import mark_safe
 import json
@@ -203,3 +203,9 @@ def pprint(value):
         return json.dumps(value, indent=2, ensure_ascii=False)
     except:
         return value
+
+
+@register.filter
+def trans_type(value):
+    # 将字符串转换为字典或列表
+    return ast.literal_eval(value)

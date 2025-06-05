@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}生成测试数据 - EasyTesting{% endblock %}
 
 {% block header %}生成测试数据{% endblock %}
@@ -47,9 +48,10 @@
                                 {{ md.description  |default:"-" }}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-primary btn-sm position-relative" data-bs-toggle="modal"
                                         data-bs-target="#exampleModal{{ md.id }}">
                                     查看数据
+                                    <span class="badge text-bg-info">{{ md.data|trans_type|length }}</span>
                                 </button>
 
                             </td>
