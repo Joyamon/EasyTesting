@@ -41,21 +41,16 @@
                     {% for md in mock_data_list %}
                         <tr>
                             <td>
-                                <a href="{% url 'mock-data-list' %}" class="fw-medium text-decoration-none text-dark">
-                                    {{ md.aim }}
-                                </a>
+                                {{ md.aim }}
                             </td>
                             <td>
-                                <a href="{% url 'mock-data-list' %}" class="text-decoration-none">
-                                    {{ md.description  |default:"-" }}
-                                </a>
+                                {{ md.description  |default:"-" }}
                             </td>
                             <td>
                                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                                         data-bs-target="#exampleModal{{ md.id }}">
                                     查看数据
                                 </button>
-
 
                             </td>
                             <td>{{ md.created_at|date:"Y-m-d H:i"|default:"-" }}</td>
