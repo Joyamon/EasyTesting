@@ -3,7 +3,7 @@ import json
 import ast
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -1987,3 +1987,14 @@ def mock_data_delete(request, pk):
         messages.success(request, '数据删除成功')
         return redirect('mock-data-list')
     return render(request, 'test_manager/mock_data_delete.html', {'mock_data': mock_data})
+
+
+def mock_data_export(request, pk):
+    data = MockData.objects.get(pk=pk)
+    data = json.loads(data.data)
+    json_str = json.dumps(data, ensure_ascii=False, indent=2)
+    # 创建响应对象
+    response = HttpResponse(json_str, content_type='application/json')
+    # 设置Content-Disposition为附件下载，并指定文件名
+    response['Content-Disposition'] = 'attachment; filename="mock_data.json"'
+    return response

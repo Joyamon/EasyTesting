@@ -51,7 +51,7 @@
                                 </a>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-primary me-md-2" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                                         data-bs-target="#exampleModal{{ md.id }}">
                                     查看数据
                                 </button>
@@ -110,6 +110,11 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             关闭
                         </button>
+                        <!-- 导出数据-->
+                        <a href="{% url 'mock-data-export' pk=md.id %}" class="btn btn-primary">
+                            导出数据
+                        </a>
+
                     </div>
                 </div>
             </div>

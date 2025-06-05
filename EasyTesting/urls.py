@@ -136,4 +136,5 @@ urlpatterns = [
     path('mock-data/', views.mock_data_generator, name='mock-data'),
     path('mock-data-list/', views.mock_data_list, name='mock-data-list'),
     path('mock-data/delete/<int:pk>/', views.mock_data_delete, name='mock-data-delete'),
+    path('mock-data/export/<int:pk>/', views.mock_data_export, name='mock-data-export'),
 ]
