@@ -148,7 +148,8 @@ EMAIL_PORT = 465  # SMTP 服务器端口
 EMAIL_USE_TLS = True  # 使用 TLS 加密
 EMAIL_HOST_USER = '1210777805@qq.com'  # SMTP 用户名
 EMAIL_HOST_PASSWORD = 'umbclibpysdzffii'  # SMTP 密码
-DEFAULT_FROM_EMAIL = '1210777805@qq.com'  # 默认发件人
+# DEFAULT_FROM_EMAIL = '1210777805@qq.com'  # 默认发件人
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # 默认发件人
 
 SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'
 # simpleui 设置
@@ -244,3 +245,68 @@ SIMPLEUI_CONFIG = {
             ]
         }]
 }
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # 保留Django默认日志器
+    'formatters': {
+        'verbose': {  # 详细格式
+            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {  # 简单格式
+            'format': '[{levelname}] {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'handlers': {
+        'console': {  # 控制台输出
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {  # 文件输出
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/django.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'mail_admins': {  # 发生错误邮件通知管理员
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+    },
+    'loggers': {
+        'django': {  # Django核心日志
+            'handlers': ['console', 'file', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {  # 请求相关日志
+            'handlers': ['file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # 你可以自定义你的app日志
+        # 'myapp': {
+        #     'handlers': ['console', 'file'],
+        #     'level': 'DEBUG',
+        #     'propagate': False,
+        # },
+    },
+
+}
+
+# 有报错日志邮件通知
+ADMINS = [
+    ('周彦明', '18152007693@163.com'),
+    # 可以添加多个管理员
+]
