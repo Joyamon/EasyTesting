@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from test_manager import views
+from test_manager import views, debug_views
 from test_manager import auth_views as custom_auth_views
 
 urlpatterns = [
@@ -147,12 +147,11 @@ urlpatterns = [
     path('scheduled-tasks/<int:pk>/toggle-status/', views.scheduled_task_toggle_status, name='scheduled_task_toggle_status'),
     path('scheduled-tasks/<int:pk>/run-now/', views.scheduled_task_run_now, name='scheduled_task_run_now'),
     path('task-execution-logs/<int:pk>/', views.task_execution_log_detail, name='task_execution_log_detail'),
-# 调试URL（仅超级用户可访问）
-#     path('debug/scheduled-tasks/', debug_views.debug_scheduled_tasks, name='debug_scheduled_tasks'),
-#     path('debug/scheduled-tasks/<int:task_id>/run-now/', debug_views.run_task_now, name='run_task_now'),
-#     path('debug/scheduled-tasks/sync/', debug_views.sync_tasks, name='sync_tasks'),
-#     path('debug/scheduled-tasks/<int:task_id>/logs/', debug_views.task_execution_logs, name='task_execution_logs'),
-#     path('debug/execution-logs/<int:log_id>/', debug_views.task_execution_log_detail, name='task_execution_log_detail'),
-    # path('debug/sync-tasks/', debug_views.sync_all_tasks, name='sync_all_tasks'),
+    # 调试相关URL
+    path('debug/task-monitor/', debug_views.task_monitor, name='task_monitor'),
+    path('debug/task-monitor-api/', debug_views.task_monitor_api, name='task_monitor_api'),
+    path('debug/sync-tasks/', debug_views.sync_tasks_api, name='sync_tasks_api'),
+    path('debug/cleanup-tasks/', debug_views.cleanup_tasks_api, name='cleanup_tasks_api'),
+    path('debug/sync-task/<int:task_id>/', debug_views.sync_single_task_api, name='sync_single_task_api'),
 
 ]
