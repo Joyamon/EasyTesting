@@ -1,24 +1,29 @@
 import datetime
 import json
 import ast
+import traceback
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.decorators.http import require_POST,require_GET
 
 from .async_executor import execute_test_suite_async, execute_test_case_async
 from .gen_data import auto_gen_data
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, TestSuiteRun, MockData
+    TestSuiteCase, TestRun, TestResult, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, TestSuiteRun, MockData,
+    TaskExecutionLog, ScheduledTask
 )
 from .forms import (
     ProjectForm, EnvironmentForm, TestCaseForm, TestSuiteForm,
-    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm, GenerateReportForm, MockDataForm
+    TestRunForm, EmailConfigForm, TestEmailForm, TestSuiteGroupForm, TestCaseGroupForm, GenerateReportForm,
+    MockDataForm, ScheduledTaskForm
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
-
+from .tasks import execute_scheduled_test_suite
 
 def paginate_queryset(request, queryset, per_page=10):
     page = request.GET.get('page', 1)
@@ -1998,3 +2003,271 @@ def mock_data_export(request, pk):
     # 设置Content-Disposition为附件下载，并指定文件名
     response['Content-Disposition'] = 'attachment; filename="mock_data.json"'
     return response
+
+
+@login_required
+def scheduled_task_list(request):
+    """定时任务列表"""
+    test_suite_id = request.GET.get('test_suite')
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    tasks = ScheduledTask.objects.filter(created_by=request.user)
+
+    if test_suite_id:
+        tasks = tasks.filter(test_suite_id=test_suite_id)
+        test_suite = get_object_or_404(TestSuite, pk=test_suite_id)
+    else:
+        test_suite = None
+
+    if search_query:
+        tasks = tasks.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(test_suite__name__icontains=search_query)
+        )
+
+    if status_filter:
+        tasks = tasks.filter(status=status_filter)
+
+    # 分页
+    paginator = Paginator(tasks, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'test_suite': test_suite,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'status_choices': ScheduledTask.STATUS_CHOICES,
+    }
+
+    return render(request, 'test_manager/scheduled_task_list.html', context)
+
+
+@login_required
+def scheduled_task_create(request):
+    """创建定时任务"""
+    test_suite_id = request.GET.get('test_suite')
+
+    if request.method == 'POST':
+        form = ScheduledTaskForm(request.POST, test_suite_id=test_suite_id)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.created_by = request.user
+            task.save()
+
+            # 计算下次执行时间
+            task.update_next_run_time()
+
+            messages.success(request, f'定时任务 "{task.name}" 创建成功')
+            return redirect('scheduled_task_detail', pk=task.pk)
+    else:
+        initial = {}
+        if test_suite_id:
+            initial['test_suite'] = test_suite_id
+        form = ScheduledTaskForm(initial=initial, test_suite_id=test_suite_id)
+
+    return render(request, 'test_manager/scheduled_task_form.html', {
+        'form': form,
+        'title': '创建定时任务'
+    })
+
+
+@login_required
+def scheduled_task_detail(request, pk):
+    """定时任务详情"""
+    task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
+
+    # 获取执行日志
+    logs = TaskExecutionLog.objects.filter(scheduled_task=task).order_by('-start_time')
+
+    # 分页
+    paginator = Paginator(logs, 10)
+    page_number = request.GET.get('page')
+    logs_page = paginator.get_page(page_number)
+
+    context = {
+        'task': task,
+        'logs_page': logs_page,
+    }
+
+    return render(request, 'test_manager/scheduled_task_detail.html', context)
+
+
+@login_required
+def scheduled_task_edit(request, pk):
+    """编辑定时任务"""
+    task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
+
+    if request.method == 'POST':
+        form = ScheduledTaskForm(request.POST, instance=task, test_suite_id=task.test_suite.id)
+        if form.is_valid():
+            task = form.save()
+            task.update_next_run_time()
+            messages.success(request, f'定时任务 "{task.name}" 更新成功')
+            return redirect('scheduled_task_detail', pk=task.pk)
+    else:
+        form = ScheduledTaskForm(instance=task, test_suite_id=task.test_suite.id)
+
+    return render(request, 'test_manager/scheduled_task_form.html', {
+        'form': form,
+        'task': task,
+        'title': f'编辑定时任务: {task.name}'
+    })
+
+
+@login_required
+def scheduled_task_delete(request, pk):
+    """删除定时任务"""
+    task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
+
+    if request.method == 'POST':
+        task_name = task.name
+        task.delete()
+        messages.success(request, f'定时任务 "{task_name}" 已删除')
+        return redirect('scheduled_task_list')
+
+    return render(request, 'test_manager/scheduled_task_confirm_delete.html', {'task': task})
+
+
+@login_required
+@require_POST
+def scheduled_task_toggle_status(request, pk):
+    """切换定时任务状态"""
+    task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
+
+    if task.status == 'active':
+        task.status = 'paused'
+        message = f'定时任务 "{task.name}" 已暂停'
+    else:
+        task.status = 'active'
+        task.update_next_run_time()
+        message = f'定时任务 "{task.name}" 已激活'
+
+    task.save()
+    messages.success(request, message)
+
+    return JsonResponse({'success': True, 'status': task.status, 'message': message})
+
+
+# @login_required
+@require_POST
+def scheduled_task_run_now(request, pk):
+    """立即执行定时任务"""
+    try:
+        task = get_object_or_404(ScheduledTask, pk=pk)
+        print(f'[DEBUG] scheduled_task_run_now - 找到任务: {task.name} (ID: {task.id})')
+
+        # 检查任务状态
+        if not task.is_enabled:
+            messages.error(request, f'定时任务 "{task.name}" 已禁用，无法执行')
+            return JsonResponse({
+                'success': False,
+                'message': f'定时任务 "{task.name}" 已禁用，无法执行'
+            })
+
+        # 检查Celery是否可用
+        try:
+            from celery import current_app
+            i = current_app.control.inspect()
+            active_workers = i.active()
+
+            if not active_workers:
+                print('[ERROR] 没有活动的Celery worker')
+                messages.error(request, 'Celery服务未运行，无法执行定时任务')
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Celery服务未运行，无法执行定时任务'
+                })
+
+            print(f'[DEBUG] 找到活动的Celery worker: {list(active_workers.keys())}')
+
+        except Exception as celery_check_error:
+            print(f'[ERROR] Celery状态检查失败: {str(celery_check_error)}')
+            # 继续执行，可能是检查方法的问题
+
+        # 尝试异步执行任务
+        try:
+            from .tasks import execute_scheduled_test_suite
+            print(f'[DEBUG] 准备异步执行任务: {task.id}')
+            result = execute_scheduled_test_suite.delay(task.id)
+            print(f'[DEBUG] 任务已提交到Celery队列，task_id: {result.id}')
+
+            messages.success(request, f'定时任务 "{task.name}" 已开始执行')
+
+            return JsonResponse({
+                'success': True,
+                'message': f'定时任务 "{task.name}" 已开始执行',
+                'task_id': result.id
+            })
+
+        except Exception as celery_error:
+            print(f'[ERROR] Celery任务提交失败: {str(celery_error)}')
+            print(f'[ERROR] 错误详情: {traceback.format_exc()}')
+
+            # 尝试直接执行任务（同步方式）
+            try:
+                print(f'[DEBUG] 尝试同步执行任务: {task.id}')
+                from .tasks import execute_scheduled_test_suite
+
+                # 在后台线程中执行，避免阻塞请求
+                import threading
+
+                def run_task_sync():
+                    try:
+                        result = execute_scheduled_test_suite(task.id)
+                        print(f'[DEBUG] 同步任务执行完成: {result}')
+                    except Exception as sync_error:
+                        print(f'[ERROR] 同步任务执行失败: {str(sync_error)}')
+                        print(f'[ERROR] 同步任务错误详情: {traceback.format_exc()}')
+
+                thread = threading.Thread(target=run_task_sync)
+                thread.daemon = True
+                thread.start()
+
+                messages.success(request, f'定时任务 "{task.name}" 已开始执行（同步模式）')
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'定时任务 "{task.name}" 已开始执行（同步模式）',
+                    'task_id': 'sync_execution'
+                })
+
+            except Exception as sync_error:
+                print(f'[ERROR] 同步执行也失败: {str(sync_error)}')
+                print(f'[ERROR] 同步执行错误详情: {traceback.format_exc()}')
+
+                messages.error(request, f'定时任务 "{task.name}" 执行失败: {str(sync_error)}')
+
+                return JsonResponse({
+                    'success': False,
+                    'message': f'定时任务 "{task.name}" 执行失败: {str(sync_error)}',
+                    'error': str(sync_error)
+                })
+
+    except Exception as e:
+        print(f'[ERROR] scheduled_task_run_now 视图异常: {str(e)}')
+        print(f'[ERROR] 视图异常详情: {traceback.format_exc()}')
+
+        messages.error(request, f'执行定时任务时发生错误: {str(e)}')
+
+        return JsonResponse({
+            'success': False,
+            'message': f'执行定时任务时发生错误: {str(e)}',
+            'error': str(e)
+        })
+
+
+# @login_required
+def task_execution_log_detail(request, pk):
+    """任务执行日志详情"""
+    log = get_object_or_404(TaskExecutionLog, pk=pk)
+    print(f'[DEBUG] 找到任务执行日志: ',log)
+
+    context = {
+        'log': log,
+    }
+
+    return render(request, 'test_manager/task_execution_log_detail.html', context)

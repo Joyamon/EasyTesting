@@ -161,15 +161,32 @@
                             <td>{{ test_suite.created_at|date:"Y-m-d H:i" }}</td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'test_suite_detail' pk=test_suite.pk %}" class="btn btn-sm btn-outline-primary" title="查看详情">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-sm btn-outline-secondary" title="编辑">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-outline-success">
+                                    <a href="{% url 'test_suite_run' pk=test_suite.pk %}" class="btn btn-sm btn-outline-success" title="运行">
                                         <i class="bi bi-play-fill"></i>
                                     </a>
+                                    <a href="{% url 'scheduled_task_create' %}?test_suite={{ test_suite.pk }}" class="btn btn-sm btn-outline-warning" title="创建定时任务">
+                                        <i class="bi bi-clock"></i>
+                                    </a>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" title="更多操作">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{% url 'scheduled_task_list' %}?test_suite={{ test_suite.pk }}">
+                                                <i class="bi bi-list-task me-2"></i>查看定时任务
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ test_suite.pk }}, '{{ test_suite.name }}')">
+                                                <i class="bi bi-trash me-2"></i>删除套件
+                                            </a></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -195,5 +212,35 @@
     </div>
 </div>
 
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除测试套件 "<span id="deleteSuiteName"></span>" 吗？</p>
+                <p class="text-danger small">此操作不可撤销，相关的定时任务也将被删除。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(suiteId, suiteName) {
+    document.getElementById('deleteSuiteName').textContent = suiteName;
+    document.getElementById('deleteForm').action = `/test-suites/${suiteId}/delete/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
 
 {% endblock %}

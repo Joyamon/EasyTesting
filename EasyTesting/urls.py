@@ -137,4 +137,22 @@ urlpatterns = [
     path('mock-data-list/', views.mock_data_list, name='mock-data-list'),
     path('mock-data/delete/<int:pk>/', views.mock_data_delete, name='mock-data-delete'),
     path('mock-data/export/<int:pk>/', views.mock_data_export, name='mock-data-export'),
+
+# 定时任务相关URL
+    path('scheduled-tasks/', views.scheduled_task_list, name='scheduled_task_list'),
+    path('scheduled-tasks/create/', views.scheduled_task_create, name='scheduled_task_create'),
+    path('scheduled-tasks/<int:pk>/', views.scheduled_task_detail, name='scheduled_task_detail'),
+    path('scheduled-tasks/<int:pk>/edit/', views.scheduled_task_edit, name='scheduled_task_edit'),
+    path('scheduled-tasks/<int:pk>/delete/', views.scheduled_task_delete, name='scheduled_task_delete'),
+    path('scheduled-tasks/<int:pk>/toggle-status/', views.scheduled_task_toggle_status, name='scheduled_task_toggle_status'),
+    path('scheduled-tasks/<int:pk>/run-now/', views.scheduled_task_run_now, name='scheduled_task_run_now'),
+    path('task-execution-logs/<int:pk>/', views.task_execution_log_detail, name='task_execution_log_detail'),
+# 调试URL（仅超级用户可访问）
+#     path('debug/scheduled-tasks/', debug_views.debug_scheduled_tasks, name='debug_scheduled_tasks'),
+#     path('debug/scheduled-tasks/<int:task_id>/run-now/', debug_views.run_task_now, name='run_task_now'),
+#     path('debug/scheduled-tasks/sync/', debug_views.sync_tasks, name='sync_tasks'),
+#     path('debug/scheduled-tasks/<int:task_id>/logs/', debug_views.task_execution_logs, name='task_execution_logs'),
+#     path('debug/execution-logs/<int:log_id>/', debug_views.task_execution_log_detail, name='task_execution_log_detail'),
+    # path('debug/sync-tasks/', debug_views.sync_all_tasks, name='sync_all_tasks'),
+
 ]

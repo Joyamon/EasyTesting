@@ -2,7 +2,8 @@ from typing import List
 
 from django import forms
 from .models import (
-    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport, MockData
+    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport,
+    MockData, ScheduledTask, TestSuiteCase
 )
 import json
 
@@ -379,3 +380,94 @@ class MockDataForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+# 新增定时任务表单
+class ScheduledTaskForm(forms.ModelForm):
+    notification_emails = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': '输入邮箱地址，多个邮箱用逗号分隔'}),
+        required=False,
+        help_text='多个邮箱地址用逗号分隔'
+    )
+
+    class Meta:
+        model = ScheduledTask
+        fields = [
+            'name', 'description', 'test_suite', 'environment',
+            'schedule_type', 'scheduled_time', 'scheduled_date', 'weekday', 'day_of_month', 'cron_expression',
+            'send_email_notification', 'notification_emails', 'notify_on_success', 'notify_on_failure',
+            'max_retries', 'retry_delay'
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'scheduled_time': forms.TimeInput(attrs={'type': 'time'}),
+            'scheduled_date': forms.DateInput(attrs={'type': 'date'}),
+            'weekday': forms.Select(choices=[
+                (1, '星期一'), (2, '星期二'), (3, '星期三'), (4, '星期四'),
+                (5, '星期五'), (6, '星期六'), (7, '星期日')
+            ]),
+            'day_of_month': forms.NumberInput(attrs={'min': 1, 'max': 31}),
+            'cron_expression': forms.TextInput(attrs={'placeholder': '0 9 * * 1-5'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        test_suite_id = kwargs.pop('test_suite_id', None)
+        super().__init__(*args, **kwargs)
+
+        if test_suite_id:
+            self.fields['test_suite'].initial = test_suite_id
+            # self.fields['test_suite'].widget = forms.HiddenInput()
+            # 只显示该测试套件项目的环境
+            test_suite = TestSuite.objects.get(pk=test_suite_id)
+            self.fields['environment'].queryset = Environment.objects.filter(project=test_suite.project)
+
+
+
+        # 添加CSS类
+        for field_name, field in self.fields.items():
+            if field_name not in ['send_email_notification', 'notify_on_success', 'notify_on_failure']:
+                field.widget.attrs.update({'class': 'form-control'})
+
+    def clean_notification_emails(self):
+        emails = self.cleaned_data.get('notification_emails', '')
+        if not emails:
+            return ''
+
+        # 验证邮箱格式
+        email_list = [email.strip() for email in emails.split(',') if email.strip()]
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        for email in email_list:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                raise forms.ValidationError(f'无效的邮箱地址: {email}')
+
+        return emails
+
+    def clean(self):
+        cleaned_data = super().clean()
+        schedule_type = cleaned_data.get('schedule_type')
+
+        if schedule_type == 'once':
+            if not cleaned_data.get('scheduled_date') or not cleaned_data.get('scheduled_time'):
+                raise forms.ValidationError('单次执行需要设置执行日期和时间')
+
+        elif schedule_type == 'daily':
+            if not cleaned_data.get('scheduled_time'):
+                raise forms.ValidationError('每日执行需要设置执行时间')
+
+        elif schedule_type == 'weekly':
+            if not cleaned_data.get('weekday') or not cleaned_data.get('scheduled_time'):
+                raise forms.ValidationError('每周执行需要设置星期几和执行时间')
+
+        elif schedule_type == 'monthly':
+            if not cleaned_data.get('day_of_month') or not cleaned_data.get('scheduled_time'):
+                raise forms.ValidationError('每月执行需要设置日期和执行时间')
+
+        elif schedule_type == 'cron':
+            if not cleaned_data.get('cron_expression'):
+                raise forms.ValidationError('Cron表达式不能为空')
+
+        return cleaned_data
