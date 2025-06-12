@@ -774,3 +774,44 @@ class TaskExecutionLog(models.Model):
             self.duration = (self.end_time - self.start_time).total_seconds()
             return self.duration
         return None
+
+
+# 信号处理器
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=ScheduledTask)
+def handle_scheduled_task_save(sender, instance, created, **kwargs):
+    """处理定时任务保存信号"""
+    from .scheduler import TaskScheduler
+
+    # 创建或更新Celery任务
+    TaskScheduler.create_or_update_celery_task(instance)
+
+
+@receiver(post_delete, sender=ScheduledTask)
+def handle_scheduled_task_delete(sender, instance, **kwargs):
+    """处理定时任务删除信号 - 优化版本"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        logger.info(f"信号处理器: 开始处理定时任务删除 - {instance.name}")
+
+        # 删除对应的Celery任务
+        if instance.celery_task_id:
+            try:
+                from django_celery_beat.models import PeriodicTask
+                celery_task = PeriodicTask.objects.get(name=instance.celery_task_id)
+                celery_task.delete()
+                logger.info(f"信号处理器: 成功删除Celery Beat任务 - {instance.celery_task_id}")
+            except PeriodicTask.DoesNotExist:
+                logger.warning(f"信号处理器: Celery Beat任务不存在 - {instance.celery_task_id}")
+            except Exception as e:
+                logger.error(f"信号处理器: 删除Celery Beat任务失败 - {str(e)}")
+        else:
+            logger.info(f"信号处理器: 任务没有关联的Celery Beat任务 - {instance.name}")
+
+    except Exception as e:
+        logger.error(f"信号处理器: 处理定时任务删除失败 - {str(e)}")

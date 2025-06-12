@@ -1,81 +1,100 @@
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 from test_manager.scheduler import TaskScheduler
 from test_manager.models import ScheduledTask
 from django_celery_beat.models import PeriodicTask
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = '同步定时任务到Celery Beat'
+    help = '清理孤立的Celery Beat任务'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--cleanup',
+            '--dry-run',
             action='store_true',
-            help='清理孤立的Celery任务',
+            help='只显示将要删除的任务，不实际删除',
         )
         parser.add_argument(
             '--force',
             action='store_true',
-            help='强制重新创建所有任务',
-        )
-        parser.add_argument(
-            '--status',
-            action='store_true',
-            help='显示当前状态',
+            help='强制删除所有孤立任务',
         )
 
     def handle(self, *args, **options):
-        if options['status']:
-            self.show_status()
-            return
-
-        if options['cleanup']:
-            self.stdout.write('清理孤立的Celery任务...')
-            cleaned = TaskScheduler.cleanup_orphaned_celery_tasks()
-            self.stdout.write(
-                self.style.SUCCESS(f'清理了 {cleaned} 个孤立任务')
-            )
-
-        if options['force']:
-            self.stdout.write('强制重新创建所有任务...')
-            # 删除所有现有的Celery任务
-            PeriodicTask.objects.filter(name__startswith='scheduled_task_').delete()
-            # 清空所有任务的celery_task_id
-            ScheduledTask.objects.update(celery_task_id='')
-
-        self.stdout.write('开始同步定时任务...')
-        success_count = TaskScheduler.sync_all_tasks()
+        dry_run = options['dry_run']
+        force = options['force']
 
         self.stdout.write(
-            self.style.SUCCESS(f'定时任务同步完成，成功同步 {success_count} 个任务')
+            self.style.SUCCESS(f'开始清理孤立的Celery Beat任务 (dry_run={dry_run})')
         )
 
-        # 显示最终状态
-        self.show_status()
+        try:
+            # 获取所有以scheduled_task_开头的Celery任务
+            celery_tasks = PeriodicTask.objects.filter(name__startswith='scheduled_task_')
+            self.stdout.write(f'找到 {celery_tasks.count()} 个相关的Celery Beat任务')
 
-    def show_status(self):
-        """显示当前状态"""
-        self.stdout.write('\n=== 定时任务状态 ===')
+            # 获取所有有效的scheduled_task的celery_task_id
+            valid_task_ids = set(
+                ScheduledTask.objects.exclude(celery_task_id='').values_list('celery_task_id', flat=True)
+            )
+            self.stdout.write(f'找到 {len(valid_task_ids)} 个有效的任务ID')
 
-        # 数据库中的定时任务
-        db_tasks = ScheduledTask.objects.filter(is_enabled=True, status='active')
-        self.stdout.write(f'数据库中的活动任务: {db_tasks.count()}')
+            # 找出孤立的任务
+            orphaned_tasks = []
+            for celery_task in celery_tasks:
+                if celery_task.name not in valid_task_ids:
+                    orphaned_tasks.append(celery_task)
 
-        # Celery中的定时任务
-        celery_tasks = PeriodicTask.objects.filter(enabled=True, name__startswith='scheduled_task_')
-        self.stdout.write(f'Celery中的定时任务: {celery_tasks.count()}')
+            self.stdout.write(f'找到 {len(orphaned_tasks)} 个孤立的Celery Beat任务')
 
-        # 检查Beat状态
-        beat_status = TaskScheduler.get_celery_beat_status()
-        self.stdout.write(f'Celery Beat状态: {beat_status["status"]}')
-        if beat_status['status'] == 'error':
+            if not orphaned_tasks:
+                self.stdout.write(self.style.SUCCESS('没有找到孤立的任务'))
+                return
+
+            # 显示孤立的任务
+            for task in orphaned_tasks:
+                self.stdout.write(f'  - {task.name} (enabled={task.enabled})')
+
+            if dry_run:
+                self.stdout.write(self.style.WARNING('这是预览模式，没有实际删除任务'))
+                return
+
+            if not force:
+                confirm = input(f'确定要删除这 {len(orphaned_tasks)} 个孤立任务吗？ (y/N): ')
+                if confirm.lower() != 'y':
+                    self.stdout.write('操作已取消')
+                    return
+
+            # 删除孤立的任务
+            deleted_count = 0
+            for task in orphaned_tasks:
+                try:
+                    task.delete()
+                    deleted_count += 1
+                    self.stdout.write(f'已删除: {task.name}')
+                except Exception as e:
+                    self.stdout.write(
+                        self.style.ERROR(f'删除失败 {task.name}: {str(e)}')
+                    )
+
             self.stdout.write(
-                self.style.ERROR(f'错误: {beat_status["message"]}')
+                self.style.SUCCESS(f'清理完成，删除了 {deleted_count} 个孤立任务')
             )
 
-        # 显示具体任务
-        self.stdout.write('\n=== 任务详情 ===')
-        for task in db_tasks:
-            celery_status = "已同步" if task.celery_task_id else "未同步"
-            next_run = task.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if task.next_run_time else "未设置"
-            self.stdout.write(f'- {task.name}: {celery_status}, 下次执行: {next_run}')
+            # 验证清理结果
+            remaining_orphaned = TaskScheduler.cleanup_orphaned_celery_tasks()
+            if remaining_orphaned > 0:
+                self.stdout.write(
+                    self.style.WARNING(f'仍有 {remaining_orphaned} 个孤立任务')
+                )
+            else:
+                self.stdout.write(self.style.SUCCESS('所有孤立任务已清理完成'))
+
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'清理过程中发生错误: {str(e)}')
+            )
+            logger.error(f"清理命令执行失败: {str(e)}")

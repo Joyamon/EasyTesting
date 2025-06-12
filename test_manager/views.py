@@ -2232,14 +2232,64 @@ def scheduled_task_edit(request, pk):
 
 @login_required
 def scheduled_task_delete(request, pk):
-    """删除定时任务"""
+    """删除定时任务 - 优化版本，确保同步删除Celery Beat任务"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
 
     if request.method == 'POST':
         task_name = task.name
-        task.delete()
-        messages.success(request, f'定时任务 "{task_name}" 已删除')
-        return redirect('scheduled_task_list')
+        celery_task_id = task.celery_task_id
+
+        try:
+            logger.info(f"开始删除定时任务: {task_name} (ID: {task.id})")
+
+            # 先删除Celery Beat任务
+            if celery_task_id:
+                try:
+                    from django_celery_beat.models import PeriodicTask
+                    celery_task = PeriodicTask.objects.get(name=celery_task_id)
+                    celery_task.delete()
+                    logger.info(f"成功删除Celery Beat任务: {celery_task_id}")
+                    messages.info(request, f'已删除调度器中的任务: {celery_task_id}')
+                except PeriodicTask.DoesNotExist:
+                    logger.warning(f"Celery Beat任务不存在: {celery_task_id}")
+                    messages.warning(request, f'调度器中的任务不存在: {celery_task_id}')
+                except Exception as celery_error:
+                    logger.error(f"删除Celery Beat任务失败: {str(celery_error)}")
+                    logger.error(f"Celery删除错误详情: {traceback.format_exc()}")
+                    messages.error(request, f'删除调度器任务失败: {str(celery_error)}')
+            else:
+                logger.info(f"任务没有关联的Celery Beat任务: {task_name}")
+
+            # 删除数据库中的定时任务
+            task.delete()
+            logger.info(f"成功删除数据库中的定时任务: {task_name}")
+
+            # 验证删除结果
+            try:
+                if celery_task_id:
+                    from django_celery_beat.models import PeriodicTask
+                    if not PeriodicTask.objects.filter(name=celery_task_id).exists():
+                        logger.info(f"验证成功: Celery Beat任务已从数据库中删除")
+                        messages.success(request, f'定时任务 "{task_name}" 已完全删除（包括调度器任务）')
+                    else:
+                        logger.error(f"验证失败: Celery Beat任务仍存在于数据库中")
+                        messages.warning(request, f'定时任务 "{task_name}" 已删除，但调度器任务可能仍然存在')
+                else:
+                    messages.success(request, f'定时任务 "{task_name}" 已删除')
+            except Exception as verify_error:
+                logger.error(f"验证删除结果失败: {str(verify_error)}")
+                messages.success(request, f'定时任务 "{task_name}" 已删除')
+
+            return redirect('scheduled_task_list')
+
+        except Exception as e:
+            logger.error(f"删除定时任务失败: {str(e)}")
+            logger.error(f"删除错误详情: {traceback.format_exc()}")
+            messages.error(request, f'删除定时任务失败: {str(e)}')
+            return redirect('scheduled_task_detail', pk=pk)
 
     return render(request, 'test_manager/scheduled_task_confirm_delete.html', {'task': task})
 
