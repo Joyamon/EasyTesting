@@ -59,7 +59,12 @@
    ```
    python manage.py runserver
    ```
-
+7. 启动celery和beat
+   ```
+   celery -A EasyTesting worker -l info
+   celery -A EasyTesting beat -l info
+   
+   ```
 ## 使用
 
 1. 点击 http://localhost:8000/ 访问
@@ -154,6 +159,12 @@
 
 ### mock数据
   <img src="static/pic/mock数据.png" />
+
+### 定时任务
+   <img src="static/pic/定时任务.png" />
+
+### 定时任务监控
+   <img src="static/pic/定时任务监控.png" />
 
 ### 觉得项目不错，请作者喝一杯咖啡
 
