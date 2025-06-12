@@ -21,7 +21,7 @@ class EnvironmentForm(forms.ModelForm):
     variables_json = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 4}),
         required=False,
-        help_text='输入json类型的环境变量, 例如., [value1,value2,...]'
+        help_text='输入json类型的环境变量, 例如. {"key1": "value1"}'
     )
 
     class Meta:
@@ -31,7 +31,13 @@ class EnvironmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields['variables_json'].initial = List[self.instance.variables]
+            variables_data = self.instance.variables
+            if variables_data is None:
+                variables_data = {}
+            self.fields['variables_json'].initial = json.dumps(variables_data, indent=2)
+        else:
+            # 对于新实例，设置一个默认的JSON字符串
+            self.fields['variables_json'].initial = json.dumps({})
 
     def clean_variables_json(self):
         variables_json = self.cleaned_data.get('variables_json')
