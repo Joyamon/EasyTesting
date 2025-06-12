@@ -23,6 +23,7 @@ from .forms import (
     MockDataForm, ScheduledTaskForm
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
+from .scheduler import TaskScheduler
 from .tasks import execute_scheduled_test_suite
 
 def paginate_queryset(request, queryset, per_page=10):
@@ -2048,21 +2049,69 @@ def scheduled_task_list(request):
 
 @login_required
 def scheduled_task_create(request):
-    """创建定时任务"""
+    """创建定时任务 - 优化版本，确保立即同步到Celery Beat"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     test_suite_id = request.GET.get('test_suite')
 
     if request.method == 'POST':
         form = ScheduledTaskForm(request.POST, test_suite_id=test_suite_id)
         if form.is_valid():
-            task = form.save(commit=False)
-            task.created_by = request.user
-            task.save()
+            try:
+                # 保存定时任务
+                task = form.save(commit=False)
+                task.created_by = request.user
+                task.save()
 
-            # 计算下次执行时间
-            task.update_next_run_time()
+                logger.info(f"定时任务已保存到数据库: {task.name} (ID: {task.id})")
 
-            messages.success(request, f'定时任务 "{task.name}" 创建成功')
-            return redirect('scheduled_task_detail', pk=task.pk)
+                # 立即同步到Celery Beat
+                try:
+                    # 计算下次执行时间
+                    task.update_next_run_time()
+                    logger.info(f"下次执行时间已计算: {task.next_run_time}")
+
+                    # 创建Celery Beat任务
+                    celery_task = TaskScheduler.create_or_update_celery_task(task)
+
+                    if celery_task:
+                        logger.info(f"Celery Beat任务创建成功: {task.celery_task_id}")
+                        messages.success(
+                            request,
+                            f'定时任务 "{task.name}" 创建成功，已同步到调度器。下次执行时间: {task.next_run_time}'
+                        )
+                    else:
+                        logger.warning(f"Celery Beat任务创建失败: {task.name}")
+                        messages.warning(
+                            request,
+                            f'定时任务 "{task.name}" 创建成功，但同步到调度器失败。请检查Celery Beat服务状态。'
+                        )
+
+                    # 验证同步结果
+                    from django_celery_beat.models import PeriodicTask
+                    if task.celery_task_id and PeriodicTask.objects.filter(name=task.celery_task_id).exists():
+                        logger.info(f"验证成功: Celery Beat任务已存在于数据库")
+                        messages.info(request, f'调度器同步验证成功')
+                    else:
+                        logger.error(f"验证失败: Celery Beat任务不存在于数据库")
+                        messages.error(request, f'调度器同步验证失败，任务可能无法按时执行')
+
+                except Exception as sync_error:
+                    logger.error(f"同步到Celery Beat失败: {str(sync_error)}")
+                    logger.error(f"同步错误详情: {traceback.format_exc()}")
+                    messages.error(
+                        request,
+                        f'定时任务创建成功，但同步到调度器失败: {str(sync_error)}'
+                    )
+
+                return redirect('scheduled_task_detail', pk=task.pk)
+
+            except Exception as e:
+                logger.error(f"创建定时任务失败: {str(e)}")
+                logger.error(f"创建错误详情: {traceback.format_exc()}")
+                messages.error(request, f'创建定时任务失败: {str(e)}')
+
     else:
         initial = {}
         if test_suite_id:
@@ -2098,16 +2147,79 @@ def scheduled_task_detail(request, pk):
 
 @login_required
 def scheduled_task_edit(request, pk):
-    """编辑定时任务"""
+    """编辑定时任务 - 优化版本，确保立即同步到Celery Beat"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
 
     if request.method == 'POST':
         form = ScheduledTaskForm(request.POST, instance=task, test_suite_id=task.test_suite.id)
         if form.is_valid():
-            task = form.save()
-            task.update_next_run_time()
-            messages.success(request, f'定时任务 "{task.name}" 更新成功')
-            return redirect('scheduled_task_detail', pk=task.pk)
+            try:
+                # 保存原始的celery_task_id，用于删除旧任务
+                old_celery_task_id = task.celery_task_id
+
+                # 保存定时任务
+                task = form.save()
+                logger.info(f"定时任务已更新到数据库: {task.name} (ID: {task.id})")
+
+                # 立即同步到Celery Beat
+                try:
+                    # 如果有旧的Celery任务，先删除
+                    if old_celery_task_id:
+                        try:
+                            from django_celery_beat.models import PeriodicTask
+                            old_task = PeriodicTask.objects.get(name=old_celery_task_id)
+                            old_task.delete()
+                            logger.info(f"已删除旧的Celery Beat任务: {old_celery_task_id}")
+                        except PeriodicTask.DoesNotExist:
+                            logger.warning(f"旧的Celery Beat任务不存在: {old_celery_task_id}")
+
+                    # 计算下次执行时间
+                    task.update_next_run_time()
+                    logger.info(f"下次执行时间已更新: {task.next_run_time}")
+
+                    # 创建新的Celery Beat任务
+                    celery_task = TaskScheduler.create_or_update_celery_task(task)
+
+                    if celery_task:
+                        logger.info(f"Celery Beat任务更新成功: {task.celery_task_id}")
+                        messages.success(
+                            request,
+                            f'定时任务 "{task.name}" 更新成功，已同步到调度器。下次执行时间: {task.next_run_time}'
+                        )
+                    else:
+                        logger.warning(f"Celery Beat任务更新失败: {task.name}")
+                        messages.warning(
+                            request,
+                            f'定时任务 "{task.name}" 更新成功，但同步到调度器失败。请检查Celery Beat服务状态。'
+                        )
+
+                    # 验证同步结果
+                    from django_celery_beat.models import PeriodicTask
+                    if task.celery_task_id and PeriodicTask.objects.filter(name=task.celery_task_id).exists():
+                        logger.info(f"验证成功: Celery Beat任务已存在于数据库")
+                        messages.info(request, f'调度器同步验证成功')
+                    else:
+                        logger.error(f"验证失败: Celery Beat任务不存在于数据库")
+                        messages.error(request, f'调度器同步验证失败，任务可能无法按时执行')
+
+                except Exception as sync_error:
+                    logger.error(f"同步到Celery Beat失败: {str(sync_error)}")
+                    logger.error(f"同步错误详情: {traceback.format_exc()}")
+                    messages.error(
+                        request,
+                        f'定时任务更新成功，但同步到调度器失败: {str(sync_error)}'
+                    )
+
+                return redirect('scheduled_task_detail', pk=task.pk)
+
+            except Exception as e:
+                logger.error(f"更新定时任务失败: {str(e)}")
+                logger.error(f"更新错误详情: {traceback.format_exc()}")
+                messages.error(request, f'更新定时任务失败: {str(e)}')
+
     else:
         form = ScheduledTaskForm(instance=task, test_suite_id=task.test_suite.id)
 
@@ -2135,21 +2247,63 @@ def scheduled_task_delete(request, pk):
 @login_required
 @require_POST
 def scheduled_task_toggle_status(request, pk):
-    """切换定时任务状态"""
+    """切换定时任务状态 - 优化版本，确保立即同步到Celery Beat"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     task = get_object_or_404(ScheduledTask, pk=pk, created_by=request.user)
+    old_status = task.status
 
-    if task.status == 'active':
-        task.status = 'paused'
-        message = f'定时任务 "{task.name}" 已暂停'
-    else:
-        task.status = 'active'
-        task.update_next_run_time()
-        message = f'定时任务 "{task.name}" 已激活'
+    try:
+        if task.status == 'active':
+            task.status = 'paused'
+            message = f'定时任务 "{task.name}" 已暂停'
+        else:
+            task.status = 'active'
+            task.update_next_run_time()
+            message = f'定时任务 "{task.name}" 已激活'
 
-    task.save()
-    messages.success(request, message)
+        task.save()
+        logger.info(f"任务状态已更新: {task.name} - {old_status} -> {task.status}")
 
-    return JsonResponse({'success': True, 'status': task.status, 'message': message})
+        # 立即同步到Celery Beat
+        try:
+            if task.status == 'active':
+                # 激活任务 - 创建Celery Beat任务
+                celery_task = TaskScheduler.create_or_update_celery_task(task)
+                if celery_task:
+                    logger.info(f"Celery Beat任务已激活: {task.celery_task_id}")
+                    message += f"，下次执行时间: {task.next_run_time}"
+                else:
+                    logger.warning(f"Celery Beat任务激活失败: {task.name}")
+                    message += "，但调度器同步失败"
+            else:
+                # 暂停任务 - 删除Celery Beat任务
+                TaskScheduler.delete_celery_task(task)
+                logger.info(f"Celery Beat任务已暂停: {task.name}")
+
+        except Exception as sync_error:
+            logger.error(f"状态切换同步失败: {str(sync_error)}")
+            message += f"，但调度器同步失败: {str(sync_error)}"
+
+        messages.success(request, message)
+
+        return JsonResponse({
+            'success': True,
+            'status': task.status,
+            'message': message,
+            'next_run_time': task.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if task.next_run_time else None
+        })
+
+    except Exception as e:
+        logger.error(f"切换任务状态失败: {str(e)}")
+        logger.error(f"状态切换错误详情: {traceback.format_exc()}")
+
+        return JsonResponse({
+            'success': False,
+            'message': f'切换任务状态失败: {str(e)}',
+            'error': str(e)
+        })
 
 
 # @login_required

@@ -27,10 +27,18 @@ class TaskScheduler:
                 except PeriodicTask.DoesNotExist:
                     logger.warning(f"旧任务不存在: {scheduled_task.celery_task_id}")
 
+            # 清理可能存在的同名任务（防止重复）
+            existing_tasks = PeriodicTask.objects.filter(
+                name__startswith=f"scheduled_task_{scheduled_task.id}_"
+            )
+            if existing_tasks.exists():
+                logger.info(f"清理 {existing_tasks.count()} 个可能重复的任务")
+                existing_tasks.delete()
+
             # 如果任务被禁用或状态不是激活，不创建Celery任务
             if not scheduled_task.is_enabled or scheduled_task.status != 'active':
                 scheduled_task.celery_task_id = ''
-                scheduled_task.save()
+                scheduled_task.save(update_fields=['celery_task_id'])
                 logger.info(f"任务已禁用或非激活状态，跳过创建: {scheduled_task.name}")
                 return None
 
