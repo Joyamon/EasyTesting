@@ -15,7 +15,7 @@
                     <div class="mb-4">
                         <label for="{{ form.name.id_for_label }}" class="form-label fw-medium">环境名称</label>
                         {{ form.name.errors }}
-                        <input type="text" class="form-control form-control-lg" id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" required placeholder="Enter environment name">
+                        <input type="text" class="form-control form-control-lg" id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" required placeholder="请输入环境名称">
                         <div class="form-text">环境名称(例如, OA系统, HR系统 )</div>
                     </div>
 
