@@ -3,7 +3,7 @@ import json
 import ast
 import traceback
 import pytz
-
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -112,6 +112,7 @@ def dashboard(request):
 
 def generate_time_series_data(mode, tz):
     now = timezone.now().astimezone(tz)
+
 
     if mode == 'daily':
         count = 7

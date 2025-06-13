@@ -170,6 +170,12 @@
 
 <img src="static/pic/pay.jpg" width="300" />
 
+## 贡献伙伴
+   非常感谢以下小伙伴的贡献
+- [jinpeng_zhang](https://gitee.com/jinpeng_zhang)
+
+   <img src="https://foruda.gitee.com/avatar/1749719940805397104/7589136_jinpeng_zhang_1749719940.png" width="80"/>
+
 ## License
 
 本项目根据MIT许可证获得许可
