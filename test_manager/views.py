@@ -2,7 +2,9 @@ import datetime
 import json
 import ast
 import traceback
+import pytz
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
@@ -42,18 +44,25 @@ def paginate_queryset(request, queryset, per_page=10):
 
 @login_required
 def dashboard(request):
-    # Get counts for dashboard
+    # 统计数量
     projects_count = Project.objects.count()
     test_cases_count = TestCase.objects.count()
     test_suites_count = TestSuite.objects.count()
     test_runs_count = TestRun.objects.count()
-
-    # Get recent test runs with pagination
-    all_test_runs = TestRun.objects.order_by('-created_at')
-    recent_test_runs = paginate_queryset(request, all_test_runs, 5)
     report_count = TestReport.objects.count()
 
-    # Get test run statistics
+    # 最近测试记录
+    all_test_runs = TestRun.objects.order_by('-created_at')
+    recent_test_runs = paginate_queryset(request, all_test_runs, 5)
+
+    tz = pytz.timezone(settings.TIME_ZONE)
+
+    # 获取时间序列数据
+    daily_data = generate_time_series_data(mode='daily', tz=tz)
+    monthly_data = generate_time_series_data(mode='monthly', tz=tz)
+    yearly_data = generate_time_series_data(mode='yearly', tz=tz)
+
+    # 测试运行状态统计
     test_run_stats = {
         'total': test_runs_count,
         'passed': TestRun.objects.filter(status='completed').count(),
@@ -62,7 +71,7 @@ def dashboard(request):
         'running': TestRun.objects.filter(status='running').count(),
     }
 
-    # Get test result statistics
+    # 测试结果状态统计
     test_result_stats = {
         'total': TestResult.objects.count(),
         'passed': TestResult.objects.filter(status='passed').count(),
@@ -71,6 +80,7 @@ def dashboard(request):
         'skipped': TestResult.objects.filter(status='skipped').count(),
     }
 
+    # 最近活动列表
     recent_activities = []
     activities = TestRun.objects.all().order_by('-created_at')
     for activity in activities:
@@ -82,6 +92,7 @@ def dashboard(request):
             'timestamp': timestamp,
             'description': description
         })
+
     context = {
         'projects_count': projects_count,
         'test_cases_count': test_cases_count,
@@ -92,9 +103,100 @@ def dashboard(request):
         'test_run_stats': test_run_stats,
         'test_result_stats': test_result_stats,
         'recent_activities': recent_activities,
+        'daily_data_json': json.dumps(daily_data),
+        'monthly_data_json': json.dumps(monthly_data),
+        'yearly_data_json': json.dumps(yearly_data),
     }
 
     return render(request, 'test_manager/dashboard.html', context)
+
+def generate_time_series_data(mode, tz):
+    now = timezone.now().astimezone(tz)
+
+    if mode == 'daily':
+        count = 7
+        start_date = now - timedelta(days=count - 1)
+        end_date = now
+        period = 'day'
+
+    elif mode == 'monthly':
+        start_date = now.replace(month=1, day=1)
+        end_date = now.replace(month=12, day=31)
+        count = 12
+        period = 'month'
+
+    elif mode == 'yearly':
+        current_year = now.year
+        start_date = now.replace(year=current_year - 4, month=1, day=1)
+        end_date = now.replace(month=12, day=31)
+        count = 5
+        period = 'year'
+
+    else:
+        raise ValueError("Invalid mode")
+
+    labels = generate_date_labels(start_date, period, count)
+    data = {
+        'projects': get_model_timeseries(Project, start_date, count, period, tz),
+        'test_cases': get_model_timeseries(TestCase, start_date, count, period, tz),
+        'test_suites': get_model_timeseries(TestSuite, start_date, count, period, tz),
+        'test_runs': get_model_timeseries(TestRun, start_date, count, period, tz),
+        'test_reports': get_model_timeseries(TestReport, start_date, count, period, tz),
+    }
+    return {'labels': labels, 'datasets': data}
+
+
+def generate_date_labels(start_date, period, count):
+    labels = []
+    current = start_date
+
+    if period == 'day':
+        for _ in range(count):
+            labels.append(current.strftime('%b %d').lstrip('0').replace(' 0', ' '))
+            current += timedelta(days=1)
+
+    elif period == 'month':
+        for i in range(count):
+            labels.append(f'{i+1}月')
+
+    elif period == 'year':
+        for i in range(count):
+            labels.append(str(start_date.year + i))
+
+    return labels
+
+
+def get_model_timeseries(model, start_date, count, period, tz):
+    now = timezone.now().astimezone(tz)
+    end_date = now
+
+    utc_start = start_date.astimezone(pytz.utc)
+    utc_end = end_date.astimezone(pytz.utc)
+
+    results = (
+        model.objects
+        .filter(created_at__range=(utc_start, utc_end))
+        .values_list('created_at', flat=True)
+    )
+
+    counts = [0] * count
+
+    for dt in results:
+        local_dt = dt.astimezone(tz)
+
+        if period == 'day':
+            diff = (local_dt.date() - start_date.date()).days
+        elif period == 'month':
+            diff = local_dt.month - 1
+        elif period == 'year':
+            diff = local_dt.year - start_date.year
+        else:
+            continue
+
+        if 0 <= diff < count:
+            counts[diff] += 1
+
+    return counts
 
 
 # Project views

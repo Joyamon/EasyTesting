@@ -307,208 +307,138 @@
 
 {% block extra_js %}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Set chart defaults
-            Chart.defaults.font.family = "'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif";
-            Chart.defaults.font.size = 12;
-            Chart.defaults.plugins.legend.position = 'bottom';
+    document.addEventListener('DOMContentLoaded', function () {
+        // 从 Django 模板变量获取真实数据
+        const realData = {
+            week: {{ daily_data_json|safe }},
+            month: {{ monthly_data_json|safe }},
+            year: {{ yearly_data_json|safe }}
+        };
 
-            // 折线图
-            var growthTrendsCtx = document.getElementById('growthTrendsChart').getContext('2d');
-
-            // 模拟数据 - 在实际应用中，这些数据应该从后端获取
-            // 这里我们模拟过去7天的数据
-            const weekLabels = Array.from({length: 7}, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (6 - i));
-                return d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-            });
-
-            const monthLabels = Array.from({length: 30}, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (29 - i));
-                return d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-            });
-
-            const yearLabels = Array.from({length: 12}, (_, i) => {
-                const d = new Date();
-                d.setMonth(d.getMonth() - (11 - i));
-                return d.toLocaleDateString('en-US', {month: 'short'});
-            });
-
-            // 模拟数据生成函数
-            function generateData(baseValue, variance, length) {
-                let lastValue = baseValue;
-                return Array.from({length}, () => {
-                    lastValue = Math.max(0, lastValue + (Math.random() * variance * 2 - variance));
-                    return Math.round(lastValue);
-                });
-            }
-
-            // 生成各种数据
-            const weekData = {
-                projects: generateData({{ projects_count }} -10, 2, 7),
-                testCases: generateData({{ test_cases_count }} -20, 5, 7),
-                testSuites: generateData({{ test_suites_count }} -8, 2, 7),
-                testRuns: generateData({{ test_runs_count }} -15, 4, 7),
-                testReports: generateData({{ test_reports_count }} -10, 3, 7)
-            };
-
-            const monthData = {
-                projects: generateData({{ projects_count }} -20, 2, 30),
-                testCases: generateData({{ test_cases_count }} -50, 5, 30),
-                testSuites: generateData({{ test_suites_count }} -15, 2, 30),
-                testRuns: generateData({{ test_runs_count }} -30, 4, 30),
-                testReports: generateData({{ test_reports_count }} -20, 3, 30)
-            };
-
-            const yearData = {
-                projects: generateData({{ projects_count }} -30, 3, 12),
-                testCases: generateData({{ test_cases_count }} -100, 10, 12),
-                testSuites: generateData({{ test_suites_count }} -20, 3, 12),
-                testRuns: generateData({{ test_runs_count }} -50, 8, 12),
-                testReports: generateData({{ test_reports_count }} -30, 5, 12)
-            };
-
-            // 创建图表配置
-            const growthChartConfig = {
-                type: 'line',
-                data: {
-                    labels: weekLabels,
-                    datasets: [
-                        {
-                            label: '项目',
-                            data: weekData.projects,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '测试用例',
-                            data: weekData.testCases,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '测试套件',
-                            data: weekData.testSuites,
-                            borderColor: 'rgba(255, 159, 64, 1)',
-                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '测试运行',
-                            data: weekData.testRuns,
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '测试报告',
-                            data: weekData.testReports,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
+        // 图表配置
+        const growthChartConfig = {
+            type: 'line',
+            data: {
+                labels: realData.week.labels,
+                datasets: [
+                    {
+                        label: '项目',
+                        data: realData.week.datasets.projects,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '测试用例',
+                        data: realData.week.datasets.test_cases,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '测试套件',
+                        data: realData.week.datasets.test_suites,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '测试运行',
+                        data: realData.week.datasets.test_runs,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '测试报告',
+                        data: realData.week.datasets.test_reports,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '测试平台增长趋势'
+                    }
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: '时间'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: '数量'
                         },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
+                        beginAtZero: true
                     }
                 }
-            };
+            }
+        };
 
-            var growthTrendsChart = new Chart(growthTrendsCtx, growthChartConfig);
+        const growthTrendsChart = new Chart(
+            document.getElementById('growthTrendsChart'),
+            growthChartConfig
+        );
 
-            // 时间段切换
-            document.querySelectorAll('[data-period]').forEach(button => {
-                button.addEventListener('click', function () {
-                    // 移除所有按钮的active类
-                    document.querySelectorAll('[data-period]').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
+        // 切换时间段
+        document.querySelectorAll('[data-period]').forEach(button => {
+            button.addEventListener('click', function () {
+                document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
 
-                    // 添加当前按钮的active类
-                    this.classList.add('active');
+                const period = this.getAttribute('data-period');
+                const periodData = realData[period];
 
-                    // 获取选择的时间段
-                    const period = this.getAttribute('data-period');
+                growthTrendsChart.data.labels = periodData.labels;
+                growthTrendsChart.data.datasets[0].data = periodData.datasets.projects;
+                growthTrendsChart.data.datasets[1].data = periodData.datasets.test_cases;
+                growthTrendsChart.data.datasets[2].data = periodData.datasets.test_suites;
+                growthTrendsChart.data.datasets[3].data = periodData.datasets.test_runs;
+                growthTrendsChart.data.datasets[4].data = periodData.datasets.test_reports;
 
-                    // 更新图表数据
-                    if (period === 'week') {
-                        growthTrendsChart.data.labels = weekLabels;
-                        growthTrendsChart.data.datasets[0].data = weekData.projects;
-                        growthTrendsChart.data.datasets[1].data = weekData.testCases;
-                        growthTrendsChart.data.datasets[2].data = weekData.testSuites;
-                        growthTrendsChart.data.datasets[3].data = weekData.testRuns;
-                        growthTrendsChart.data.datasets[4].data = weekData.testReports;
-
-                    } else if (period === 'month') {
-                        growthTrendsChart.data.labels = monthLabels;
-                        growthTrendsChart.data.datasets[0].data = monthData.projects;
-                        growthTrendsChart.data.datasets[1].data = monthData.testCases;
-                        growthTrendsChart.data.datasets[2].data = monthData.testSuites;
-                        growthTrendsChart.data.datasets[3].data = monthData.testRuns;
-                        growthTrendsChart.data.datasets[4].data = monthData.testReports;
-                    } else if (period === 'year') {
-                        growthTrendsChart.data.labels = yearLabels;
-                        growthTrendsChart.data.datasets[0].data = yearData.projects;
-                        growthTrendsChart.data.datasets[1].data = yearData.testCases;
-                        growthTrendsChart.data.datasets[2].data = yearData.testSuites;
-                        growthTrendsChart.data.datasets[3].data = yearData.testRuns;
-                        growthTrendsChart.data.datasets[4].data = yearData.testReports;
-                    }
-
-                    // 更新图表
-                    growthTrendsChart.update();
-                });
-            });
-
-            // Export chart as PNG
-            document.getElementById('exportTrendsChart').addEventListener('click', function () {
-                const link = document.createElement('a');
-                link.download = 'growth-trends-chart.png';
-                link.href = growthTrendsChart.toBase64Image();
-                link.click();
-            });
-
-            // Refresh timeline
-            document.getElementById('refreshTimeline').addEventListener('click', function () {
-                // In a real application, this would fetch new data via AJAX
-                this.classList.add('spin');
-                setTimeout(() => {
-                    this.classList.remove('spin');
-                }, 1000);
+                growthTrendsChart.update();
             });
         });
+
+        // 导出图表
+        document.getElementById('exportTrendsChart').addEventListener('click', function() {
+            const link = document.createElement('a');
+            link.download = 'growth-trends-chart.png';
+            link.href = growthTrendsChart.toBase64Image();
+            link.click();
+        });
+
+        // 刷新按钮
+        document.getElementById('refreshTimeline').addEventListener('click', function() {
+            this.classList.add('spin');
+            setTimeout(() => this.classList.remove('spin'), 1000);
+        });
+    });
     </script>
+
 
     <style>
         .timeline .timeline-icon {
