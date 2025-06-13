@@ -248,6 +248,15 @@ SIMPLEUI_CONFIG = {
         }]
 }
 
+# 在文件开头部分定义日志目录路径
+LOGS_DIR = BASE_DIR / 'logs'
+
+# 创建日志目录（如果不存在）
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+# 确保目录权限
+os.chmod(LOGS_DIR, 0o755)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,  # 保留Django默认日志器
@@ -275,7 +284,7 @@ LOGGING = {
         'file': {  # 文件输出
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/django.log'),
+            'filename': LOGS_DIR / 'django.log',
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'formatter': 'verbose',
