@@ -1,190 +1,167 @@
+
+
 # EasyTesting
 
-使用Django、Django REST框架、SQLite、Bootstrap和HTTPRunner构建的综合测试平台，包含测试前台和后台管理后台，后台管理系统使用Django-SimpleUI构建。
-
-## 推荐版本
-
-- Django==4.2.11
-- djangorestframework==3.15.2
-- httprunner==4.3.0
-- jsonpath-ng==1.7.0
-- django-simpleui==2025.5.17
-- Faker==37.3.0
-- django-cors-headers==4.3.1
-- requests==2.31.0
-- Pillow==10.1.0
-- celery==5.3.4
-- redis==5.0.1
-- croniter==2.0.1
-- django-celery-beat==2.5.0
-- django-cors-headers==4.3.1
+EasyTesting 是一个功能强大的测试管理平台，提供全面的测试功能，包括测试用例、测试套件、测试运行和测试报告等。它支持用户友好的界面，便于管理和执行测试任务，适用于Web应用的自动化测试。
 
 ## 功能特点
 
-- 创建和管理测试项目
-- 使用变量定义测试环境
-- 使用请求详细信息和验证规则创建API测试用例
-- 将测试用例组织到测试套件中
-- 执行测试并查看结果
-- 通过执行结果生成测试报告
-- 用于与其他工具集成的RESTful API
+- **测试用例管理**：创建、编辑、运行和删除测试用例。
+- **测试套件管理**：组织测试用例为测试套件，并支持套件运行。
+- **测试运行**：支持手动和定时测试运行，提供实时测试结果。
+- **测试报告**：测试运行后生成详细的测试报告，支持查看和导出。
+- **Mock数据生成**：提供Mock数据支持，便于测试接口开发。
+- **定时任务**：支持定时执行测试套件，可配置邮件通知。
+- **邮件配置**：提供邮件配置功能，支持测试结果的通知发送。
+- **用户管理**：包括注册、登录、个人资料管理和修改密码等功能。
 
-## 快速开始
+## 安装指南
 
-1. 拉取代码:
+1. 克隆项目到本地：
 
-```
-   git clone https://gitee.com/joyamon/easy-testing.git
-```
-
-2. 创建虚拟环境:
+   ```bash
+   git clone <repository-url>
    ```
-   python -m venv venv
-   source venv/bin/activate 
-   ```
-3. 安装依赖:
-   ```
+
+2. 安装依赖：
+
+   ```bash
    pip install -r requirements.txt
    ```
-4. 生成迁移文件并迁移数据库:
-   ```
-   python manage.py makemigrations
+
+3. 创建数据库并迁移：
+
+   ```bash
    python manage.py migrate
    ```
-5. 创建管理员:
-   ```
-   python manage.py createsuperuser
-   ```
-6. 启动服务器:
-   ```
+
+4. 启动服务器：
+
+   ```bash
    python manage.py runserver
    ```
-7. 启动celery和beat
+
+5. (可选) 启动 Celery worker：
+
+   ```bash
+   celery -A EasyTesting worker --loglevel=info
    ```
-   celery -A EasyTesting worker -l info
-   celery -A EasyTesting beat -l info
-   
+
+   启动 Celery beat：
+
+   ```bash
+   celery -A EasyTesting beat --loglevel=info
    ```
-## 使用
 
-1. 点击 http://localhost:8000/ 访问
-2. 使用账号密码登录
-3. 创建项目、环境、测试用例和测试套件
-4. 执行测试用例并查看结果
+## 使用说明
 
-## 效果截图
+### 用户注册与登录
 
-### 注册
+- **注册**：访问 `/register/` 创建新账户。
+- **登录**：访问 `/login/` 进行登录。
 
-<img src="static/pic/注册.png" />
+### 项目管理
 
-### 登录
+- **创建项目**：登录后访问 `/project/new/` 创建新项目。
+- **编辑项目**：通过 `/project/<id>/edit/` 编辑已有项目。
+- **删除项目**：通过 `/project/<id>/delete/` 删除项目。
 
-<img src="static/pic/登录.png" />
+### 环境配置
 
-### 面板
+- **添加环境**：在项目详情页 `/project/<id>/` 中点击 "Add Environment"。
+- **编辑环境**：访问 `/environment/<id>/edit/` 编辑环境变量。
+- **删除环境**：访问 `/environment/<id>/delete/` 删除环境。
 
-<img src="static/pic/Dashboard.png" />
+### 测试用例管理
 
-### 项目
+- **创建测试用例**：在项目详情页 `/project/<id>/` 中点击 "Add Test Case"。
+- **编辑测试用例**：访问 `/testcase/<id>/edit/`。
+- **运行测试用例**：访问 `/testcase/<id>/run/` 并选择环境执行测试。
+- **删除测试用例**：访问 `/testcase/<id>/delete/`。
 
-<img src="static/pic/project.png" />
+### 测试套件管理
 
-### 项目详情
+- **创建测试套件**：在项目详情页 `/project/<id>/` 中点击 "Add Test Suite"。
+- **编辑测试套件**：访问 `/testsuite/<id>/edit/`。
+- **运行测试套件**：访问 `/testsuite/<id>/run/` 并选择环境执行测试。
+- **删除测试套件**：访问 `/testsuite/<id>/delete/`。
 
-<img src="static/pic/projectDetails.png" />
+### 测试运行与报告
 
-### 环境
+- **查看测试运行**：访问 `/testrun/<id>/` 获取测试执行详情。
+- **生成测试报告**：测试运行完成后，可通过 `/testreport/<id>/` 查看报告。
+- **导出报告**：支持导出测试报告为HTML、PDF等格式。
 
-<img src="static/pic/Environments.png" />
+### Mock 数据生成
 
-### 测试用例
-
-<img src="static/pic/Test Cases .png" />
-
-### 测试用例详情
-
-<img src="static/pic/caseDetail.png" />
-
-### 测试套件
-
-<img src="static/pic/Test Suites .png" />
-
-### 测试套件详情
-
-<img src="static/pic/suiteDetail.png" />
-
-### 测试运行
-
-<img src="static/pic/Test Runs .png" />
-
-### 测试结果
-
-<img src="static/pic/testresultsDetail.png" />
-
-### 测试用例分组
-
-<img src="static/pic/All Test Case Groups .png" />
-
-### 测试套件分组
-
-<img src="static/pic/All Test Suite Groups  .png" />
-
-### 个人资料
-
-<img src="static/pic/个人资料.png" />
-
-### 修改密码
-
-<img src="static/pic/修改密码.png" />
-
-### 邮件配置列表
-
-<img src="static/pic/邮件配置列表.png" />
-
-### 测试报告列表
-
-<img src="static/pic/report_list.png" />
-
-### 测试报告详情
-
-<img src="static/pic/report_details.png" />
-
-### 测试管理后台
-
-<img src="static/pic/后台管理.png" />
-
-### 悬浮球
-<img src="static/pic/悬浮球.png" />
-
-### mock数据
-  <img src="static/pic/mock数据.png" />
+- **生成Mock数据**：访问 `/mockdata/` 创建Mock数据，支持数据导出和删除。
 
 ### 定时任务
-   <img src="static/pic/定时任务.png" />
 
-### 定时任务监控
-   <img src="static/pic/定时任务监控.png" />
+- **添加定时任务**：访问 `/scheduledtask/new/` 配置定时执行测试套件。
+- **编辑定时任务**：访问 `/scheduledtask/<id>/edit/`。
+- **手动执行定时任务**：通过 `/scheduledtask/<id>/run/` 立立即执行。
+- **查看定时任务日志**：访问 `/tasklog/<id>/` 查看执行日志。
 
-### 觉得项目不错，请作者喝一杯咖啡
+### 邮件通知配置
 
-<img src="static/pic/pay.jpg" width="300" />
+- **配置邮件**：管理员访问 `/emailconfig/<id>/` 配置邮件服务器设置。
+- **测试邮件连接**：在邮件配置页点击 "Test Connection" 按钮。
+- **激活邮件配置**：点击 `/emailconfig/<id>/activate/` 设为当前激活配置。
 
-## 贡献伙伴
-   非常感谢以下小伙伴的贡献
-- [jinpeng_zhang](https://gitee.com/jinpeng_zhang)
+## API 文档
 
-   <img src="https://foruda.gitee.com/avatar/1749719940805397104/7589136_jinpeng_zhang_1749719940.png" width="80"/>
+EasyTesting 提供 RESTful API，使用 Django REST framework 实现。
+
+### 项目 API
+
+- `GET /api/project/`：获取项目列表。
+- `POST /api/project/`：创建新项目。
+- `GET /api/project/<id>/`：获取指定项目详情。
+- `PUT /api/project/<id>/`：更新项目。
+- `DELETE /api/project/<id>/`：删除项目。
+
+### 测试用例 API
+
+- `GET /api/testcase/`：获取测试用例列表。
+- `POST /api/testcase/`：创建新测试用例。
+- `GET /api/testcase/<id>/`：获取测试用例详情。
+- `POST /api/testcase/<id>/run/`：运行测试用例。
+- `PUT /api/testcase/<id>/`：更新测试用例。
+- `DELETE /api/testcase/<id>/`：删除测试用例。
+
+### 测试套件 API
+
+- `GET /api/testsuite/`：获取测试套件列表。
+- `POST /api/testsuite/`：创建新测试套件。
+- `GET /api/testsuite/<id>/`：获取测试套件详情。
+- `POST /api/testsuite/<id>/run/`：运行测试套件。
+- `PUT /api/testsuite/<id>/`：更新测试套件。
+- `DELETE /api/testsuite/<id>/`：删除测试套件。
+
+### 测试运行 API
+
+- `GET /api/testrun/`：获取测试运行列表。
+- `GET /api/testrun/<id>/results/`：获取测试运行结果。
+
+### 测试报告 API
+
+- `GET /api/testreport/`：获取测试报告列表。
+- `GET /api/testreport/<id>/`：获取报告详情。
+- `POST /api/testreport/<id>/delete/`：删除报告。
+
+### Mock数据 API
+
+- `GET /api/mockdata/`：获取Mock数据列表。
+- `POST /api/mockdata/`：创建Mock数据。
+- `GET /api/mockdata/<id>/`：获取指定Mock数据详情。
+- `PUT /api/mockdata/<id>/`：更新Mock数据。
+- `DELETE /api/mockdata/<id>/`：删除Mock数据。
 
 ## License
 
-本项目根据MIT许可证获得许可
+本项目采用 [MIT License](LICENSE)。
 
 ## 致谢
 
-- [Django](https://www.djangoproject.com/)
-- [Django REST framework](https://www.django-rest-framework.org/)
-- [SQLite](https://www.sqlite.org/index.html)
-- [Bootstrap](https://getbootstrap.com/)
-- [HTTPRunner](https://httprunner.com/)
-- [Django-SimpleUI](https://github.com/xui2013/django-simpleui)
+感谢所有为本项目做出贡献的伙伴。
