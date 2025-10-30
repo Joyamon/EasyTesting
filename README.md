@@ -170,6 +170,9 @@
 
 <img src="static/pic/pay.jpg" width="300" />
 
+### 交流群
+<img src="static/pic/wechat.jpg"  />
+
 ## 贡献伙伴
    非常感谢以下小伙伴的贡献
 - [jinpeng_zhang](https://gitee.com/jinpeng_zhang)

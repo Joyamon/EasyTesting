@@ -22,7 +22,7 @@ def execute_test_suite_async(test_suite, environment, case_environments, test_ru
     thread = threading.Thread(
         target=_execute_test_suite_thread,
         args=(test_suite, environment, case_environments, test_run, user, execute_test_suite_func),
-        daemon=True
+        daemon=True  # 设置线程为守护线程
     )
     thread.start()
     return thread
