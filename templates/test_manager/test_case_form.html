@@ -1559,9 +1559,9 @@
                 formDataTextarea.setAttribute('disabled', 'disabled');
 
                 // 禁用表格中的输入
-                const inputs = document.querySelectorAll('#form-data-params input, #form-data-params select, #form-data-params button');
-                inputs.forEach(input => input.setAttribute('disabled', 'disabled'));
-                document.getElementById('add-param-btn').setAttribute('disabled', 'disabled');
+                {#const inputs = document.querySelectorAll('#form-data-params input, #form-data-params select, #form-data-params button');#}
+                {#inputs.forEach(input => input.setAttribute('disabled', 'disabled'));#}
+                {#document.getElementById('add-param-btn').setAttribute('disabled', 'disabled');#}
             } else {
                 jsonTextarea.removeAttribute('disabled');
                 formDataTextarea.removeAttribute('disabled');
@@ -1574,10 +1574,9 @@
         });
 
         // 初始化时检查一次
-        if (methodSelect.value === 'GET' || methodSelect.value === 'DELETE') {
-            document.getElementById('{{ form.request_body_json.id_for_label }}').setAttribute('disabled', 'disabled');
-            document.getElementById('{{ form.request_body_form_data.id_for_label }}').setAttribute('disabled', 'disabled');
-        }
+        {#if (methodSelect.value === 'GET' || methodSelect.value === 'DELETE') {#}
+        {#    document.getElementById('{{ form.request_body_json.id_for_label }}').setAttribute('disabled', 'disabled');#}
+        {#    document.getElementById('{{ form.request_body_form_data.id_for_label }}').setAttribute('disabled', 'disabled');}#}
 
         // 初始化form-data表格
         initFormDataTable();
