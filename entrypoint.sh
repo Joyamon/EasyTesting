@@ -16,4 +16,4 @@ python manage.py migrate &
 
 celery -A EasyTesting worker -l info &
 celery -A EasyTesting beat -l info
-python manage.py runserver 0.0.0.0:80
+python manage.py runserver 10.10.50.25:80
