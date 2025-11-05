@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 # 进入项目
-cd /var/lib/jenkins/workspace/EasyTesting
+cd EasyTesting
 #创建虚拟环境
 python -m venv EasyTesting_env
 # 激活虚拟环境
