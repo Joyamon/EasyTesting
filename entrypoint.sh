@@ -5,7 +5,7 @@ cd /var/lib/jenkins/workspace/EasyTesting
 #创建虚拟环境
 python -m venv EasyTesting_env
 
-pip install --upgrade setuptools wheel
+pip install -i http://nexus.prod.svc.yafex.io:8081/repository/pypi-proxy/simple/ --trusted-host nexus.prod.svc.yafex.io --upgrade setuptools wheel
 # 激活虚拟环境
 source EasyTesting_env/bin/activate
 
