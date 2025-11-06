@@ -4,6 +4,8 @@ set -e
 cd /var/lib/jenkins/workspace/EasyTesting
 #创建虚拟环境
 python -m venv EasyTesting_env
+
+pip install --upgrade setuptools wheel
 # 激活虚拟环境
 source EasyTesting_env/bin/activate
 
