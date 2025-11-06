@@ -16,6 +16,6 @@ python manage.py makemigrations
 python manage.py migrate &
 # 运行项目
 
-celery -A EasyTesting worker -l info &
-celery -A EasyTesting beat -l info
+#celery -A EasyTesting worker -l info &
+#celery -A EasyTesting beat -l info
 python manage.py runserver 10.10.50.25:80
