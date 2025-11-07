@@ -1,5 +1,5 @@
 # 使用华为云镜像
-FROM swr.cn-north-4.myhuaweicloud.com/hubpaas/python:3.9-slim
+#FROM swr.cn-north-4.myhuaweicloud.com/hubpaas/python:3.9-slim
 
 WORKDIR /app
 
