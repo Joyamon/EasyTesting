@@ -173,8 +173,6 @@
 ### 交流群
 <img src="static/pic/wechat.jpg"  />
 
-### 备选（扫不了请扫备选码） 
-<img src="static/pic/httpsweixin.qq.comgAQYAADV6gkisQ9EArNaSIuJ_3e5WhKNq-6taEnj4M70VPGDbOy6KsAVzyIlp2iPW.png"  />
 
 ## 贡献伙伴
    非常感谢以下小伙伴的贡献
