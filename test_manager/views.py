@@ -2578,3 +2578,7 @@ def task_execution_log_detail(request, pk):
     }
 
     return render(request, 'test_manager/task_execution_log_detail.html', context)
+
+
+def tools(request):
+    return render(request, 'test_manager/tools.html')

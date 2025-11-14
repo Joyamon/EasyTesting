@@ -516,7 +516,7 @@
                                         aria-controls="user-settings-collapse">
                                     <i class="bi bi-sliders me-lg-2" style="color: cornflowerblue"></i>用户&设置
                                 </button>
-                                <div class="collapse {% if '/profile/' in request.path or '/password-change/' in request.path or '/email-config' in request.path %}show{% endif %}"
+                                <div class="collapse {% if '/profile/' in request.path or '/password-change/' in request.path or '/email-config' in request.path or '/tools-list/' in request.path %}show{% endif %}"
                                      id="user-settings-collapse">
                                     <ul class="nav flex-column mb-2">
                                         <li class="nav-item">
@@ -535,6 +535,12 @@
                                             <a class="nav-link {% if '/email_config' in request.path %}active{% endif %}"
                                                href="{% url 'email_config_list' %}">
                                                 <i class="bi bi-envelope-fill" style="color: cornflowerblue"></i> 邮件配置
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {% if '/tools-list/' in request.path %}active{% endif %}"
+                                               href="{% url 'tools-list' %}">
+                                                <i class="bi bi-tools" style="color: cornflowerblue"></i> 辅助工具
                                             </a>
                                         </li>
                                     </ul>
