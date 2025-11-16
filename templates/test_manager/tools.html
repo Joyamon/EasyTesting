@@ -1,34 +1,286 @@
-{% extends "base.html" %}
-{% block title %} 工具 - EasyTesting {% endblock %}
-{% block header %}工具{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}辅助工具 - EasyTesting{% endblock %}
+
+{% block header %}辅助工具{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>日期计算器</span>
-
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">日期计算器</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="startDateTime" class="form-label">开始日期时间</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="datetime-local" id="startDateTime" class="form-control" step="1"/>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="endDateTime" class="form-label">结束日期时间</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="datetime-local" id="endDateTime" class="form-control" step="1"/>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="mb-3">
+            <button id="calculateBtn" class="btn btn-primary" type="button">
+                <i class="bi bi-calculator"></i> 计算
+            </button>
+            <button id="resetBtn" class="btn btn-secondary ms-2" type="button">
+                <i class="bi bi-arrow-clockwise"></i> 重置
+            </button>
+        </div>
+
+        <!-- 修改后的结果容器，移除关闭按钮 -->
+        <div id="resultContainer" style="display: none;">
+            <div class="alert alert-info" role="alert">
+                <h5 class="mb-3">计算结果</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>天数差:</strong> <span id="daysDiff" class="badge bg-primary">-</span> 天</p>
+                        <p><strong>小时数:</strong> <span id="hoursDiff" class="badge bg-primary">-</span> 小时</p>
+                        <p><strong>分钟数:</strong> <span id="minutesDiff" class="badge bg-primary">-</span> 分钟</p>
+                        <p><strong>秒数:</strong> <span id="secondsDiff" class="badge bg-primary">-</span> 秒</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>总小时数:</strong> <span id="totalHours" class="badge bg-success">-</span></p>
+                        <p><strong>总分钟数:</strong> <span id="totalMinutes" class="badge bg-success">-</span></p>
+                        <p><strong>总秒数:</strong> <span id="totalSeconds" class="badge bg-success">-</span></p>
+                        <p><strong>总天数:</strong> <span id="totalDays" class="badge bg-success">-</span></p>
+                    </div>
+                </div>
+                <hr class="my-2">
+                <small class="text-muted">总小时数、总分钟数、总秒数均保留2位小数</small>
+            </div>
+        </div>
+
+        <!-- 修改后的错误容器，移除关闭按钮 -->
+        <div id="errorContainer" style="display: none;">
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span id="errorMessage">-</span>
             </div>
         </div>
     </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>日期计算器</span>
-
-            </div>
-            <div class="card-body">
-
-            </div>
-        </div>
-    </div>
-
-
 </div>
 
+<style>
+    .input-group-text {
+        background-color: rgba(67, 97, 238, 0.1);
+        border-color: #dee2e6;
+        color: var(--primary-color);
+    }
+
+    .badge {
+        font-size: 0.95rem;
+        padding: 0.5rem 0.75rem;
+        margin-left: 0.5rem;
+    }
+
+    #resultContainer .row p {
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+
+    #resultContainer strong {
+        min-width: 120px;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        // 缓存DOM元素，避免重复查询
+        const DOM = {
+            startDateTime: null,
+            endDateTime: null,
+            calculateBtn: null,
+            resetBtn: null,
+            resultContainer: null,
+            errorContainer: null,
+            errorMessage: null,
+            results: {}
+        };
+
+        // 初始化DOM引用
+        function initDOM() {
+            DOM.startDateTime = document.getElementById('startDateTime');
+            DOM.endDateTime = document.getElementById('endDateTime');
+            DOM.calculateBtn = document.getElementById('calculateBtn');
+            DOM.resetBtn = document.getElementById('resetBtn');
+            DOM.resultContainer = document.getElementById('resultContainer');
+            DOM.errorContainer = document.getElementById('errorContainer');
+            DOM.errorMessage = document.getElementById('errorMessage');
+
+            // 缓存结果元素
+            DOM.results = {
+                daysDiff: document.getElementById('daysDiff'),
+                hoursDiff: document.getElementById('hoursDiff'),
+                minutesDiff: document.getElementById('minutesDiff'),
+                secondsDiff: document.getElementById('secondsDiff'),
+                totalHours: document.getElementById('totalHours'),
+                totalMinutes: document.getElementById('totalMinutes'),
+                totalSeconds: document.getElementById('totalSeconds'),
+                totalDays: document.getElementById('totalDays')
+            };
+        }
+
+        // 验证必要元素是否存在
+        function validateDOM() {
+            return DOM.startDateTime && DOM.endDateTime && DOM.calculateBtn && DOM.resetBtn;
+        }
+
+        // 设置默认时间
+        function setDefaultTimes() {
+            const now = new Date();
+            const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+
+            DOM.startDateTime.value = formatDateTimeLocal(now);
+            DOM.endDateTime.value = formatDateTimeLocal(endTime);
+        }
+
+        // 格式化日期时间为 datetime-local 格式
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            if (DOM.errorMessage) {
+                DOM.errorMessage.textContent = message;
+            }
+            if (DOM.errorContainer) {
+                DOM.errorContainer.style.display = 'block';
+            }
+            if (DOM.resultContainer) {
+                DOM.resultContainer.style.display = 'none';
+            }
+        }
+
+        // 显示计算结果
+        function showResults(data) {
+            Object.entries(data).forEach(([key, value]) => {
+                if (DOM.results[key]) {
+                    DOM.results[key].textContent = value;
+                }
+            });
+
+            if (DOM.resultContainer) {
+                DOM.resultContainer.style.display = 'block';
+            }
+            if (DOM.errorContainer) {
+                DOM.errorContainer.style.display = 'none';
+            }
+        }
+
+        // 计算日期时间差
+        function handleCalculate() {
+            const startValue = DOM.startDateTime.value;
+            const endValue = DOM.endDateTime.value;
+
+            if (!startValue || !endValue) {
+                showError('请选择开始和结束日期时间');
+                return;
+            }
+
+            try {
+                const startTime = new Date(startValue);
+                const endTime = new Date(endValue);
+
+                if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+                    showError('请输入有效的日期时间格式');
+                    return;
+                }
+
+                const diffMs = Math.abs(endTime - startTime);
+
+                // 计算天、时、分、秒
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const remainingMs = diffMs % (1000 * 60 * 60 * 24);
+                const diffHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                const remainingMs2 = remainingMs % (1000 * 60 * 60);
+                const diffMinutes = Math.floor(remainingMs2 / (1000 * 60));
+                const diffSeconds = Math.floor((remainingMs2 % (1000 * 60)) / 1000);
+
+                // 计算总的小时、分钟、秒数（保留2位小数）
+                const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
+                const totalMinutes = (diffMs / (1000 * 60)).toFixed(2);
+                const totalSeconds = (diffMs / 1000).toFixed(2);
+                const totalDays = (diffMs / (1000 * 60 * 60 * 24)).toFixed(2);
+
+                // 显示结果
+                showResults({
+                    daysDiff: diffDays,
+                    hoursDiff: diffHours,
+                    minutesDiff: diffMinutes,
+                    secondsDiff: diffSeconds,
+                    totalHours: totalHours,
+                    totalMinutes: totalMinutes,
+                    totalSeconds: totalSeconds,
+                    totalDays: totalDays
+                });
+
+            } catch (error) {
+                showError('计算过程出错: ' + error.message);
+            }
+        }
+
+        // 重置表单
+        function handleReset() {
+            DOM.startDateTime.value = '';
+            DOM.endDateTime.value = '';
+            if (DOM.resultContainer) {
+                DOM.resultContainer.style.display = 'none';
+            }
+            if (DOM.errorContainer) {
+                DOM.errorContainer.style.display = 'none';
+            }
+            setDefaultTimes();
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            DOM.calculateBtn.addEventListener('click', handleCalculate);
+            DOM.resetBtn.addEventListener('click', handleReset);
+        }
+
+        // 主初始化函数
+        function init() {
+            initDOM();
+
+            if (!validateDOM()) {
+                console.error('[DateCalculator] 必要的DOM元素不存在');
+                return false;
+            }
+
+            setDefaultTimes();
+            initEventListeners();
+            return true;
+        }
+
+        // 页面加载完成后执行初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
 {% endblock %}

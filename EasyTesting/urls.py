@@ -154,6 +154,6 @@ urlpatterns = [
     path('debug/cleanup-tasks/', debug_views.cleanup_tasks_api, name='cleanup_tasks_api'),
     path('debug/sync-task/<int:task_id>/', debug_views.sync_single_task_api, name='sync_single_task_api'),
 
-    path('tools-list/', views.tools, name='tools-list')
+    path('tools-list/', views.tools, name='tools-list'),
 
 ]
