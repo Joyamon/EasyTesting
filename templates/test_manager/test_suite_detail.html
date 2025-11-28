@@ -494,7 +494,7 @@
         }
 
         function removeTestCase(testSuiteId, testCaseId) {
-            if (confirm('Are you sure you want to remove this test case from the suite?')) {
+            if (confirm('是否确定要删除该测试用例？')) {
                 // 获取CSRF令牌
                 const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') || getCookie('csrftoken');
 

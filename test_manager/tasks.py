@@ -35,7 +35,7 @@ def execute_scheduled_test_suite(self, scheduled_task_id):
 
     # 立即写入文件，确保任务被调用
     try:
-        with open('/tmp/celery_task_log.txt', 'a') as f:
+        with open('../logs/celery_task_log.txt', 'a') as f:
             f.write(f"{timezone.now().isoformat()} - TASK STARTED: {scheduled_task_id}\n")
     except Exception as e:
         print(f"无法写入日志文件: {e}")
@@ -163,7 +163,7 @@ def execute_scheduled_test_suite(self, scheduled_task_id):
 
         # 记录任务完成
         try:
-            with open('/tmp/celery_task_log.txt', 'a') as f:
+            with open('../logs/celery_task_log.txt', 'a') as f:
                 f.write(f"{timezone.now().isoformat()} - TASK COMPLETED: {scheduled_task_id}\n")
         except:
             pass
@@ -187,7 +187,7 @@ def execute_scheduled_test_suite(self, scheduled_task_id):
 
         # 记录异常
         try:
-            with open('/tmp/celery_task_log.txt', 'a') as f:
+            with open('../logs/celery_task_log.txt', 'a') as f:
                 f.write(f"{timezone.now().isoformat()} - TASK ERROR: {scheduled_task_id} - {str(e)}\n")
         except:
             pass
