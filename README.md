@@ -174,7 +174,7 @@
 <img src="static/pic/pay.jpg" width="300" />
 
 ### 交流群
-<img src="static/pic/wechat.jpg" width="500"  /> <img src="static/pic/chat.jpg" width="500"  />
+<img src="static/pic/wechat.jpg" width="250"  /> <img src="static/pic/chat.jpg" width="250"  />
 
 -  群二维码过期无法访问，请添加个人微信，博主可拉进群，欢迎大家一起交流
 
