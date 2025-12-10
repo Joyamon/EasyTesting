@@ -174,9 +174,9 @@
 <img src="static/pic/pay.jpg" width="300" />
 
 ### 交流群
-<img src="static/pic/wechat.jpg" width="500"  />
+<img src="static/pic/wechat.jpg" width="500"  /> <img src="static/pic/chat.jpg" width="500"  />
 
--  二维码过期无法访问，请在主页添加个人微信，博主可拉进群，欢迎大家一起交流
+-  群二维码过期无法访问，请添加个人微信，博主可拉进群，欢迎大家一起交流
 
 ## 贡献伙伴
    非常感谢以下小伙伴的贡献
