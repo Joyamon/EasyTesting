@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.views.decorators.http import require_POST,require_GET
+from django.views.decorators.http import require_POST, require_GET
 from django_celery_beat.models import PeriodicTasks
 
 from .async_executor import execute_test_suite_async, execute_test_case_async
@@ -28,6 +28,7 @@ from .forms import (
 from .httprunner_executor import execute_test_case, execute_test_suite
 from .scheduler import TaskScheduler, logger
 from .tasks import execute_scheduled_test_suite
+
 
 def paginate_queryset(request, queryset, per_page=10):
     page = request.GET.get('page', 1)
@@ -111,9 +112,9 @@ def dashboard(request):
 
     return render(request, 'test_manager/dashboard.html', context)
 
+
 def generate_time_series_data(mode, tz):
     now = timezone.now().astimezone(tz)
-
 
     if mode == 'daily':
         count = 7
@@ -159,7 +160,7 @@ def generate_date_labels(start_date, period, count):
 
     elif period == 'month':
         for i in range(count):
-            labels.append(f'{i+1}月')
+            labels.append(f'{i + 1}月')
 
     elif period == 'year':
         for i in range(count):
@@ -814,6 +815,14 @@ def test_suite_run(request, pk):
         'environments': environments,
         'test_suite_cases': test_suite_cases
     })
+
+
+@login_required
+def test_suite_delete(request, pk):
+    test_suite = get_object_or_404(TestSuite, pk=pk)
+    test_suite.delete()
+    messages.success(request, '删除测试套件成功')
+    return redirect('project_detail', pk=test_suite.project.pk)
 
 
 # Test Run views
@@ -2207,6 +2216,7 @@ def create_celery_periodic_task(scheduled_task):
         logger.error(f"创建Celery周期性任务失败: {str(e)}")
         return None
 
+
 @login_required
 def scheduled_task_create(request):
     """创建定时任务 - 修复版本，确保立即同步到Celery Beat"""
@@ -2375,6 +2385,8 @@ def scheduled_task_create(request):
         'form': form,
         'title': '创建定时任务'
     })
+
+
 @login_required
 def scheduled_task_detail(request, pk):
     """定时任务详情"""
@@ -2719,7 +2731,7 @@ def scheduled_task_run_now(request, pk):
 def task_execution_log_detail(request, pk):
     """任务执行日志详情"""
     log = get_object_or_404(TaskExecutionLog, pk=pk)
-    print(f'[DEBUG] 找到任务执行日志: ',log)
+    print(f'[DEBUG] 找到任务执行日志: ', log)
 
     context = {
         'log': log,

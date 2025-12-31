@@ -54,6 +54,7 @@ urlpatterns = [
     path('test-suites/<int:pk>/', views.test_suite_detail, name='test_suite_detail'),
     path('test-suites/<int:pk>/edit/', views.test_suite_edit, name='test_suite_edit'),
     path('test-suites/<int:pk>/run/', views.test_suite_run, name='test_suite_run'),
+    path('test-suites/<int:pk>/delete/', views.test_suite_delete, name='test_suite_delete'),
 
     # 测试运行相关
     path('test-runs/', views.test_run_list, name='test_run_list'),
