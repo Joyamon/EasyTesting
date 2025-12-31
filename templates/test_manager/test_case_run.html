@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = environmentSelect.options[environmentSelect.selectedIndex];
         if (selectedOption && selectedOption.value) {
             const baseUrl = selectedOption.dataset.baseUrl;
-            const testCaseUrl = '{{ test_case.request_url }}';
+            const testCaseUrl = '{{ test_case.request_url }}'.replace(/&amp;/g, '&');
 
             baseUrlSpan.textContent = baseUrl;
             fullUrlSpan.textContent = baseUrl + testCaseUrl;
