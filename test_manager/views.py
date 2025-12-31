@@ -2742,3 +2742,10 @@ def task_execution_log_detail(request, pk):
 
 def tools(request):
     return render(request, 'test_manager/tools.html')
+
+
+def test_case_delete(request,pk):
+    test_case = get_object_or_404(TestCase, pk=pk)
+    test_case.delete()
+    messages.success(request, f'删除成功: {test_case.name}')
+    return redirect('project_detail', pk=test_case.project.pk)

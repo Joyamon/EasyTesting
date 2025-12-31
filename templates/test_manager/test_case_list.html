@@ -5,116 +5,128 @@
 {% block header %}测试用例{% endblock %}
 
 {% block header_buttons %}
-<div class="btn-group">
-    <a href="{% url 'test_case_create' %}{% if project %}?project={{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> 新增测试用例
-    </a>
-    {% if project %}
-    <a href="{% url 'test_case_group_create' %}?project={{ project.id }}{% if current_group %}&parent={{ current_group.id }}{% endif %}" class="btn btn-outline-primary">
-        <i class="bi bi-folder-plus"></i> 新增测试用例分组
-    </a>
-    {% endif %}
-</div>
+    <div class="btn-group">
+        <a href="{% url 'test_case_create' %}{% if project %}?project=
+            {{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}"
+           class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 新增测试用例
+        </a>
+        {% if project %}
+            <a href="{% url 'test_case_group_create' %}?project=
+                    {{ project.id }}{% if current_group %}&parent={{ current_group.id }}{% endif %}"
+               class="btn btn-outline-primary">
+                <i class="bi bi-folder-plus"></i> 新增测试用例分组
+            </a>
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        {% if project %}
-        <div class="alert alert-info mb-4">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <div>
-                    <strong>筛选项目:</strong> {{ project.name }}
-                    <a href="{% url 'test_case_list' %}" class="btn btn-sm btn-outline-primary ms-3">
-                        <i class="bi bi-x-lg"></i> 清除项目筛选
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if current_group %}
-        <div class="alert alert-info mb-4">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-folder-fill me-2"></i>
-                <div>
-                    <strong>最近分组:</strong> {{ current_group }}
-                    <a href="{% url 'test_case_list' %}?project={{ project.id }}" class="btn btn-sm btn-outline-primary ms-3">
-                        <i class="bi bi-x-lg"></i> 清除分组筛选
-                    </a>
-                    <a href="{% url 'test_case_group_edit' pk=current_group.id %}" class="btn btn-sm btn-outline-secondary ms-1">
-                        <i class="bi bi-pencil"></i> 编辑分组
-                    </a>
-                    <a href="{% url 'test_case_group_delete' pk=current_group.id %}" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('确认删除分组吗?');">
-                        <i class="bi bi-trash"></i> 删除分组
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- 搜索框 -->
-        <div class="mb-4">
-            <form method="get" class="d-flex">
-                {% if project %}
-                <input type="hidden" name="project" value="{{ project.id }}">
-                {% endif %}
-                {% if current_group %}
-                <input type="hidden" name="group" value="{{ current_group.id }}">
-                {% endif %}
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="输入测试用例..." value="{{ search_query }}">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        {% if project and child_groups %}
-        <!-- 显示子分组 -->
-        <div class="mb-4">
-            <h5 class="mb-3">分组</h5>
-            <div class="row row-cols-1 row-cols-md-3 g-3">
-                {% for group in child_groups %}
-                <div class="col">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-folder fs-4 me-2 text-warning"></i>
-                                <h5 class="card-title mb-0">{{ group.name }}</h5>
-                            </div>
-                            <p class="card-text text-muted small">
-                                {{ group.test_cases.count }} 测试用例
-                                {% if group.children.count > 0 %}
-                                | {{ group.children.count }} 子分组
-                                {% endif %}
-                            </p>
-                            <div class="d-flex justify-content-between mt-3">
-                                <a href="{% url 'test_case_list' %}?project={{ project.id }}&group={{ group.id }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-folder2-open"></i> 打开
-                                </a>
-                                <div>
-                                    <a href="{% url 'test_case_group_edit' pk=group.id %}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a href="{% url 'test_case_group_delete' pk=group.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确认删除分组吗?');">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </div>
+    <div class="card">
+        <div class="card-body">
+            {% if project %}
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>
+                            <strong>筛选项目:</strong> {{ project.name }}
+                            <a href="{% url 'test_case_list' %}" class="btn btn-sm btn-outline-primary ms-3">
+                                <i class="bi bi-x-lg"></i> 清除项目筛选
+                            </a>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            {% if current_group %}
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-folder-fill me-2"></i>
+                        <div>
+                            <strong>最近分组:</strong> {{ current_group }}
+                            <a href="{% url 'test_case_list' %}?project={{ project.id }}"
+                               class="btn btn-sm btn-outline-primary ms-3">
+                                <i class="bi bi-x-lg"></i> 清除分组筛选
+                            </a>
+                            <a href="{% url 'test_case_group_edit' pk=current_group.id %}"
+                               class="btn btn-sm btn-outline-secondary ms-1">
+                                <i class="bi bi-pencil"></i> 编辑分组
+                            </a>
+                            <a href="{% url 'test_case_group_delete' pk=current_group.id %}"
+                               class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('确认删除分组吗?');">
+                                <i class="bi bi-trash"></i> 删除分组
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- 搜索框 -->
+            <div class="mb-4">
+                <form method="get" class="d-flex">
+                    {% if project %}
+                        <input type="hidden" name="project" value="{{ project.id }}">
+                    {% endif %}
+                    {% if current_group %}
+                        <input type="hidden" name="group" value="{{ current_group.id }}">
+                    {% endif %}
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="输入测试用例..."
+                               value="{{ search_query }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {% if project and child_groups %}
+                <!-- 显示子分组 -->
+                <div class="mb-4">
+                    <h5 class="mb-3">分组</h5>
+                    <div class="row row-cols-1 row-cols-md-3 g-3">
+                        {% for group in child_groups %}
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-folder fs-4 me-2 text-warning"></i>
+                                            <h5 class="card-title mb-0">{{ group.name }}</h5>
+                                        </div>
+                                        <p class="card-text text-muted small">
+                                            {{ group.test_cases.count }} 测试用例
+                                            {% if group.children.count > 0 %}
+                                                | {{ group.children.count }} 子分组
+                                            {% endif %}
+                                        </p>
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <a href="{% url 'test_case_list' %}?project={{ project.id }}&group={{ group.id }}"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-folder2-open"></i> 打开
+                                            </a>
+                                            <div>
+                                                <a href="{% url 'test_case_group_edit' pk=group.id %}"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'test_case_group_delete' pk=group.id %}"
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('确认删除分组吗?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
                     <tr>
                         <th>名称</th>
                         <th>项目</th>
@@ -124,27 +136,30 @@
                         <th>预期状态码</th>
                         <th class="text-end">操作</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {% for test_case in test_cases %}
                         <tr>
                             <td>
-                                <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="fw-medium text-decoration-none text-dark">
+                                <a href="{% url 'test_case_detail' pk=test_case.pk %}"
+                                   class="fw-medium text-decoration-none text-dark">
                                     {{ test_case.name }}
                                 </a>
                             </td>
                             <td>
-                                <a href="{% url 'project_detail' pk=test_case.project.pk %}" class="text-decoration-none">
+                                <a href="{% url 'project_detail' pk=test_case.project.pk %}"
+                                   class="text-decoration-none">
                                     {{ test_case.project.name }}
                                 </a>
                             </td>
                             <td>
                                 {% if test_case.group %}
-                                <a href="{% url 'test_case_list' %}?project={{ test_case.project.id }}&group={{ test_case.group.id }}" class="text-decoration-none">
-                                    <i class="bi bi-folder text-warning"></i> {{ test_case.group.name }}
-                                </a>
+                                    <a href="{% url 'test_case_list' %}?project={{ test_case.project.id }}&group={{ test_case.group.id }}"
+                                       class="text-decoration-none">
+                                        <i class="bi bi-folder text-warning"></i> {{ test_case.group.name }}
+                                    </a>
                                 {% else %}
-                                <span class="text-muted">-</span>
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -159,7 +174,8 @@
                                 </span>
                             </td>
                             <td>
-                                <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;">
+                                <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                      style="max-width: 200px;">
                                     {{ test_case.request_url }}
                                 </code>
                             </td>
@@ -168,14 +184,25 @@
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    <a href="{% url 'test_case_detail' pk=test_case.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'test_case_detail' pk=test_case.pk %}"
+                                       class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{% url 'test_case_edit' pk=test_case.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <a href="{% url 'test_case_edit' pk=test_case.pk %}"
+                                       class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'test_case_run' pk=test_case.pk %}" class="btn btn-sm btn-outline-success">
+                                    <a href="{% url 'test_case_run' pk=test_case.pk %}"
+                                       class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-play-fill"></i>
+                                    </a>
+{#                                    <a href="{% url 'test_case_delete' pk=test_case.pk %}"#}
+{#                                       class="btn btn-sm btn-outline-danger">#}
+{#                                        <i class="bi bi-trash"></i>#}
+{#                                    </a>#}
+                                    <a class="btn btn-sm btn-outline-danger" href="#"
+                                       onclick="confirmDelete({{ test_case.pk }}, '{{ test_case.name }}')">
+                                        <i class="bi bi-trash me-2"></i>
                                     </a>
                                 </div>
                             </td>
@@ -187,20 +214,52 @@
                                     <i class="bi bi-file-earmark-code display-4 text-muted mb-3"></i>
                                     <h5>暂无测试用例</h5>
                                     <p class="text-muted">创建第一个测试用例</p>
-                                    <a href="{% url 'test_case_create' %}{% if project %}?project={{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}" class="btn btn-primary mt-2">
+                                    <a href="{% url 'test_case_create' %}{% if project %}?project=
+                                        {{ project.id }}{% if current_group %}&group={{ current_group.id }}{% endif %}{% endif %}"
+                                       class="btn btn-primary mt-2">
                                         <i class="bi bi-plus-lg"></i> 创建测试用例
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
+
+            {% include 'pagination.html' with page_obj=test_cases %}
         </div>
-
-        {% include 'pagination.html' with page_obj=test_cases %}
     </div>
-</div>
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除测试用例 "<span id="deleteCaseName"></span>" 吗？</p>
+                    <p class="text-danger small">此操作不可撤销</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <form id="deleteForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">确认删除</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        function confirmDelete(caseId, caseName) {
+            document.getElementById('deleteCaseName').textContent = caseName;
+            document.getElementById('deleteForm').action = `/test-cases/${caseId}/delete/`;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
 
 {% endblock %}
+
