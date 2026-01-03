@@ -140,13 +140,14 @@ urlpatterns = [
     path('mock-data/delete/<int:pk>/', views.mock_data_delete, name='mock-data-delete'),
     path('mock-data/export/<int:pk>/', views.mock_data_export, name='mock-data-export'),
 
-# 定时任务相关URL
+    # 定时任务相关URL
     path('scheduled-tasks/', views.scheduled_task_list, name='scheduled_task_list'),
     path('scheduled-tasks/create/', views.scheduled_task_create, name='scheduled_task_create'),
     path('scheduled-tasks/<int:pk>/', views.scheduled_task_detail, name='scheduled_task_detail'),
     path('scheduled-tasks/<int:pk>/edit/', views.scheduled_task_edit, name='scheduled_task_edit'),
     path('scheduled-tasks/<int:pk>/delete/', views.scheduled_task_delete, name='scheduled_task_delete'),
-    path('scheduled-tasks/<int:pk>/toggle-status/', views.scheduled_task_toggle_status, name='scheduled_task_toggle_status'),
+    path('scheduled-tasks/<int:pk>/toggle-status/', views.scheduled_task_toggle_status,
+         name='scheduled_task_toggle_status'),
     path('scheduled-tasks/<int:pk>/run-now/', views.scheduled_task_run_now, name='scheduled_task_run_now'),
     path('task-execution-logs/<int:pk>/', views.task_execution_log_detail, name='task_execution_log_detail'),
     # 调试相关URL
@@ -157,5 +158,7 @@ urlpatterns = [
     path('debug/sync-task/<int:task_id>/', debug_views.sync_single_task_api, name='sync_single_task_api'),
 
     path('tools-list/', views.tools, name='tools-list'),
+    # 用于ui自动化测试的页面,无需登录
+    path('ui-test/', views.ui_test_page, name='ui-test')
 
 ]

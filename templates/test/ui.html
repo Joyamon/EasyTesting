@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../../static/svg/test.svg">
+    <title>UI自动化测试页面</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+
+        .description {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, textarea:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .radio-item, .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-item input, .checkbox-item input {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-upload {
+            border: 2px dashed #3498db;
+            padding: 25px;
+            text-align: center;
+            border-radius: 8px;
+            background-color: #f0f8ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            background-color: #e8f4fc;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .download-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #e8f6f3;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .download-button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-button:hover {
+            background-color: #27ae60;
+        }
+
+        .submit-section {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .submit-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .test-result {
+            background-color: #fffde7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border-left: 4px solid #f1c40f;
+            display: none;
+        }
+
+        .test-result h3 {
+            margin-top: 0;
+            color: #d35400;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .test-section {
+                padding: 15px;
+            }
+
+            .radio-group, .checkbox-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UI自动化测试页面</h1>
+        <p class="description">此页面包含UI自动化测试所需的所有控件类型：文本框、下拉框、复选框、单选框、文件上传与下载</p>
+
+        <!-- 文本输入部分 -->
+        <div class="test-section">
+            <h2 class="section-title">文本输入控件</h2>
+
+            <div class="form-group">
+                <label for="username">用户名：</label>
+                <input type="text" id="username" name="username" placeholder="请输入用户名">
+            </div>
+
+            <div class="form-group">
+                <label for="email">邮箱地址：</label>
+                <input type="email" id="email" name="email" placeholder="请输入邮箱地址">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码：</label>
+                <input type="password" id="password" name="password" placeholder="请输入密码">
+            </div>
+
+            <div class="form-group">
+                <label for="comments">备注：</label>
+                <textarea id="comments" name="comments" placeholder="请输入备注信息"></textarea>
+            </div>
+        </div>
+
+        <!-- 选择下拉框部分 -->
+        <div class="test-section">
+            <h2 class="section-title">选择下拉框</h2>
+
+            <div class="form-group">
+                <label for="country">选择国家：</label>
+                <select id="country" name="country">
+                    <option value="">请选择国家</option>
+                    <option value="china">中国</option>
+                    <option value="usa">美国</option>
+                    <option value="uk">英国</option>
+                    <option value="japan">日本</option>
+                    <option value="germany">德国</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="city">选择城市：</label>
+                <select id="city" name="city" multiple size="4">
+                    <option value="beijing">北京</option>
+                    <option value="shanghai">上海</option>
+                    <option value="guangzhou">广州</option>
+                    <option value="shenzhen">深圳</option>
+                    <option value="hangzhou">杭州</option>
+                    <option value="chengdu">成都</option>
+                </select>
+                <small>提示：按住Ctrl键可以多选</small>
+            </div>
+        </div>
+
+        <!-- 单选框部分 -->
+        <div class="test-section">
+            <h2 class="section-title">单选框</h2>
+            <p>请选择性别：</p>
+            <div class="radio-group">
+                <div class="radio-item">
+                    <input type="radio" id="male" name="gender" value="male">
+                    <label for="male">男性</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="female" name="gender" value="female">
+                    <label for="female">女性</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="other" name="gender" value="other">
+                    <label for="other">其他</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="prefer_not_to_say" name="gender" value="prefer_not_to_say">
+                    <label for="prefer_not_to_say">不愿透露</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 复选框部分 -->
+        <div class="test-section">
+            <h2 class="section-title">复选框</h2>
+            <p>请选择您的兴趣领域（可多选）：</p>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="web" name="interests" value="web">
+                    <label for="web">网页开发</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="mobile" name="interests" value="mobile">
+                    <label for="mobile">移动开发</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="ai" name="interests" value="ai">
+                    <label for="ai">人工智能</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="data" name="interests" value="data">
+                    <label for="data">数据分析</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="devops" name="interests" value="devops">
+                    <label for="devops">DevOps</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="security" name="interests" value="security">
+                    <label for="security">网络安全</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件上传部分 -->
+        <div class="test-section">
+            <h2 class="section-title">文件上传</h2>
+            <div class="file-upload" id="fileUploadArea">
+                <p>点击此处选择文件或拖放文件到此处</p>
+                <input type="file" id="fileInput" name="file" multiple>
+                <div class="file-info" id="fileInfo">尚未选择文件</div>
+            </div>
+        </div>
+
+        <!-- 文件下载部分 -->
+        <div class="test-section">
+            <h2 class="section-title">文件下载</h2>
+            <p>点击下方按钮下载测试文件，用于测试文件下载功能</p>
+            <div class="download-section">
+                <div>
+                    <p><strong>测试文件</strong><br>这是一个用于测试的示例文件，包含各种测试数据</p>
+                </div>
+                <a href="#" class="download-button" id="downloadButton">下载测试文件</a>
+            </div>
+        </div>
+
+        <!-- 提交按钮和测试结果 -->
+        <div class="submit-section">
+            <button type="button" class="submit-button" id="submitButton">提交测试数据</button>
+
+            <div class="test-result" id="testResult">
+                <h3>测试结果</h3>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>此页面专为UI自动化测试设计 | 包含所有标准表单控件</p>
+            <p>注意：此页面不会将数据发送到服务器，仅用于前端测试</p>
+        </div>
+    </div>
+
+    <script>
+        // 文件上传处理
+        const fileInput = document.getElementById('fileInput');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+
+        fileUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.backgroundColor = '#e1f5fe';
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.backgroundColor = '#f0f8ff';
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.backgroundColor = '#f0f8ff';
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileInfo();
+            }
+        });
+
+        fileInput.addEventListener('change', updateFileInfo);
+
+        function updateFileInfo() {
+            if (fileInput.files.length === 0) {
+                fileInfo.textContent = '尚未选择文件';
+                return;
+            }
+
+            if (fileInput.files.length === 1) {
+                fileInfo.textContent = `已选择文件: ${fileInput.files[0].name} (${formatFileSize(fileInput.files[0].size)})`;
+            } else {
+                fileInfo.textContent = `已选择 ${fileInput.files.length} 个文件`;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 文件下载处理
+        const downloadButton = document.getElementById('downloadButton');
+        downloadButton.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // 创建测试文件内容
+            const content = `这是一个用于UI自动化测试的示例文件。
+生成时间: ${new Date().toLocaleString()}
+测试数据:
+- 用户名: testuser
+- 邮箱: test@example.com
+- 国家: 中国
+- 城市: 北京
+- 性别: 男性
+- 兴趣: 网页开发,人工智能
+
+此文件用于测试文件下载功能是否正常工作。`;
+
+            // 创建Blob对象并下载
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ui-test-file.txt';
+            document.body.appendChild(a);
+            a.click();
+
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+
+            alert('测试文件已开始下载！');
+        });
+
+        // 提交按钮处理
+        const submitButton = document.getElementById('submitButton');
+        const testResult = document.getElementById('testResult');
+        const resultContent = document.getElementById('resultContent');
+
+        submitButton.addEventListener('click', () => {
+            // 收集表单数据
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value ? '***已输入***' : '未输入',
+                comments: document.getElementById('comments').value,
+                country: document.getElementById('country').value,
+                city: Array.from(document.getElementById('city').selectedOptions).map(opt => opt.value),
+                gender: document.querySelector('input[name="gender"]:checked')?.value || '未选择',
+                interests: Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(cb => cb.value),
+                files: fileInput.files.length > 0 ? `${fileInput.files.length}个文件已选择` : '无文件'
+            };
+
+            // 显示结果
+            let resultHTML = '<ul>';
+            resultHTML += `<li><strong>用户名:</strong> ${formData.username || '未输入'}</li>`;
+            resultHTML += `<li><strong>邮箱:</strong> ${formData.email || '未输入'}</li>`;
+            resultHTML += `<li><strong>密码:</strong> ${formData.password}</li>`;
+            resultHTML += `<li><strong>备注:</strong> ${formData.comments || '未输入'}</li>`;
+            resultHTML += `<li><strong>国家:</strong> ${formData.country || '未选择'}</li>`;
+            resultHTML += `<li><strong>城市:</strong> ${formData.city.length > 0 ? formData.city.join(', ') : '未选择'}</li>`;
+            resultHTML += `<li><strong>性别:</strong> ${formData.gender}</li>`;
+            resultHTML += `<li><strong>兴趣领域:</strong> ${formData.interests.length > 0 ? formData.interests.join(', ') : '未选择'}</li>`;
+            resultHTML += `<li><strong>文件上传:</strong> ${formData.files}</li>`;
+            resultHTML += '</ul>';
+
+            resultContent.innerHTML = resultHTML;
+            testResult.style.display = 'block';
+
+            // 滚动到结果区域
+            testResult.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 页面加载时初始化一些示例数据
+        window.addEventListener('DOMContentLoaded', () => {
+            // 设置一些默认值以便测试
+            document.getElementById('username').value = 'testuser';
+            document.getElementById('email').value = 'test@example.com';
+            document.getElementById('password').value = 'test123';
+            document.getElementById('comments').value = '这是一个用于UI自动化测试的示例数据。';
+            document.getElementById('country').value = 'china';
+
+            // 选择一些选项
+            document.getElementById('male').checked = true;
+            document.getElementById('web').checked = true;
+            document.getElementById('ai').checked = true;
+            document.getElementById('data').checked = true;
+
+            // 选择多个城市
+            const citySelect = document.getElementById('city');
+            for (let option of citySelect.options) {
+                if (option.value === 'beijing' || option.value === 'shanghai') {
+                    option.selected = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
