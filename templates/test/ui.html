@@ -510,11 +510,14 @@
             document.getElementById('comments').value = '这是一个用于UI自动化测试的示例数据。';
             document.getElementById('country').value = 'china';
 
-            // 选择一些选项
-            document.getElementById('male').checked = true;
-            document.getElementById('web').checked = true;
-            document.getElementById('ai').checked = true;
-            document.getElementById('data').checked = true;
+            // 复选框示例
+            const interestsCheckboxes = document.querySelectorAll('input[name="interests"]');
+            for (let checkbox of interestsCheckboxes) {
+                if (checkbox.value === 'web' || checkbox.value === 'ai') {
+                    checkbox.checked = true;
+                    checkbox.parentElement.classList.add('checked');
+                }
+            }
 
             // 选择多个城市
             const citySelect = document.getElementById('city');
