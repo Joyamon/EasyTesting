@@ -1409,7 +1409,7 @@
                                 path: Array.isArray(value) ? value[0] : '',
                                 type: rule.type || 'String',
                                 value: Array.isArray(value) ? value[1] : value,
-                                description: ''
+                                description: rule.description || ''
                             });
                         });
                     }
@@ -1448,7 +1448,6 @@
                             } else if (valueType === 'Null') {
                                 value = null;
                             }
-                            // String keeps as is
                         }
 
                         if (path || value !== '') {
@@ -1460,6 +1459,8 @@
                             } else {
                                 rule[validator] = [value];
                             }
+                            rule.type = valueType;
+                            rule.description = row.querySelector('.validation-description')?.value.trim() || '';
                             rules.push(rule);
                         }
                     }
@@ -1569,6 +1570,8 @@
                             } else {
                                 rule[validator] = [value];
                             }
+                            rule.type = valueType;
+                            rule.description = row.querySelector('.validation-description')?.value.trim() || '';
                             rules.push(rule);
                         }
                     }
@@ -1606,11 +1609,9 @@
                         addRow({
                             validator,
                             path: Array.isArray(value) ? value[0] : '',
-                            type: typeof(Array.isArray(value) ? value[1] : value) === 'number' ? 'Number' :
-                                  typeof(Array.isArray(value) ? value[1] : value) === 'boolean' ? 'Boolean' :
-                                  (Array.isArray(value) ? value[1] : value) === null ? 'Null' : 'String',
+                            type: ruleData.type || 'String', // Use the stored type
                             value: Array.isArray(value) ? value[1] : value,
-                            description: ''
+                            description: ruleData.description || ''
                         });
                     });
                 } else {
@@ -1736,3 +1737,4 @@
     }
 </style>
 {% endblock %}
+</existing_code>
