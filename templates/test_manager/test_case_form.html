@@ -153,9 +153,6 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-medium mb-0">请求头</label>
                             <div>
-{#                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="headers-preset-btn">#}
-{#                                    Presets <i class="bi bi-chevron-down"></i>#}
-{#                                </button>#}
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-headers-btn">
                                     Bulk Edit
                                 </button>
@@ -410,8 +407,10 @@
                                                         <input type="checkbox" class="form-check-input" id="select-all-validation" checked>
                                                     </th>
                                                     <th style="width: 20%;">Validator</th>
-                                                    <th style="width: 30%;">Path/Expected</th>
-                                                    <th style="width: 30%;">Value</th>
+                                                    <th style="width: 25%;">Path/Expected</th>
+                                                    <!-- 添加type用于转换Value类型 -->
+                                                    <th style="width: 15%;">Type</th>
+                                                    <th style="width: 20%;">Value</th>
                                                     <th>Description</th>
                                                     <th style="width: 40px;" class="text-center">
                                                         <i class="bi bi-pencil-square"></i>
@@ -423,7 +422,7 @@
                                             </tbody>
                                             <tfoot>
                                                 <tr>
-                                                    <td colspan="6">
+                                                    <td colspan="7">
                                                         <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-validation-btn">
                                                             <i class="bi bi-plus-lg"></i> Add Validation Rule
                                                         </button>
@@ -544,13 +543,14 @@
                 })
             },
             'validation': {
-                fields: ['validator', 'path', 'value', 'description'],
-                labels: { validator: 'Validator', path: 'Path/Expected', value: 'Value', description: 'Description' },
+                fields: ['validator', 'path', 'type', 'value', 'description'],
+                labels: { validator: 'Validator', path: 'Path/Expected', type: 'Type', value: 'Value', description: 'Description' },
                 getRow: (elem) => elem.closest('tr'),
                 getCheckbox: (row) => row.querySelector('.validation-checkbox'),
                 getFields: (row) => ({
                     validator: row.querySelector('.validation-type'),
                     path: row.querySelector('.validation-path'),
+                    type: row.querySelector('.validation-value-type'),
                     value: row.querySelector('.validation-value'),
                     description: row.querySelector('.validation-description')
                 })
@@ -624,7 +624,7 @@
                 div.className = 'mb-3';
 
                 let input = '';
-                if (field === 'type') {
+                if (field === 'type' && this.currentTable === 'form-data') {
                     // 针对Form Data的type字段
                     input = `
                         <label class="form-label" for="input_${field}">${label}</label>
@@ -632,6 +632,16 @@
                             <option value="Text">Text</option>
                             <option value="File">File</option>
                             <option value="Number">Number</option>
+                        </select>
+                    `;
+                } else if (field === 'type' && this.currentTable === 'validation') {
+                    input = `
+                        <label class="form-label" for="input_${field}">${label}</label>
+                        <select class="form-select bulk-input" id="input_${field}" data-field="${field}">
+                            <option value="String">String</option>
+                            <option value="Number">Number</option>
+                            <option value="Boolean">Boolean</option>
+                            <option value="Null">Null</option>
                         </select>
                     `;
                 } else if (field === 'validator') {
@@ -1397,6 +1407,7 @@
                             rules.push({
                                 validator,
                                 path: Array.isArray(value) ? value[0] : '',
+                                type: rule.type || 'String',
                                 value: Array.isArray(value) ? value[1] : value,
                                 description: ''
                             });
@@ -1407,7 +1418,7 @@
                 }
             }
             if (rules.length === 0) {
-                rules.push({ validator: 'eq', path: '', value: '', description: '' });
+                rules.push({ validator: 'eq', path: '', type: 'String', value: '', description: '' });
             }
             return rules;
         }
@@ -1420,16 +1431,29 @@
                 if (checkbox && checkbox.checked) {
                     const typeInput = row.querySelector('.validation-type');
                     const pathInput = row.querySelector('.validation-path');
+                    const valueTypeInput = row.querySelector('.validation-value-type');
                     const valueInput = row.querySelector('.validation-value');
 
                     if (typeInput && pathInput && valueInput) {
                         const validator = typeInput.value;
                         const path = pathInput.value.trim();
-                        const value = valueInput.value.trim();
+                        const valueType = valueTypeInput ? valueTypeInput.value : 'String';
+                        let value = valueInput.value.trim();
 
-                        if (path || value) {
+                        if (value) {
+                            if (valueType === 'Number') {
+                                value = parseFloat(value) || 0;
+                            } else if (valueType === 'Boolean') {
+                                value = value.toLowerCase() === 'true' || value === '1';
+                            } else if (valueType === 'Null') {
+                                value = null;
+                            }
+                            // String keeps as is
+                        }
+
+                        if (path || value !== '') {
                             const rule = {};
-                            if (path && value) {
+                            if (path && value !== '') {
                                 rule[validator] = [path, value];
                             } else if (path) {
                                 rule[validator] = [path];
@@ -1444,7 +1468,7 @@
             textarea.value = JSON.stringify(rules, null, 2);
         }
 
-        function addRow(rule = { validator: 'eq', path: '', value: '', description: '' }) {
+        function addRow(rule = { validator: 'eq', path: '', type: 'String', value: '', description: '' }) {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="text-center align-middle">
@@ -1461,6 +1485,14 @@
                     </select>
                 </td>
                 <td><input type="text" class="form-control validation-path font-monospace" value="${rule.path}" placeholder="$.data.field"></td>
+                <td>
+                    <select class="form-select validation-value-type">
+                        <option value="String" ${rule.type === 'String' ? 'selected' : ''}>String</option>
+                        <option value="Number" ${rule.type === 'Number' ? 'selected' : ''}>Number</option>
+                        <option value="Boolean" ${rule.type === 'Boolean' ? 'selected' : ''}>Boolean</option>
+                        <option value="Null" ${rule.type === 'Null' ? 'selected' : ''}>Null</option>
+                    </select>
+                </td>
                 <td><input type="text" class="form-control validation-value" value="${rule.value}" placeholder="Expected Value"></td>
                 <td><input type="text" class="form-control validation-description" value="${rule.description}" placeholder="Description"></td>
                 <td class="text-center align-middle">
@@ -1510,14 +1542,27 @@
                 if (checkbox && checkbox.checked) {
                     const typeInput = row.querySelector('.validation-type');
                     const pathInput = row.querySelector('.validation-path');
+                    const valueTypeInput = row.querySelector('.validation-value-type');
                     const valueInput = row.querySelector('.validation-value');
                     if (typeInput && pathInput && valueInput) {
                         const validator = typeInput.value;
                         const path = pathInput.value.trim();
-                        const value = valueInput.value.trim();
-                        if (path || value) {
+                        const valueType = valueTypeInput ? valueTypeInput.value : 'String';
+                        let value = valueInput.value.trim();
+
+                        if (value) {
+                            if (valueType === 'Number') {
+                                value = parseFloat(value) || 0;
+                            } else if (valueType === 'Boolean') {
+                                value = value.toLowerCase() === 'true' || value === '1';
+                            } else if (valueType === 'Null') {
+                                value = null;
+                            }
+                        }
+
+                        if (path || value !== '') {
                             const rule = {};
-                            if (path && value) {
+                            if (path && value !== '') {
                                 rule[validator] = [path, value];
                             } else if (path) {
                                 rule[validator] = [path];
@@ -1561,6 +1606,9 @@
                         addRow({
                             validator,
                             path: Array.isArray(value) ? value[0] : '',
+                            type: typeof(Array.isArray(value) ? value[1] : value) === 'number' ? 'Number' :
+                                  typeof(Array.isArray(value) ? value[1] : value) === 'boolean' ? 'Boolean' :
+                                  (Array.isArray(value) ? value[1] : value) === null ? 'Null' : 'String',
                             value: Array.isArray(value) ? value[1] : value,
                             description: ''
                         });
@@ -1688,4 +1736,3 @@
     }
 </style>
 {% endblock %}
-</existing_code>
