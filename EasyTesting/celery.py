@@ -1,5 +1,6 @@
 import os
 from celery import Celery
+from celery import shared_task
 
 # 设置默认的Django设置模块
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "EasyTesting.settings")
@@ -8,7 +9,9 @@ app = Celery('easy_testing')
 
 # 使用Django的设置文件配置Celery
 app.config_from_object('django.conf:settings', namespace='CELERY')
-
+app.conf.update(
+    imports=['test_manager.tasks'],  # 任务模块
+)
 # 自动发现任务
 app.autodiscover_tasks()
 
@@ -26,6 +29,7 @@ app.conf.beat_schedule = {
 
 app.conf.timezone = 'Asia/Shanghai'
 
-@app.task(bind=True)
+
+@shared_task
 def debug_task(self):
     print(f'Request: {self.request!r}')
