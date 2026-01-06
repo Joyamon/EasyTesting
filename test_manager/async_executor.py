@@ -66,7 +66,8 @@ def _execute_test_suite_thread(test_suite, environment, case_environments, test_
                 request_headers=result.get('request_headers', {}),
                 request_body=result.get('request_body'),
                 error_message=result.get('error_message', ''),
-                extracted_params=result.get('extracted_params', {})
+                extracted_params=result.get('extracted_params', {}),
+                validators=result.get('validators', [])
             )
 
         # 更新测试运行状态
