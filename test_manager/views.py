@@ -824,8 +824,8 @@ def test_suite_run(request, pk):
 def test_suite_delete(request, pk):
     test_suite = get_object_or_404(TestSuite, pk=pk)
     test_suite.delete()
-    messages.success(request, '删除测试套件成功')
-    return redirect('project_detail', pk=test_suite.project.pk)
+    messages.success(request, f'测试套件{test_suite}删除成功')
+    return redirect("test_suite_list")
 
 
 # Test Run views

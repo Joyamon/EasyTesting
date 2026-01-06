@@ -61,6 +61,10 @@
    ```
 7. 启动celery和beat
    ```
+   # windows 
+   celery -A EasyTesting worker -l info  -P eventlet --pool=solo
+   celery -A EasyTesting beat -l info
+   # linux
    celery -A EasyTesting worker -l info
    celery -A EasyTesting beat -l info
    

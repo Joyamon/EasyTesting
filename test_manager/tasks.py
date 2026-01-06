@@ -27,7 +27,7 @@ logger = get_task_logger(__name__)
 # 显式定义任务名称，确保一致性
 # 主要的定时任务执行函数
 @shared_task(bind=True)
-def execute_scheduled_test_suite(scheduled_task_id):
+def execute_scheduled_test_suite(self,scheduled_task_id):
     """执行定时测试套件任务"""
     # 在函数开始就立即记录
     logger.info(f"[TASK STARTED] 定时任务开始执行: ID={scheduled_task_id}")
