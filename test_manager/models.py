@@ -1,8 +1,12 @@
-import uuid
 from django.urls import reverse
-from django.db import models
 from django.contrib.auth.models import User
 import json
+from django.db import models
+from django.conf import settings
+from django.core.mail import EmailMessage
+from django.core.exceptions import ValidationError
+import smtplib
+import ssl
 
 
 class Project(models.Model):
@@ -232,14 +236,6 @@ class TestResult(models.Model):
     class Meta:
         verbose_name = "测试结果"
         verbose_name_plural = verbose_name
-
-
-from django.db import models
-from django.conf import settings
-from django.core.mail import EmailMessage
-from django.core.exceptions import ValidationError
-import smtplib
-import ssl
 
 
 class EmailConfig(models.Model):
@@ -533,6 +529,7 @@ class MockData(models.Model):
 
     def __str__(self):
         return self.description
+
     @property
     def count_data(self):
         return len(json.loads(self.data))
@@ -564,7 +561,7 @@ class ScheduledTask(models.Model):
     test_suite = models.ForeignKey(TestSuite, on_delete=models.CASCADE, related_name='scheduled_tasks',
                                    verbose_name="测试套件", db_comment="测试套件")
     environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='scheduled_tasks',
-                                    verbose_name="执行环境", db_comment="执行环境",null=True, blank=True)
+                                    verbose_name="执行环境", db_comment="执行环境", null=True, blank=True)
 
     # 调度配置
     schedule_type = models.CharField(max_length=20, choices=SCHEDULE_TYPE_CHOICES, default='daily',
@@ -596,7 +593,6 @@ class ScheduledTask(models.Model):
                                             db_comment="成功时通知")
     notify_on_failure = models.BooleanField(default=True, verbose_name="失败时通知",
                                             db_comment="失败时通知")
-
 
     max_retries = models.IntegerField(default=3, verbose_name="最大重试次数", db_comment="最大重试次数")
     retry_delay = models.IntegerField(default=300, verbose_name="重试间隔(秒)", db_comment="重试间隔(秒)")
@@ -774,44 +770,3 @@ class TaskExecutionLog(models.Model):
             self.duration = (self.end_time - self.start_time).total_seconds()
             return self.duration
         return None
-#
-#
-# # 信号处理器
-# from django.db.models.signals import post_save, post_delete
-# from django.dispatch import receiver
-#
-#
-# @receiver(post_save, sender=ScheduledTask)
-# def handle_scheduled_task_save(sender, instance, created, **kwargs):
-#     """处理定时任务保存信号"""
-#     from .scheduler import TaskScheduler
-#
-#     # 创建或更新Celery任务
-#     TaskScheduler.create_or_update_celery_task(instance)
-#
-#
-# @receiver(post_delete, sender=ScheduledTask)
-# def handle_scheduled_task_delete(sender, instance, **kwargs):
-#     """处理定时任务删除信号 - 优化版本"""
-#     import logging
-#     logger = logging.getLogger(__name__)
-#
-#     try:
-#         logger.info(f"信号处理器: 开始处理定时任务删除 - {instance.name}")
-#
-#         # 删除对应的Celery任务
-#         if instance.celery_task_id:
-#             try:
-#                 from django_celery_beat.models import PeriodicTask
-#                 celery_task = PeriodicTask.objects.get(name=instance.celery_task_id)
-#                 celery_task.delete()
-#                 logger.info(f"信号处理器: 成功删除Celery Beat任务 - {instance.celery_task_id}")
-#             except PeriodicTask.DoesNotExist:
-#                 logger.warning(f"信号处理器: Celery Beat任务不存在 - {instance.celery_task_id}")
-#             except Exception as e:
-#                 logger.error(f"信号处理器: 删除Celery Beat任务失败 - {str(e)}")
-#         else:
-#             logger.info(f"信号处理器: 任务没有关联的Celery Beat任务 - {instance.name}")
-#
-#     except Exception as e:
-#         logger.error(f"信号处理器: 处理定时任务删除失败 - {str(e)}")

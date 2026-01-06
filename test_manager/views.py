@@ -5,14 +5,11 @@ import traceback
 import pytz
 from datetime import timedelta
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.views.decorators.http import require_POST, require_GET
-from django_celery_beat.models import PeriodicTasks
-
+from django.views.decorators.http import require_POST
 from .async_executor import execute_test_suite_async, execute_test_case_async
 from .gen_data import auto_gen_data
 from .models import (
@@ -27,7 +24,10 @@ from .forms import (
 )
 from .httprunner_executor import execute_test_case, execute_test_suite
 from .scheduler import TaskScheduler, logger
-from .tasks import execute_scheduled_test_suite
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.urls import reverse
 
 
 def paginate_queryset(request, queryset, per_page=10):
@@ -911,10 +911,6 @@ def test_run_delete(request, pk):
     return render(request, 'test_manager/test_run_confirm_delete.html', {'test_run': test_run})
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.urls import reverse
 
 
 def is_admin(request, user):

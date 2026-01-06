@@ -146,7 +146,7 @@ LOGOUT_REDIRECT_URL = '/login/'
 # 邮件设置 - SMTP 配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.qq.com'  # SMTP 服务器地址
-EMAIL_PORT = 465  # SMTP 服务器端口
+EMAIL_PORT = 25  # SMTP 服务器端口
 EMAIL_USE_TLS = True  # 使用 TLS 加密
 EMAIL_HOST_USER = '1210777805@qq.com'  # SMTP 用户名
 EMAIL_HOST_PASSWORD = 'umbclibpysdzffii'  # SMTP 密码

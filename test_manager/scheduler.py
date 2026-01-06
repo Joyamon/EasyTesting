@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, IntervalSchedule
 from .models import ScheduledTask
-from .tasks import execute_scheduled_test_suite
 import json
 
 logger = logging.getLogger(__name__)
