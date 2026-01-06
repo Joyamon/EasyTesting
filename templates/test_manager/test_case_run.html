@@ -76,7 +76,7 @@
                             {% if test_case.request_body %}
                             <div class="mb-3">
                                 <p><strong>请求体:</strong></p>
-                                <pre class="bg-light p-2 rounded"><code>{{ test_case.request_body }}</code></pre>
+                                <pre class="bg-light p-2 rounded"><code>{{ test_case.request_body|pprint }}</code></pre>
                             </div>
                             {% endif %}
                         </div>

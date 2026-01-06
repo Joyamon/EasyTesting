@@ -790,7 +790,10 @@ def test_suite_run(request, pk):
             start_time=timezone.now(),
             created_by=request.user
         )
-
+        # 判断测试套件是否为空
+        if not test_suite.testsuitecase_set.exists():
+            messages.warning(request, '测试套件为空,请先添加测试用例')
+            return redirect('test_suite_list')
         # 异步执行测试套件
         execute_test_suite_async(
             test_suite=test_suite,
