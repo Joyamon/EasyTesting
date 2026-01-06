@@ -2092,7 +2092,11 @@ def mock_data_list(request):
     except ValueError:
         per_page = 10
     mock_data_list = paginate_queryset(request, all_mock_data, per_page)
-    return render(request, 'test_manager/mock_data.html', {'mock_data_list': mock_data_list})
+    context = {
+        'mock_data_list': mock_data_list,
+        'per_page': per_page,
+    }
+    return render(request, 'test_manager/mock_data.html', context)
 
 
 def mock_data_delete(request, pk):
