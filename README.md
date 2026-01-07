@@ -1,7 +1,6 @@
 # EasyTesting
 
-使用Django、Django REST框架、SQLite、Bootstrap和HTTPRunner构建的综合测试平台，包含测试前台和后台管理后台，后台管理系统使用Django-SimpleUI构建。
-
+EasyTesting 是一款基于 Django、DRF、SQLite、Bootstrap 与 HTTPRunner 构建的接口自动化测试平台。平台支持异步执行测试用例与测试套件，提供接口调试、用例管理、自动化测试执行、测试报告查看、测试数据生成、定时任务调度与监控等功能。界面简约美观，操作流畅易上手，致力于为测试团队提供高效、轻量、开源的自动化测试解决方案。
 ## 推荐版本
 
 - Django==4.2.11
