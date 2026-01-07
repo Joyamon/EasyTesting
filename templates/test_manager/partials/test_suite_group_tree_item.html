@@ -17,9 +17,9 @@
             <a href="{% url 'test_suite_group_create' %}?project={{ group.project.id }}&parent={{ group.id }}" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-folder-plus"></i>
             </a>
-            <a href="{% url 'test_suite_create' %}?project={{ group.project.id }}&group={{ group.id }}" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-plus-lg"></i>
-            </a>
+{#            <a href="{% url 'test_suite_create' %}?project={{ group.project.id }}&group={{ group.id }}" class="btn btn-sm btn-outline-success">#}
+{#                <i class="bi bi-plus-lg"></i>#}
+{#            </a>#}
             <a href="{% url 'test_suite_group_edit' pk=group.id %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-pencil"></i>
             </a>

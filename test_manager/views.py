@@ -1076,7 +1076,7 @@ def test_case_group_create(request):
     parent_id = request.GET.get('parent')
 
     if not project_id:
-        messages.error(request, 'Project ID is required.')
+        messages.error(request, '项目id不能为空')
         return redirect('project_list')
 
     project = get_object_or_404(Project, pk=project_id)
@@ -1087,8 +1087,8 @@ def test_case_group_create(request):
             group = form.save(commit=False)
             group.created_by = request.user
             group.save()
-            messages.success(request, 'Test case group created successfully.')
-            return redirect('test_case_list')
+            messages.success(request, '测试分组已创建！')
+            return redirect('test_case_group_list')
     else:
         initial = {'project': project}
         if parent_id:
@@ -1113,8 +1113,8 @@ def test_case_group_edit(request, pk):
         form = TestCaseGroupForm(request.POST, instance=group, project_id=project.id)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Test case group updated successfully.')
-            return redirect('test_case_list')
+            messages.success(request, '测试分组已更新！')
+            return redirect('test_case_group_list')
     else:
         form = TestCaseGroupForm(instance=group, project_id=project.id)
 
@@ -1133,12 +1133,12 @@ def test_case_group_delete(request, pk):
 
     # 检查是否有子分组或测试用例
     if TestCaseGroup.objects.filter(parent=group).exists() or TestCase.objects.filter(group=group).exists():
-        messages.warning(request, 'Cannot delete group with child groups or test cases.')
+        messages.warning(request, '无法删除带有子组或测试用例的组。')
     else:
         group.delete()
-        messages.success(request, 'Test case group deleted successfully.')
+        messages.success(request, '测试分组已删除！')
 
-    return redirect('test_case_list')
+    return redirect('test_case_group_list')
 
 
 # 测试套件分组视图
@@ -1179,7 +1179,7 @@ def test_suite_group_create(request):
     parent_id = request.GET.get('parent')
 
     if not project_id:
-        messages.error(request, 'Project ID is required.')
+        messages.error(request, '项目id不能为空')
         return redirect('project_list')
 
     project = get_object_or_404(Project, pk=project_id)
@@ -1190,8 +1190,8 @@ def test_suite_group_create(request):
             group = form.save(commit=False)
             group.created_by = request.user
             group.save()
-            messages.success(request, 'Test suite group created successfully.')
-            return redirect('test_suite_list')
+            messages.success(request, '测试套件分组已创建！')
+            return redirect('test_suite_group_list')
     else:
         initial = {'project': project}
         if parent_id:
@@ -1216,8 +1216,8 @@ def test_suite_group_edit(request, pk):
         form = TestSuiteGroupForm(request.POST, instance=group, project_id=project.id)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Test suite group updated successfully.')
-            return redirect('test_suite_list')
+            messages.success(request, '测试套件分组已更新！')
+            return redirect('test_suite_group_list')
     else:
         form = TestSuiteGroupForm(instance=group, project_id=project.id)
 
@@ -1236,12 +1236,12 @@ def test_suite_group_delete(request, pk):
 
     # 检查是否有子分组或测试套件
     if TestSuiteGroup.objects.filter(parent=group).exists() or TestSuite.objects.filter(group=group).exists():
-        messages.warning(request, 'Cannot delete group with child groups or test suites.')
+        messages.warning(request, '无法删除带有子组或测试套件的组。')
     else:
         group.delete()
-        messages.success(request, 'Test suite group deleted successfully.')
+        messages.success(request, '测试套件分组已删除！')
 
-    return redirect('test_suite_list')
+    return redirect('test_suite_group_list')
 
 
 # 获取测试用例分组数据的API
