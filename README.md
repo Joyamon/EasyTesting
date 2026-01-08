@@ -172,6 +172,9 @@ EasyTesting 是一款基于 Django、DRF、SQLite、Bootstrap 与 HTTPRunner 构
 ### 日期计算器
   <img src="static/pic/日期计算器.png" />
 
+### 访问记录
+<img src="static/pic/访问记录.png">
+
 ### ui-test
 <img src="static/pic/ui_入口.png" width="500"  /> <img src="static/pic/ui-test.png" width="500"  />
 
