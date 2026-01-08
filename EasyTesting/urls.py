@@ -159,6 +159,12 @@ urlpatterns = [
 
     path('tools-list/', views.tools, name='tools-list'),
     # 用于ui自动化测试的页面,无需登录
-    path('ui-test/', views.ui_test_page, name='ui-test')
+    path('ui-test/', views.ui_test_page, name='ui-test'),
+
+    # 访客日志相关URL
+    path('visitor-logs/', views.visitor_log_list, name='visitor_log_list'),
+    path('visitor-logs/stats/', views.visitor_log_stats, name='visitor_log_stats'),
+    path('visitor-logs/clear/', views.visitor_log_clear, name='visitor_log_clear'),
+
 
 ]

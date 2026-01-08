@@ -414,19 +414,26 @@
                         <!-- 测试管理菜单组 -->
                         <li class="mb-1">
                             <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 {% if '/dashboard/' in request.path or  '/task-monitor/' in request.path or '/projects/' in request.path or '/environments/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path or 'mock-data' in request.path %}collapsed{% else %}collapsed{% endif %}"
-                                    data-bs-toggle="collapse"
+
                                     data-bs-target="#test-management-collapse"
-                                    aria-expanded="{% if '/dashboard/' in request.path or '/projects/' in request.path or '/environments/' in request.path or  '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path or 'mock-data' in request.path %}true{% else %}false{% endif %}"
+                                    aria-expanded="{% if '/dashboard/' in request.path or '/projects/' in request.path or '/environments/' in request.path or '/visitor-logs/' in request.path or '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path or 'mock-data' in request.path %}true{% else %}false{% endif %}"
                                     aria-controls="test-management-collapse">
                                 <i class="bi bi-calendar-range-fill me-lg-2" style="color: cornflowerblue"></i>测试管理
                             </button>
-                            <div class="collapse {% if '/dashboard/' in request.path or '/projects/' in request.path or '/environments/' in request.path or  '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path or 'mock-data' in request.path %}show{% endif %}"
+                            <div class="collapse {% if '/dashboard/' in request.path or '/projects/' in request.path or '/environments/' in request.path or '/visitor-logs/' in request.path or '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path or 'mock-data' in request.path %}show{% endif %}"
                                  id="test-management-collapse">
                                 <ul class="nav flex-column mb-2">
                                     <li class="nav-item">
                                         <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
                                            href="{% url 'dashboard' %}">
                                             <i class="bi bi-speedometer2" style="color: cornflowerblue"></i> 仪表盘
+                                        </a>
+                                    </li>
+                                    <!--访客记录-->
+                                    <li class="nav-item">
+                                         <a class="nav-link {% if '/visitor-logs/' in request.path %}active{% endif %}"
+                                              href="{% url 'visitor_log_list' %}">
+                                            <i class="bi bi-person-lines-fill" style="color: cornflowerblue"></i> 访客记录
                                         </a>
                                     </li>
                                     <li class="nav-item">
@@ -510,7 +517,7 @@
                             <!-- 用户&设置菜单组 -->
                             <li class="mb-1">
                                 <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 {% if '/profile/' in request.path or '/password-change/' in request.path or '/email-config' in request.path %}collapsed{% else %}collapsed{% endif %}"
-                                        data-bs-toggle="collapse"
+
                                         data-bs-target="#user-settings-collapse"
                                         aria-expanded="{% if '/profile/' in request.path or '/password-change/' in request.path or '/email-config' in request.path %}true{% else %}false{% endif %}"
                                         aria-controls="user-settings-collapse">
@@ -550,7 +557,7 @@
                             <!-- 管理后台菜单组 -->
                             <li class="mb-1">
                                 <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed"
-                                        data-bs-toggle="collapse"
+
                                         data-bs-target="#admin-collapse"
                                         aria-expanded="false"
                                         aria-controls="admin-collapse">

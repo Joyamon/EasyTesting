@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}访客记录 - EasyTesting{% endblock %}
+{% block header %}访客记录{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-eye text-primary" style="font-size: 2rem;"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">总访问量</h6>
+                            <h3 class="mb-0">{{ total_visits }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">独立IP</h6>
+                            <h3 class="mb-0">{{ unique_ips }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-person-check text-info" style="font-size: 2rem;"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">登录访问</h6>
+                            <h3 class="mb-0">{{ authenticated_visits }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">访问趋势统计</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="visitorChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选表单 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0">访客记录</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 mb-3">
+                <div class="col-md-2">
+                    <input type="text" class="form-control" name="ip" placeholder="IP地址" value="{{ ip_filter }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" name="user" placeholder="用户" value="{{ user_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="path" placeholder="访问路径" value="{{ path_filter }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">筛选</button>
+                </div>
+            </form>
+
+            <!-- 操作按钮 -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-danger btn-sm" onclick="clearOldLogs()">
+                    <i class="bi bi-trash"></i> 清理30天前记录
+                </button>
+            </div>
+
+            <!-- 访客记录表格 -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>访问时间</th>
+                            <th>用户</th>
+                            <th>IP地址</th>
+                            <th>访问路径</th>
+                            <th>请求方法</th>
+                            <th>浏览器</th>
+                            <th>操作系统</th>
+                            <th>来源</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in visitor_logs %}
+                        <tr>
+                            <td>{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                {% if log.user %}
+                                    <span class="badge bg-success">{{ log.user.username }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">匿名</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ log.ip_address }}</code>
+                            </td>
+                            <td>
+                                <small>{{ log.path }}</small>
+                            </td>
+                            <td>
+                                <span class="badge {% if log.method == 'GET' %}bg-primary{% elif log.method == 'POST' %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ log.method }}
+                                </span>
+                            </td>
+                            <td>{{ log.browser }}</td>
+                            <td>{{ log.os }}</td>
+                            <td>
+                                {% if log.referer %}
+                                    <small class="text-truncate d-inline-block" style="max-width: 150px;">{{ log.referer }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">暂无访客记录</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if visitor_logs.has_other_pages %}
+                {% include 'pagination.html' with page_obj=visitor_logs %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载访问趋势图表
+    loadVisitorChart();
+});
+
+function loadVisitorChart() {
+    fetch('{% url "visitor_log_stats" %}?days=7')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('visitorChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.daily_stats.map(item => item.date),
+                    datasets: [{
+                        label: '访问量',
+                        data: data.daily_stats.map(item => item.count),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('加载图表失败:', error));
+}
+
+function clearOldLogs() {
+    if (!confirm('确定要清理30天前的访客记录吗？此操作不可撤销。')) {
+        return;
+    }
+
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch('{% url "visitor_log_clear" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        body: 'days=30'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('清理失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('清理失败:', error);
+        alert('清理失败，请稍后重试');
+    });
+}
+</script>
+{% endblock %}

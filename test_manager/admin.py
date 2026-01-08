@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 
 from .models import (
     Project, Environment, TestCase, TestSuite,
-    TestRun, TestResult, TestReport, TestCaseGroup, TestSuiteGroup, EmailConfig
+    TestRun, TestResult, TestReport, TestCaseGroup, TestSuiteGroup, EmailConfig, VisitorLog
 )
 
 
@@ -82,6 +82,24 @@ class EmailConfigAdmin(admin.ModelAdmin):
     list_per_page = 10
 
 
+class VisitorLogAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'user', 'ip_address', 'path', 'method', 'browser', 'os')
+    search_fields = ('ip_address', 'path', 'user__username', 'user_agent')
+    list_filter = ('method', 'created_at')
+    date_hierarchy = 'created_at'
+    readonly_fields = (
+    'user', 'ip_address', 'user_agent', 'path', 'method', 'referer', 'session_key', 'created_at', 'browser', 'os')
+    list_per_page = 20
+
+    def browser(self, obj):
+        return obj.browser
+
+    browser.short_description = '浏览器'
+
+    def os(self, obj):
+        return obj.os
+
+    os.short_description = '操作系统'
 
 
 admin.site.register(Project, ProjectAdmin)
@@ -94,6 +112,7 @@ admin.site.register(TestRun, TestRunAdmin)
 admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(TestReport, TestReportAdmin)
 admin.site.register(EmailConfig, EmailConfigAdmin)
+admin.site.register(VisitorLog, VisitorLogAdmin)
 
 admin.site.site_header = 'EastTesting测试管理后台'
 admin.site.site_title = 'EastTesting测试管理后台'

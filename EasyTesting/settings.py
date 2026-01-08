@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "test_manager.middleware.VisitorTrackingMiddleware",  # 访客中间件
 ]
 
 ROOT_URLCONF = "EasyTesting.urls"
@@ -285,8 +286,18 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'django.log',
+            'encoding': 'utf-8',
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'visitor': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'visitor.log',
+            'encoding': 'utf-8',
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 10,
             'formatter': 'verbose',
         },
         'mail_admins': {  # 发生错误邮件通知管理员
@@ -305,6 +316,10 @@ LOGGING = {
             'handlers': ['file', 'mail_admins'],
             'level': 'ERROR',
             'propagate': False,
+        },
+        'test_manager.visitor': {  # 访客日志记录器
+            'handlers': ['console', 'visitor'],
+            'level': 'INFO',
         },
         # 你可以自定义你的app日志
         # 'myapp': {
