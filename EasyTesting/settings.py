@@ -137,6 +137,7 @@ REST_FRAMEWORK = {
     ],
 }
 # 登录和登出后的重定向 URL
+LOGIN_URL = '/login/'  # 设置登录页面URL，避免默认的/accounts/login/
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 # # 邮件设置 (开发环境使用控制台输出)
@@ -154,7 +155,7 @@ EMAIL_HOST_PASSWORD = 'umbclibpysdzffii'  # SMTP 密码
 # DEFAULT_FROM_EMAIL = '1210777805@qq.com'  # 默认发件人
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # 默认发件人
 
-SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'
+# SOCIALACCOUNT_ADAPTER = 'test_manager.social_auth_adapter.CustomSocialAccountAdapter'
 # simpleui 设置
 SIMPLEUI_LOGO = "../static/svg/test.svg"
 # 隐藏右侧SimpleUI广告链接和使用分析
