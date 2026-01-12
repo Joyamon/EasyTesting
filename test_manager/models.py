@@ -816,6 +816,18 @@ class VisitorLog(models.Model):
         verbose_name="会话KEY",
         db_comment="Django会话KEY"
     )
+    platform = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="平台",
+        db_comment="访问平台"
+    )
+    browser_type = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="浏览器",
+        db_comment="访问浏览器"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="访问时间",
@@ -830,16 +842,16 @@ class VisitorLog(models.Model):
     @property
     def browser(self):
         """解析浏览器类型"""
-        ua = self.user_agent.lower()
-        if 'chrome' in ua:
+        br = self.browser_type.lower()
+        if 'chrome' in br:
             return 'Chrome'
-        elif 'firefox' in ua:
+        elif 'firefox' in br:
             return 'Firefox'
-        elif 'safari' in ua:
+        elif 'safari' in br:
             return 'Safari'
-        elif 'edge' in ua:
+        elif 'edge' in br:
             return 'Edge'
-        elif 'msie' in ua or 'trident' in ua:
+        elif 'msie' in br or 'trident' in br:
             return 'IE'
         else:
             return 'Unknown'
@@ -847,16 +859,16 @@ class VisitorLog(models.Model):
     @property
     def os(self):
         """解析操作系统"""
-        ua = self.user_agent.lower()
-        if 'windows' in ua:
+        pl = self.platform.lower()
+        if 'windows' in pl:
             return 'Windows'
-        elif 'mac' in ua:
+        elif 'mac' in pl:
             return 'MacOS'
-        elif 'linux' in ua:
+        elif 'linux' in pl:
             return 'Linux'
-        elif 'android' in ua:
+        elif 'android' in pl:
             return 'Android'
-        elif 'iphone' in ua or 'ipad' in ua:
+        elif 'iphone' in pl or 'ipad' in pl:
             return 'iOS'
         else:
             return 'Unknown'

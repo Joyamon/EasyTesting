@@ -38,6 +38,8 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
 
             # 获取来源页面
             referer = request.META.get('HTTP_REFERER', '')[:500]
+            platform = request.META.get('HTTP_SEC_CH_UA_PLATFORM', '')
+            browser = request.META.get('HTTP_SEC_CH_UA', '')
 
             # 获取用户（如果已登录）
             user = request.user if request.user.is_authenticated else None
@@ -54,6 +56,8 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
                 method=method,
                 referer=referer,
                 session_key=request.session.session_key or '',
+                platform=platform,
+                browser_type=browser
             )
 
             logger.info(f"访客记录: {ip_address} - {method} {path}")
