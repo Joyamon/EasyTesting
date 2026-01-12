@@ -1,21 +1,17 @@
 from celery import shared_task, current_app
 from django.utils import timezone
-from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from celery.utils.log import get_task_logger
-from celery.exceptions import MaxRetriesExceededError
 import traceback
-import json
 import time
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 import sys
 import os
-
-from test_manager.async_executor import execute_test_suite_async
-from test_manager.httprunner_executor import execute_test_suite
+from test_manager.model.models import TestRun, TestResult
+from test_manager.model.schedule import ScheduledTask, TaskExecutionLog
 
 # 确保任务可以被正确导入
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,7 +23,7 @@ logger = get_task_logger(__name__)
 # 显式定义任务名称，确保一致性
 # 主要的定时任务执行函数
 @shared_task(bind=True)
-def execute_scheduled_test_suite(self,scheduled_task_id):
+def execute_scheduled_test_suite(self, scheduled_task_id):
     """执行定时测试套件任务"""
     # 在函数开始就立即记录
     logger.info(f"[TASK STARTED] 定时任务开始执行: ID={scheduled_task_id}")
@@ -42,7 +38,7 @@ def execute_scheduled_test_suite(self,scheduled_task_id):
 
     # 导入模型（避免循环导入）
     try:
-        from .models import ScheduledTask, TaskExecutionLog, TestRun, TestResult
+
         logger.info("成功导入模型")
     except Exception as e:
         logger.error(f"导入模型失败: {e}")
@@ -195,10 +191,8 @@ def execute_scheduled_test_suite(self,scheduled_task_id):
         return {"success": False, "error": error_msg}
 
 
-def execute_test_suite_simple(test_suite, environment, test_run, user):
+def execute_test_suite_simple(test_suite, environment, test_run):
     """简化的测试套件执行函数"""
-    from .models import TestResult
-
     logger.info(f"执行测试套件: {test_suite.name}")
     print(f"[EXEC] 执行测试套件: {test_suite.name}")
 
@@ -289,10 +283,7 @@ def execute_test_suite_simple(test_suite, environment, test_run, user):
 @shared_task
 def send_task_notification_email(execution_log_id):
     """发送任务执行通知邮件"""
-    from .models import TaskExecutionLog
-
     logger.info(f"准备发送任务通知邮件: execution_log_id={execution_log_id}")
-
     try:
         execution_log = TaskExecutionLog.objects.get(id=execution_log_id)
         scheduled_task = execution_log.scheduled_task
@@ -374,8 +365,6 @@ def send_task_notification_email(execution_log_id):
 @shared_task(name='test_manager.tasks.cleanup_old_execution_logs')
 def cleanup_old_execution_logs():
     """清理旧的执行日志"""
-    from .models import TaskExecutionLog
-
     logger.info("开始清理旧的执行日志")
 
     try:
@@ -394,8 +383,6 @@ def cleanup_old_execution_logs():
 @shared_task(name='test_manager.tasks.update_scheduled_tasks_next_run_time')
 def update_scheduled_tasks_next_run_time():
     """更新所有定时任务的下次执行时间"""
-    from .models import ScheduledTask
-
     logger.info("开始更新定时任务的下次执行时间")
 
     try:
@@ -424,8 +411,6 @@ def update_scheduled_tasks_next_run_time():
 @shared_task(name='test_manager.tasks.run_scheduled_task_now')
 def run_scheduled_task_now(scheduled_task_id):
     """立即执行指定的定时任务"""
-    from .models import ScheduledTask
-
     logger.info(f"立即执行定时任务: ID={scheduled_task_id}")
 
     try:

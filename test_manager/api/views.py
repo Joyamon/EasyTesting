@@ -4,16 +4,14 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from test_manager.models import (
-    Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult
-)
+
 from .serializers import (
     ProjectSerializer, EnvironmentSerializer, TestCaseSerializer,
     TestSuiteSerializer, TestSuiteCaseSerializer, TestRunSerializer,
     TestResultSerializer
 )
-from test_manager.httprunner_executor import execute_test_case, execute_test_suite
+from ..model.models import Project, Environment, TestCase, TestRun, TestResult, TestSuite, TestSuiteCase
+from ..utils.httprunner_executor import execute_test_case, execute_test_suite
 
 
 # 自定义分页类

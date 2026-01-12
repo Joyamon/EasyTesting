@@ -4,10 +4,10 @@ from django.contrib.admin import AdminSite
 from django.contrib import admin
 from django.contrib.auth.models import AbstractUser
 
-from .models import (
-    Project, Environment, TestCase, TestSuite,
-    TestRun, TestResult, TestReport, TestCaseGroup, TestSuiteGroup, EmailConfig, VisitorLog
-)
+from test_manager.model.email import EmailConfig
+from test_manager.model.models import Project, Environment, TestCase, TestSuite, TestCaseGroup, TestSuiteGroup, TestRun, \
+    TestResult, TestReport
+from test_manager.model.visitor import VisitorLog
 
 
 class ProjectAdmin(admin.ModelAdmin):

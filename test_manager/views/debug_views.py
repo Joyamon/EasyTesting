@@ -2,11 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
-from .models import ScheduledTask
-from .scheduler import TaskScheduler
-import json
+from test_manager.model.schedule import ScheduledTask
+from test_manager.scheduler import TaskScheduler
 
 
 @login_required

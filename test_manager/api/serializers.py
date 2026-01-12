@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from test_manager.models import (
-    Project, Environment, TestCase, TestSuite,
-    TestSuiteCase, TestRun, TestResult
-)
+
+from test_manager.model.models import Project, Environment, TestCase, TestSuiteCase, TestSuite, TestRun, TestResult
 
 
 class UserSerializer(serializers.ModelSerializer):

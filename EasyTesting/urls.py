@@ -17,8 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from test_manager import views, debug_views
-from test_manager import auth_views as custom_auth_views
+from test_manager.views import views, debug_views, tools_views, test_views, visitor_views, scheduled_views, \
+    mockdata_views, email_views
+from test_manager.views import auth_views as custom_auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -109,12 +110,12 @@ urlpatterns = [
     path('profile/edit/', custom_auth_views.edit_profile_view, name='edit_profile'),
 
     # 邮件配置
-    path('email-config/', views.email_config_list, name='email_config_list'),
-    path('email-config/create/', views.email_config_create, name='email_config_create'),
-    path('email-config/<int:pk>/edit/', views.email_config_edit, name='email_config_edit'),
-    path('email-config/<int:pk>/delete/', views.email_config_delete, name='email_config_delete'),
-    path('email-config/<int:pk>/test/', views.email_config_test, name='email_config_test'),
-    path('email-config/<int:pk>/activate/', views.email_config_activate, name='email_config_activate'),
+    path('email-config/', email_views.email_config_list, name='email_config_list'),
+    path('email-config/create/', email_views.email_config_create, name='email_config_create'),
+    path('email-config/<int:pk>/edit/', email_views.email_config_edit, name='email_config_edit'),
+    path('email-config/<int:pk>/delete/', email_views.email_config_delete, name='email_config_delete'),
+    path('email-config/<int:pk>/test/', email_views.email_config_test, name='email_config_test'),
+    path('email-config/<int:pk>/activate/', email_views.email_config_activate, name='email_config_activate'),
 
     path('test-case-groups/', views.test_case_group_list, name='test_case_group_list'),
     path('test-case-groups/create/', views.test_case_group_create, name='test_case_group_create'),
@@ -135,21 +136,21 @@ urlpatterns = [
     path('test-suite-runs/<int:pk>/generate-report/', views.generate_test_suite_run_report,
          name='generate_test_suite_run_report'),
     # 生成测试数据
-    path('mock-data/', views.mock_data_generator, name='mock-data'),
-    path('mock-data-list/', views.mock_data_list, name='mock-data-list'),
-    path('mock-data/delete/<int:pk>/', views.mock_data_delete, name='mock-data-delete'),
-    path('mock-data/export/<int:pk>/', views.mock_data_export, name='mock-data-export'),
+    path('mock-data/', mockdata_views.mock_data_generator, name='mock-data'),
+    path('mock-data-list/', mockdata_views.mock_data_list, name='mock-data-list'),
+    path('mock-data/delete/<int:pk>/', mockdata_views.mock_data_delete, name='mock-data-delete'),
+    path('mock-data/export/<int:pk>/', mockdata_views.mock_data_export, name='mock-data-export'),
 
     # 定时任务相关URL
-    path('scheduled-tasks/', views.scheduled_task_list, name='scheduled_task_list'),
-    path('scheduled-tasks/create/', views.scheduled_task_create, name='scheduled_task_create'),
-    path('scheduled-tasks/<int:pk>/', views.scheduled_task_detail, name='scheduled_task_detail'),
-    path('scheduled-tasks/<int:pk>/edit/', views.scheduled_task_edit, name='scheduled_task_edit'),
-    path('scheduled-tasks/<int:pk>/delete/', views.scheduled_task_delete, name='scheduled_task_delete'),
-    path('scheduled-tasks/<int:pk>/toggle-status/', views.scheduled_task_toggle_status,
+    path('scheduled-tasks/', scheduled_views.scheduled_task_list, name='scheduled_task_list'),
+    path('scheduled-tasks/create/', scheduled_views.scheduled_task_create, name='scheduled_task_create'),
+    path('scheduled-tasks/<int:pk>/', scheduled_views.scheduled_task_detail, name='scheduled_task_detail'),
+    path('scheduled-tasks/<int:pk>/edit/', scheduled_views.scheduled_task_edit, name='scheduled_task_edit'),
+    path('scheduled-tasks/<int:pk>/delete/', scheduled_views.scheduled_task_delete, name='scheduled_task_delete'),
+    path('scheduled-tasks/<int:pk>/toggle-status/', scheduled_views.scheduled_task_toggle_status,
          name='scheduled_task_toggle_status'),
-    path('scheduled-tasks/<int:pk>/run-now/', views.scheduled_task_run_now, name='scheduled_task_run_now'),
-    path('task-execution-logs/<int:pk>/', views.task_execution_log_detail, name='task_execution_log_detail'),
+    path('scheduled-tasks/<int:pk>/run-now/', scheduled_views.scheduled_task_run_now, name='scheduled_task_run_now'),
+    path('task-execution-logs/<int:pk>/', scheduled_views.task_execution_log_detail, name='task_execution_log_detail'),
     # 调试相关URL
     path('debug/task-monitor/', debug_views.task_monitor, name='task_monitor'),
     path('debug/task-monitor-api/', debug_views.task_monitor_api, name='task_monitor_api'),
@@ -157,14 +158,14 @@ urlpatterns = [
     path('debug/cleanup-tasks/', debug_views.cleanup_tasks_api, name='cleanup_tasks_api'),
     path('debug/sync-task/<int:task_id>/', debug_views.sync_single_task_api, name='sync_single_task_api'),
 
-    path('tools-list/', views.tools, name='tools-list'),
+    path('tools-list/', tools_views.tools, name='tools-list'),
     # 用于ui自动化测试的页面,无需登录
-    path('ui-test/', views.ui_test_page, name='ui-test'),
+    path('ui-test/', test_views.ui_test_page, name='ui-test'),
 
     # 访客日志相关URL
-    path('visitor-logs/', views.visitor_log_list, name='visitor_log_list'),
-    path('visitor-logs/stats/', views.visitor_log_stats, name='visitor_log_stats'),
-    path('visitor-logs/clear/', views.visitor_log_clear, name='visitor_log_clear'),
+    path('visitor-logs/', visitor_views.visitor_log_list, name='visitor_log_list'),
+    path('visitor-logs/stats/', visitor_views.visitor_log_stats, name='visitor_log_stats'),
+    path('visitor-logs/clear/', visitor_views.visitor_log_clear, name='visitor_log_clear'),
 
 
 ]

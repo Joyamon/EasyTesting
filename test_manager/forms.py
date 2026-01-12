@@ -1,11 +1,14 @@
 from typing import List
 
 from django import forms
-from .models import (
-    Project, Environment, TestCase, TestSuite, TestRun, EmailConfig, TestSuiteGroup, TestCaseGroup, TestReport,
-    MockData, ScheduledTask, TestSuiteCase
-)
+
 import json
+
+from test_manager.model.email import EmailConfig
+from test_manager.model.mockdata import MockData
+from test_manager.model.models import Project, Environment, TestCase, TestSuite, TestRun, TestCaseGroup, TestSuiteGroup, \
+    TestReport
+from test_manager.model.schedule import ScheduledTask
 
 
 class ProjectForm(forms.ModelForm):
