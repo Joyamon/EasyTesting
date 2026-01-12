@@ -1,6 +1,7 @@
 """
+author: fishzjp
 特别说明：本模块由fishzjp开发。后续由于代码重构，没有显示fishzjp名称。特此说明
-fishzjp的gitee：https://gitee.com/jinpeng_zhang
+gitee：https://gitee.com/jinpeng_zhang
 """
 import pytz
 from datetime import timedelta

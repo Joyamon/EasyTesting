@@ -780,21 +780,21 @@
         }
     });
 </script>
-{#<script>#}
-{#    fetch('https://gitee.com/api/v5/repos/Joyamon/easy-testing')#}
-{#        .then(response => response.json())      // 把响应转为JSON对象#}
-{#        .then(data => {#}
-{#            // 找到指定的HTML元素#}
-{#            const starCountElement = document.getElementById('star-count');#}
-{#            // 渲染star数量#}
-{#            starCountElement.textContent = data.stargazers_count;     // 处理返回的数据#}
-{#        })#}
-{#        .catch(error => {#}
-{#            console.error('请求失败:', error);#}
-{#        });#}
-{##}
-{##}
-{#</script>#}
+<script>
+    fetch('https://gitee.com/api/v5/repos/Joyamon/easy-testing')
+        .then(response => response.json())      // 把响应转为JSON对象
+        .then(data => {
+            // 找到指定的HTML元素
+            const starCountElement = document.getElementById('star-count');
+            // 渲染star数量
+            starCountElement.textContent = data.stargazers_count;     // 处理返回的数据
+        })
+        .catch(error => {
+            console.error('请求失败:', error);
+        });
+
+
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
