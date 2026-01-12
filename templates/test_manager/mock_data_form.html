@@ -6,30 +6,48 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-10">
         <div class="card">
             <div class="card-body p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-4">
-                        <label for="{{ form.aim.id_for_label }}" class="form-label fw-medium">条数</label>
-                        {{ form.aim.errors }}
-                        <input type="number" class="form-control form-control-lg"  name="num" value="num" required placeholder="数据生成条数...">
-                        <div class="form-text">数据生成条数</div>
-                    </div>
+                <!-- tab -->
+                <ul class="nav nav-tabs mb-4" id="mockDataTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                            <i class="bi bi-pencil-square"></i> 基础数据
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab">
+                            <i class="bi bi-gear-wide-connected"></i> 高级数据...
+                        </button>
+                    </li>
 
-                    <div class="mb-4">
-                        <label for="{{ form.aim.id_for_label }}" class="form-label fw-medium">用途</label>
-                        {{ form.aim.errors }}
-                        <input type="text" class="form-control form-control-lg" id="{{ form.aim.id_for_label }}" name="{{ form.aim.html_name }}" value="{{ form.aim.value|default:'' }}" required placeholder="描述数据用途...">
-                        <div class="form-text">描述数据用途</div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">描述</label>
-                        {{ form.description.errors }}
-                        <input type="text" class="form-control form-control-lg" id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}" value="{{ form.description.value|default:'' }}" required placeholder="简单描述数据...">
-                        <div class="form-text">简单描述数据</div>
-                    </div>
+                </ul>
+
+                <div class="tab-content" id="mockDataTabContent">
+                    <!-- Basic Form Tab -->
+                    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label for="{{ form.aim.id_for_label }}" class="form-label fw-medium">条数</label>
+                                {{ form.aim.errors }}
+                                <input type="number" class="form-control form-control-lg"  name="num" value="num" required placeholder="数据生成条数...">
+                                <div class="form-text">数据生成条数</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="{{ form.aim.id_for_label }}" class="form-label fw-medium">用途</label>
+                                {{ form.aim.errors }}
+                                <input type="text" class="form-control form-control-lg" id="{{ form.aim.id_for_label }}" name="{{ form.aim.html_name }}" value="{{ form.aim.value|default:'' }}" required placeholder="描述数据用途...">
+                                <div class="form-text">描述数据用途</div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">描述</label>
+                                {{ form.description.errors }}
+                                <input type="text" class="form-control form-control-lg" id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}" value="{{ form.description.value|default:'' }}" required placeholder="简单描述数据...">
+                                <div class="form-text">简单描述数据</div>
+                            </div>
 
                     <div class="mb-4">
                         <label for="{{ form.data.id_for_label }}" class="form-label fw-medium">定义生成数据规则</label>
@@ -41,15 +59,46 @@
                         <div class="form-text">输入数据生成格式</div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'mock-data-list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> 取消
-                        </a>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg"></i> 保存
-                        </button>
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'mock-data-list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> 取消
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg"></i> 保存
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+
+                    <!-- 高级数据 -->
+                    <div class="tab-pane fade" id="advanced" role="tabpanel">
+                        <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <div>
+                                使用 <strong>generatedata.com</strong> 高级数据生成器创建更复杂的模拟数据。生成后请手动保存数据。
+                            </div>
+                        </div>
+
+                        <div class="ratio ratio-16x9 border rounded" style="min-height: 600px">
+                            <iframe
+                                src="https://generatedata.com/generator"
+                                title="高级数据生成器"
+                                class="rounded"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <a href="{% url 'mock-data-list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> 返回列表
+                            </a>
+                            <a href="https://generatedata.com/" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> 新窗口打开
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
