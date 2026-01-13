@@ -2,9 +2,10 @@ import datetime
 import json
 import pytz
 from django.conf import settings
+from django.core import serializers
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -15,6 +16,7 @@ from test_manager.forms import ProjectForm, EnvironmentForm, TestCaseForm, TestS
 from test_manager.model.models import Project, TestCase, TestSuite, TestRun, TestReport, TestResult, Environment, \
     TestCaseGroup, TestSuiteGroup, TestSuiteCase, TestSuiteRun
 from test_manager.utils.chart import generate_time_series_data
+from test_manager.utils.export import export_test_case
 from test_manager.utils.httprunner_executor import execute_test_case, execute_test_suite
 from test_manager.views.common import paginate_queryset
 
@@ -439,6 +441,27 @@ def test_case_delete(request, pk):
     test_case.delete()
     messages.success(request, f'删除成功: {test_case.name}')
     return redirect('project_detail', pk=test_case.project.pk)
+
+
+def test_case_export(request):
+    # 导出测试用例，支持查询参数过滤
+    from django.db.models import Q
+
+    cases = TestCase.objects.all()
+
+    # 支持查询参数过滤
+    project_id = request.GET.get('project_id')
+    group_id = request.GET.get('group_id')
+    name = request.GET.get('name')
+
+    if project_id:
+        cases = cases.filter(project_id=project_id)
+    if group_id:
+        cases = cases.filter(group_id=group_id)
+    if name:
+        cases = cases.filter(name__icontains=name)
+
+    return export_test_case(cases)
 
 
 @login_required
