@@ -1,9 +1,7 @@
 import re
 import ast
 from django import template
-from django.utils.safestring import mark_safe
 import json
-import pprint
 
 register = template.Library()
 
@@ -16,7 +14,7 @@ def pprint(value):
     if isinstance(value, str):
         try:
             value = json.loads(value)
-        except:
+        except ValueError:
             pass
 
     if isinstance(value, (dict, list)):
@@ -35,7 +33,7 @@ def get_item(dictionary, key):
     if isinstance(dictionary, str):
         try:
             dictionary = json.loads(dictionary)
-        except:
+        except ValueError:
             return None
 
     return dictionary.get(key)
@@ -201,7 +199,7 @@ def pprint(value):
             parsed = json.loads(value)
             return json.dumps(parsed, indent=2, ensure_ascii=False)
         return json.dumps(value, indent=2, ensure_ascii=False)
-    except:
+    except ValueError:
         return value
 
 

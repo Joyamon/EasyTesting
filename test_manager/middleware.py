@@ -45,7 +45,7 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
             user = request.user if request.user.is_authenticated else None
 
             # 延迟导入模型，避免循环导入
-            from .models import VisitorLog
+            from .model.visitor import VisitorLog
 
             # 创建访客记录
             VisitorLog.objects.create(
