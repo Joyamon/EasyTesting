@@ -134,6 +134,7 @@
                     <thead>
                     <tr>
                         <th>名称</th>
+                        <th>状态</th>
                         <th>项目</th>
                         <th>分组</th>
                         <th>请求方式</th>
@@ -151,7 +152,11 @@
                                        class="fw-medium text-decoration-none text-dark me-2">
                                         {{ test_case.name }}
                                     </a>
-                                    <div class="form-check form-switch">
+
+                                </div>
+                            </td>
+                            <td>
+                               <div class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input skip-switch"
                                                data-testcase-id="{{ test_case.pk }}"
                                                id="skip-switch-{{ test_case.pk }}"
@@ -159,13 +164,12 @@
                                         <label class="form-check-label small ms-1" for="skip-switch-{{ test_case.pk }}"
                                                title="{% if test_case.skip_test %}跳过测试{% else %}正常执行{% endif %}">
                                             {% if test_case.skip_test %}
-                                                <span class="text-muted">跳过</span>
+                                                <span class="text-warning">跳过</span>
                                             {% else %}
                                                 <span class="text-success">正常</span>
                                             {% endif %}
                                         </label>
                                     </div>
-                                </div>
                             </td>
                             <td>
                                 <a href="{% url 'project_detail' pk=test_case.project.pk %}"
@@ -305,7 +309,7 @@
                             // 更新标签文本
                             const label = this.nextElementSibling;
                             if (isSkip) {
-                                label.innerHTML = '<span class="text-muted">跳过</span>';
+                                label.innerHTML = '<span class="text-warning">跳过</span>';
                                 label.title = '跳过测试';
                             } else {
                                 label.innerHTML = '<span class="text-success">正常</span>';
