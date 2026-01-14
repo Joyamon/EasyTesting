@@ -436,6 +436,19 @@ def test_case_edit(request, pk):
     return render(request, 'test_manager/test_case_form.html', {'form': form, 'title': '编辑测试用例'})
 
 
+def test_case_skip_update(request, pk):
+    try:
+        test_case = TestCase.objects.get(pk=pk)
+        data = json.loads(request.body)
+        test_case.skip_test = data.get('skip', False)
+        test_case.save()
+        return JsonResponse({'success': True})
+    except TestCase.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '测试用例不存在'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 def test_case_delete(request, pk):
     test_case = get_object_or_404(TestCase, pk=pk)
     test_case.delete()
@@ -467,7 +480,10 @@ def test_case_export(request):
 @login_required
 def test_case_run(request, pk):
     test_case = get_object_or_404(TestCase, pk=pk)
-
+    # 判断是否需要跳过
+    if test_case.skip_test:
+        messages.warning(request, '测试用例已标记跳过，将不再执行')
+        return redirect('test_case_list')
     if request.method == 'POST':
         environment_id = request.POST.get('environment')
         if not environment_id:
@@ -476,7 +492,6 @@ def test_case_run(request, pk):
 
         environment = get_object_or_404(Environment, pk=environment_id)
 
-        # Create a test run
         test_run = TestRun.objects.create(
             name=f"Single run: {test_case.name}",
             project=test_case.project,

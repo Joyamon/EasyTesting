@@ -94,6 +94,8 @@ class TestCase(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间", db_comment="更新时间")
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_test_cases',
                                    verbose_name="创建人", db_comment="创建人")
+    # 新增字段，用于存储跳过测试
+    skip_test = models.BooleanField(default=False, verbose_name="跳过测试", db_comment="跳过测试")
 
     def __str__(self):
         return self.name
