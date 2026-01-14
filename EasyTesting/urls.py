@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from test_manager.views import views, debug_views, tools_views, test_views, visitor_views, scheduled_views, \
-    mockdata_views, email_views
+    mockdata_views, email_views, domain_views
 from test_manager.views import auth_views as custom_auth_views
 
 urlpatterns = [
@@ -167,6 +167,9 @@ urlpatterns = [
     path('visitor-logs/', visitor_views.visitor_log_list, name='visitor_log_list'),
     path('visitor-logs/stats/', visitor_views.visitor_log_stats, name='visitor_log_stats'),
     path('visitor-logs/clear/', visitor_views.visitor_log_clear, name='visitor_log_clear'),
+
+    # 域名检测
+    path('domain-check/', domain_views.check_website, name='domain_check'),
 
 
 ]

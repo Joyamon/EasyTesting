@@ -6,6 +6,7 @@
 
 {% block content %}
 <div class="card">
+    <!-- 日期计算器部分 -->
     <div class="card-header">
         <h5 class="mb-0">日期计算器</h5>
     </div>
@@ -40,7 +41,7 @@
             </button>
         </div>
 
-        <!-- 修改后的结果容器，移除关闭按钮 -->
+        <!-- 日期计算器结果容器 -->
         <div id="resultContainer" style="display: none;">
             <div class="alert alert-info" role="alert">
                 <h5 class="mb-3">计算结果</h5>
@@ -63,11 +64,68 @@
             </div>
         </div>
 
-        <!-- 修改后的错误容器，移除关闭按钮 -->
-        <div id="errorContainer" style="display: none;">
+        <!-- 日期计算器错误容器 -->
+        <div id="dateErrorContainer" style="display: none;">
             <div class="alert alert-danger" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <span id="errorMessage">-</span>
+                <span id="dateErrorMessage">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 域名检测部分 -->
+    <div class="card-header">
+        <h5 class="mb-0">域名检测</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="domainInput" class="form-label">域名</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                        <input type="text" id="domainInput" class="form-control" placeholder="请输入域名，例如：example.com"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button id="checkDomainBtn" class="btn btn-primary" type="button">
+                <i class="bi bi-check-circle"></i> 检查
+            </button>
+            <button id="resetDomainBtn" class="btn btn-secondary ms-2" type="button">
+                <i class="bi bi-arrow-clockwise"></i> 重置
+            </button>
+        </div>
+
+        <!-- 域名检测结果容器 -->
+        <div id="domainResultContainer" style="display: none;">
+            <div class="alert alert-info" role="alert">
+                <h5 class="mb-3">检测结果</h5>
+                <div id="domainResults">
+                    <!-- 结果将在这里动态生成 -->
+                </div>
+                <hr class="my-2">
+                <small class="text-md-start">检查域名完成</small>
+            </div>
+        </div>
+
+        <!-- 域名检测错误容器 -->
+        <div id="domainErrorContainer" style="display: none;">
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span id="domainErrorMessage">-</span>
+            </div>
+        </div>
+
+        <!-- 加载指示器 -->
+        <div id="loadingContainer" style="display: none;">
+            <div class="alert alert-light text-center" role="alert">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">检测中...</span>
+                </div>
+                <p class="mt-2 mb-0">正在检测域名，请稍候...</p>
             </div>
         </div>
     </div>
@@ -86,14 +144,28 @@
         margin-left: 0.5rem;
     }
 
-    #resultContainer .row p {
+    #resultContainer .row p,
+    #domainResultContainer .row p {
         margin-bottom: 0.75rem;
         display: flex;
         align-items: center;
     }
 
-    #resultContainer strong {
+    #resultContainer strong,
+    #domainResultContainer strong {
         min-width: 120px;
+    }
+
+    .domain-result-item {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: rgba(13, 110, 253, 0.05);
+        border-radius: 0.375rem;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .domain-result-item:last-child {
+        margin-bottom: 0;
     }
 </style>
 
@@ -102,177 +174,404 @@
 {% block extra_js %}
 <script>
     (function() {
+        // 日期计算器部分
         // 缓存DOM元素，避免重复查询
-        const DOM = {
-            startDateTime: null,
-            endDateTime: null,
-            calculateBtn: null,
-            resetBtn: null,
-            resultContainer: null,
-            errorContainer: null,
-            errorMessage: null,
-            results: {}
-        };
+        const dateCalculator = {
+            dom: {
+                startDateTime: null,
+                endDateTime: null,
+                calculateBtn: null,
+                resetBtn: null,
+                resultContainer: null,
+                errorContainer: null,
+                errorMessage: null,
+                results: {}
+            },
 
-        // 初始化DOM引用
-        function initDOM() {
-            DOM.startDateTime = document.getElementById('startDateTime');
-            DOM.endDateTime = document.getElementById('endDateTime');
-            DOM.calculateBtn = document.getElementById('calculateBtn');
-            DOM.resetBtn = document.getElementById('resetBtn');
-            DOM.resultContainer = document.getElementById('resultContainer');
-            DOM.errorContainer = document.getElementById('errorContainer');
-            DOM.errorMessage = document.getElementById('errorMessage');
-
-            // 缓存结果元素
-            DOM.results = {
-                daysDiff: document.getElementById('daysDiff'),
-                hoursDiff: document.getElementById('hoursDiff'),
-                minutesDiff: document.getElementById('minutesDiff'),
-                secondsDiff: document.getElementById('secondsDiff'),
-                totalHours: document.getElementById('totalHours'),
-                totalMinutes: document.getElementById('totalMinutes'),
-                totalSeconds: document.getElementById('totalSeconds'),
-                totalDays: document.getElementById('totalDays')
-            };
-        }
-
-        // 验证必要元素是否存在
-        function validateDOM() {
-            return DOM.startDateTime && DOM.endDateTime && DOM.calculateBtn && DOM.resetBtn;
-        }
-
-        // 设置默认时间
-        function setDefaultTimes() {
-            const now = new Date();
-            const endTime = new Date(now.getTime() + 60 * 60 * 1000);
-
-            DOM.startDateTime.value = formatDateTimeLocal(now);
-            DOM.endDateTime.value = formatDateTimeLocal(endTime);
-        }
-
-        // 格式化日期时间为 datetime-local 格式
-        function formatDateTimeLocal(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
-        }
-
-        // 显示错误信息
-        function showError(message) {
-            if (DOM.errorMessage) {
-                DOM.errorMessage.textContent = message;
-            }
-            if (DOM.errorContainer) {
-                DOM.errorContainer.style.display = 'block';
-            }
-            if (DOM.resultContainer) {
-                DOM.resultContainer.style.display = 'none';
-            }
-        }
-
-        // 显示计算结果
-        function showResults(data) {
-            Object.entries(data).forEach(([key, value]) => {
-                if (DOM.results[key]) {
-                    DOM.results[key].textContent = value;
+            init: function() {
+                this.initDOM();
+                if (!this.validateDOM()) {
+                    console.error('[DateCalculator] 必要的DOM元素不存在');
+                    return false;
                 }
-            });
+                this.setDefaultTimes();
+                this.initEventListeners();
+                return true;
+            },
 
-            if (DOM.resultContainer) {
-                DOM.resultContainer.style.display = 'block';
-            }
-            if (DOM.errorContainer) {
-                DOM.errorContainer.style.display = 'none';
-            }
-        }
+            initDOM: function() {
+                this.dom.startDateTime = document.getElementById('startDateTime');
+                this.dom.endDateTime = document.getElementById('endDateTime');
+                this.dom.calculateBtn = document.getElementById('calculateBtn');
+                this.dom.resetBtn = document.getElementById('resetBtn');
+                this.dom.resultContainer = document.getElementById('resultContainer');
+                this.dom.errorContainer = document.getElementById('dateErrorContainer');
+                this.dom.errorMessage = document.getElementById('dateErrorMessage');
 
-        // 计算日期时间差
-        function handleCalculate() {
-            const startValue = DOM.startDateTime.value;
-            const endValue = DOM.endDateTime.value;
+                // 缓存结果元素
+                this.dom.results = {
+                    daysDiff: document.getElementById('daysDiff'),
+                    hoursDiff: document.getElementById('hoursDiff'),
+                    minutesDiff: document.getElementById('minutesDiff'),
+                    secondsDiff: document.getElementById('secondsDiff'),
+                    totalHours: document.getElementById('totalHours'),
+                    totalMinutes: document.getElementById('totalMinutes'),
+                    totalSeconds: document.getElementById('totalSeconds'),
+                    totalDays: document.getElementById('totalDays')
+                };
+            },
 
-            if (!startValue || !endValue) {
-                showError('请选择开始和结束日期时间');
-                return;
-            }
+            validateDOM: function() {
+                return this.dom.startDateTime && this.dom.endDateTime &&
+                       this.dom.calculateBtn && this.dom.resetBtn;
+            },
 
-            try {
-                const startTime = new Date(startValue);
-                const endTime = new Date(endValue);
+            setDefaultTimes: function() {
+                const now = new Date();
+                const endTime = new Date(now.getTime() + 60 * 60 * 1000);
 
-                if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-                    showError('请输入有效的日期时间格式');
+                this.dom.startDateTime.value = this.formatDateTimeLocal(now);
+                this.dom.endDateTime.value = this.formatDateTimeLocal(endTime);
+            },
+
+            formatDateTimeLocal: function(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            },
+
+            showError: function(message) {
+                if (this.dom.errorMessage) {
+                    this.dom.errorMessage.textContent = message;
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'block';
+                }
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'none';
+                }
+            },
+
+            showResults: function(data) {
+                Object.entries(data).forEach(([key, value]) => {
+                    if (this.dom.results[key]) {
+                        this.dom.results[key].textContent = value;
+                    }
+                });
+
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'block';
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'none';
+                }
+            },
+
+            handleCalculate: function() {
+                const startValue = this.dom.startDateTime.value;
+                const endValue = this.dom.endDateTime.value;
+
+                if (!startValue || !endValue) {
+                    this.showError('请选择开始和结束日期时间');
                     return;
                 }
 
-                const diffMs = Math.abs(endTime - startTime);
+                try {
+                    const startTime = new Date(startValue);
+                    const endTime = new Date(endValue);
 
-                // 计算天、时、分、秒
-                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                const remainingMs = diffMs % (1000 * 60 * 60 * 24);
-                const diffHours = Math.floor(remainingMs / (1000 * 60 * 60));
-                const remainingMs2 = remainingMs % (1000 * 60 * 60);
-                const diffMinutes = Math.floor(remainingMs2 / (1000 * 60));
-                const diffSeconds = Math.floor((remainingMs2 % (1000 * 60)) / 1000);
+                    if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+                        this.showError('请输入有效的日期时间格式');
+                        return;
+                    }
 
-                // 计算总的小时、分钟、秒数（保留2位小数）
-                const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
-                const totalMinutes = (diffMs / (1000 * 60)).toFixed(2);
-                const totalSeconds = (diffMs / 1000).toFixed(2);
-                const totalDays = (diffMs / (1000 * 60 * 60 * 24)).toFixed(2);
+                    const diffMs = Math.abs(endTime - startTime);
 
-                // 显示结果
-                showResults({
-                    daysDiff: diffDays,
-                    hoursDiff: diffHours,
-                    minutesDiff: diffMinutes,
-                    secondsDiff: diffSeconds,
-                    totalHours: totalHours,
-                    totalMinutes: totalMinutes,
-                    totalSeconds: totalSeconds,
-                    totalDays: totalDays
+                    // 计算天、时、分、秒
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const remainingMs = diffMs % (1000 * 60 * 60 * 24);
+                    const diffHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                    const remainingMs2 = remainingMs % (1000 * 60 * 60);
+                    const diffMinutes = Math.floor(remainingMs2 / (1000 * 60));
+                    const diffSeconds = Math.floor((remainingMs2 % (1000 * 60)) / 1000);
+
+                    // 计算总的小时、分钟、秒数（保留2位小数）
+                    const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
+                    const totalMinutes = (diffMs / (1000 * 60)).toFixed(2);
+                    const totalSeconds = (diffMs / 1000).toFixed(2);
+                    const totalDays = (diffMs / (1000 * 60 * 60 * 24)).toFixed(2);
+
+                    // 显示结果
+                    this.showResults({
+                        daysDiff: diffDays,
+                        hoursDiff: diffHours,
+                        minutesDiff: diffMinutes,
+                        secondsDiff: diffSeconds,
+                        totalHours: totalHours,
+                        totalMinutes: totalMinutes,
+                        totalSeconds: totalSeconds,
+                        totalDays: totalDays
+                    });
+
+                } catch (error) {
+                    this.showError('计算过程出错: ' + error.message);
+                }
+            },
+
+            handleReset: function() {
+                this.dom.startDateTime.value = '';
+                this.dom.endDateTime.value = '';
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'none';
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'none';
+                }
+                this.setDefaultTimes();
+            },
+
+            initEventListeners: function() {
+                this.dom.calculateBtn.addEventListener('click', this.handleCalculate.bind(this));
+                this.dom.resetBtn.addEventListener('click', this.handleReset.bind(this));
+            }
+        };
+
+        // 域名检测部分
+        const domainChecker = {
+            dom: {
+                domainInput: null,
+                checkBtn: null,
+                resetBtn: null,
+                resultContainer: null,
+                resultsContainer: null,
+                errorContainer: null,
+                errorMessage: null,
+                loadingContainer: null
+            },
+
+            init: function() {
+                this.initDOM();
+                if (!this.validateDOM()) {
+                    console.error('[DomainChecker] 必要的DOM元素不存在');
+                    return false;
+                }
+                this.initEventListeners();
+                return true;
+            },
+
+            initDOM: function() {
+                this.dom.domainInput = document.getElementById('domainInput');
+                this.dom.checkBtn = document.getElementById('checkDomainBtn');
+                this.dom.resetBtn = document.getElementById('resetDomainBtn');
+                this.dom.resultContainer = document.getElementById('domainResultContainer');
+                this.dom.resultsContainer = document.getElementById('domainResults');
+                this.dom.errorContainer = document.getElementById('domainErrorContainer');
+                this.dom.errorMessage = document.getElementById('domainErrorMessage');
+                this.dom.loadingContainer = document.getElementById('loadingContainer');
+            },
+
+            validateDOM: function() {
+                return this.dom.domainInput && this.dom.checkBtn &&
+                       this.dom.resetBtn && this.dom.resultsContainer;
+            },
+
+            showLoading: function() {
+                if (this.dom.loadingContainer) {
+                    this.dom.loadingContainer.style.display = 'block';
+                }
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'none';
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'none';
+                }
+            },
+
+            hideLoading: function() {
+                if (this.dom.loadingContainer) {
+                    this.dom.loadingContainer.style.display = 'none';
+                }
+            },
+
+            showError: function(message) {
+                if (this.dom.errorMessage) {
+                    this.dom.errorMessage.textContent = message;
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'block';
+                }
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'none';
+                }
+                if (this.dom.loadingContainer) {
+                    this.dom.loadingContainer.style.display = 'none';
+                }
+            },
+
+            showResults: function(data) {
+                // 清空之前的结果
+                this.dom.resultsContainer.innerHTML = '';
+
+                // 检查是否是数组
+                if (Array.isArray(data)) {
+                    data.forEach((item, index) => {
+                        this.createResultItem(item, index);
+                    });
+                } else {
+                    // 如果是单个对象
+                    this.createResultItem(data, 0);
+                }
+
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'block';
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'none';
+                }
+                if (this.dom.loadingContainer) {
+                    this.dom.loadingContainer.style.display = 'none';
+                }
+            },
+
+            createResultItem: function(item, index) {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'domain-result-item';
+
+                // 格式化检查结果
+                const isValid = item.is_valid !== undefined ? item.is_valid : item.isValid;
+                const isValidText = isValid === true ? 'True' : (isValid === false ? 'False' : isValid);
+                const isValidClass = isValid === true ? 'bg-success' : (isValid === false ? 'bg-danger' : 'bg-warning');
+
+                // 格式化检测时间
+                const checkTime = item.checkTime.toLocaleString() || new Date().toLocaleString();
+
+                // 格式化检测耗时
+                const during = item.during || item.duration || '-';
+                const dns = item.DNS || item.dns || '-';
+                const url = item.url || this.dom.domainInput.value || '-';
+                const server = item.details.http_response.server  || '-';
+                const scheme = item.details.scheme || '-';
+                const ip_address = item.details.dns_resolution.ip_address || '-';
+
+
+                resultDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>DNS:</strong> <span class="badge bg-primary">${dns}</span></p>
+                            <p><strong>服务器:</strong> <span class="badge bg-primary">${server}</span></p>
+                            <p><strong>scheme:</strong> <span class="badge bg-primary">${scheme}</span></p>
+                            <p><strong>ip_address:</strong> <span class="badge bg-primary">${ip_address}</span></p>
+
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>检测时间:</strong> <span class="badge bg-primary">${checkTime}</span></p>
+                            <p><strong>检测耗时:</strong> <span class="badge bg-primary">${during}</span></p>
+                            <p><strong>URL:</strong> <span class="badge bg-primary">${url}</span></p>
+                            <p><strong>检查结果:</strong> <span class="badge ${isValidClass}">${isValidText}</span></p>
+
+                        </div>
+                    </div>
+                `;
+
+                this.dom.resultsContainer.appendChild(resultDiv);
+            },
+
+            validateDomain: function(domain) {
+                // 简单的域名验证
+                if (!domain) return false;
+
+                // 移除协议部分
+                domain = domain.replace(/^https?:\/\//, '');
+
+                // 移除路径部分
+                domain = domain.split('/')[0];
+
+                // 基本的域名格式验证
+                const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;
+                return domainRegex.test(domain);
+            },
+
+            handleCheck: async function() {
+                const domain = this.dom.domainInput.value.trim();
+
+                if (!domain) {
+                    this.showError('请输入要检测的域名');
+                    return;
+                }
+
+                // 简单的域名格式验证
+                if (!this.validateDomain(domain)) {
+                    this.showError('请输入有效的域名格式（例如：example.com）');
+                    return;
+                }
+
+                // 显示加载状态
+                this.showLoading();
+
+                try {
+                    // 构建API URL
+                    const apiUrl = `/domain-check/?url=${encodeURIComponent(domain)}`;
+
+                    // 发送GET请求
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // 显示结果
+                    this.showResults(data);
+
+                } catch (error) {
+                    console.error('域名检测失败:', error);
+                    this.showError(`检测失败: ${error.message || '网络请求出错'}`);
+                } finally {
+                    this.hideLoading();
+                }
+            },
+
+            handleReset: function() {
+                this.dom.domainInput.value = '';
+                if (this.dom.resultContainer) {
+                    this.dom.resultContainer.style.display = 'none';
+                }
+                if (this.dom.errorContainer) {
+                    this.dom.errorContainer.style.display = 'none';
+                }
+                if (this.dom.loadingContainer) {
+                    this.dom.loadingContainer.style.display = 'none';
+                }
+                this.dom.resultsContainer.innerHTML = '';
+            },
+
+            initEventListeners: function() {
+                this.dom.checkBtn.addEventListener('click', this.handleCheck.bind(this));
+                this.dom.resetBtn.addEventListener('click', this.handleReset.bind(this));
+
+                // 支持按Enter键触发检查
+                this.dom.domainInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        this.handleCheck();
+                    }
                 });
-
-            } catch (error) {
-                showError('计算过程出错: ' + error.message);
             }
-        }
-
-        // 重置表单
-        function handleReset() {
-            DOM.startDateTime.value = '';
-            DOM.endDateTime.value = '';
-            if (DOM.resultContainer) {
-                DOM.resultContainer.style.display = 'none';
-            }
-            if (DOM.errorContainer) {
-                DOM.errorContainer.style.display = 'none';
-            }
-            setDefaultTimes();
-        }
-
-        // 初始化事件监听
-        function initEventListeners() {
-            DOM.calculateBtn.addEventListener('click', handleCalculate);
-            DOM.resetBtn.addEventListener('click', handleReset);
-        }
+        };
 
         // 主初始化函数
         function init() {
-            initDOM();
-
-            if (!validateDOM()) {
-                console.error('[DateCalculator] 必要的DOM元素不存在');
-                return false;
-            }
-
-            setDefaultTimes();
-            initEventListeners();
-            return true;
+            dateCalculator.init();
+            domainChecker.init();
         }
 
         // 页面加载完成后执行初始化
