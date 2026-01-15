@@ -453,7 +453,7 @@ def test_case_delete(request, pk):
     test_case = get_object_or_404(TestCase, pk=pk)
     test_case.delete()
     messages.success(request, f'删除成功: {test_case.name}')
-    return redirect('project_detail', pk=test_case.project.pk)
+    return redirect('test_case_list')
 
 
 def test_case_export(request):

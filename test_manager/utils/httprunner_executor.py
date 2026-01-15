@@ -309,6 +309,7 @@ def _execute_with_requests(test_case, environment, variables=None):
 
             # 替换请求体中的变量
             request_body = replace_variables(request_body, variables)
+            print(f"##Request body before variable replacement: {original_body}")
             print(f"##Request body after variable replacement: {request_body}")
 
             # 根据请求体格式设置请求参数
@@ -496,8 +497,8 @@ def _execute_with_requests(test_case, environment, variables=None):
 
         return {
             "status": status,
-            "request_headers": original_headers,  # 保存原始请求头
-            "request_body": original_body,  # 保存原始请求体
+            "request_headers": original_headers,
+            "request_body": request_body,
             "response_status_code": response.status_code,
             "response_headers": dict(response.headers),
             "response_body": response_body,

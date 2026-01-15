@@ -125,13 +125,13 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         order = request.data.get('order', 0)
 
         if not test_case_id:
-            return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "测试用例ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
         test_case = get_object_or_404(TestCase, id=test_case_id)
 
-        # Check if test case is already in the suite
+        # 检查测试用例是否已经存在于测试套件中
         if TestSuiteCase.objects.filter(test_suite=test_suite, test_case=test_case).exists():
-            return Response({"error": "Test case already in suite"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "测试用例已经在测试套件中"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 创建测试套件用例关联，并设置环境（如果提供）
         test_suite_case_data = {
@@ -156,7 +156,7 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         environment_id = request.data.get('environment_id')
 
         if not test_case_id:
-            return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "测试用例ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
         test_suite_case = get_object_or_404(TestSuiteCase, test_suite=test_suite, test_case_id=test_case_id)
 
@@ -177,7 +177,7 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         test_case_id = request.data.get('test_case_id')
 
         if not test_case_id:
-            return Response({"error": "Test case ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "测试用例ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
         test_suite_case = get_object_or_404(TestSuiteCase, test_suite=test_suite, test_case_id=test_case_id)
         test_suite_case.delete()
@@ -190,8 +190,7 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         default_environment_id = request.data.get('environment_id')
 
         if not default_environment_id:
-            return Response({"error": "Default environment ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"error": "默认环境ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
         default_environment = get_object_or_404(Environment, id=default_environment_id)
 
         # 获取每个测试用例的环境设置
