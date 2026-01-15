@@ -4,649 +4,1962 @@
 
 {% block title %}{{ report.name }} - EasyTesting{% endblock %}
 
-{% block header %}测试报告: {{ report.name }}{% endblock %}
+{% block header %}
+<div class="d-flex align-items-center gap-3">
+    <div class="report-header-icon">
+        <i class="bi bi-file-earmark-text"></i>
+    </div>
+    <div>
+        <h1 class="mb-1">{{ report.name }}</h1>
+        <p class="text-muted mb-0">测试报告详情</p>
+    </div>
+</div>
+{% endblock %}
 
 {% block header_buttons %}
-    <div class="btn-group">
-        <a href="{% url 'test_report_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> 返回列表
-        </a>
-        <div class="btn-group">
-            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                <i class="bi bi-download"></i> 导出
-            </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" id="exportPDF"><i class="bi bi-file-earmark-pdf"></i> 导出为
-                    PDF</a></li>
-                <li><a class="dropdown-item" href="#" id="exportExcel"><i class="bi bi-file-earmark-excel"></i> 导出为
-                    Excel</a></li>
-                <li><a class="dropdown-item" href="#" id="exportJSON"><i class="bi bi-file-earmark-code"></i> 导出为
-                    JSON</a></li>
-            </ul>
-        </div>
-        <a href="{% url 'test_report_delete' report.pk %}" class="btn btn-outline-danger">
-            <i class="bi bi-trash"></i> 删除
-        </a>
+<div class="d-flex gap-2">
+    <a href="{% url 'test_report_list' %}" class="btn btn-soft-secondary d-flex align-items-center">
+        <i class="bi bi-arrow-left me-2"></i>返回列表
+    </a>
+    <div class="dropdown">
+        <button class="btn btn-soft-primary dropdown-toggle d-flex align-items-center" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-download me-2"></i>导出报告
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" id="exportPDF">
+                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF 格式
+            </a></li>
+            <li><a class="dropdown-item" href="#" id="exportExcel">
+                <i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel 格式
+            </a></li>
+            <li><a class="dropdown-item" href="#" id="exportJSON">
+                <i class="bi bi-file-earmark-code me-2 text-warning"></i>JSON 格式
+            </a></li>
+        </ul>
     </div>
+    <button class="btn btn-soft-danger d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#deleteModal">
+        <i class="bi bi-trash me-2"></i>删除
+    </button>
+</div>
 {% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>报告详情</span>
+<div class="row g-4">
+    <!-- 左侧信息栏 -->
+    <div class="col-lg-4">
+        <!-- 报告概览卡片 -->
+        <div class="card glass-card mb-4">
+            <div class="card-header card-header-gradient">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper bg-primary-soft">
+                        <i class="bi bi-info-circle text-primary"></i>
+                    </div>
+                    <h5 class="card-title mb-0 ms-3">报告概览</h5>
                 </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h5 class="text-muted mb-2">项目</h5>
-                        <p>
-                            <a href="{% url 'project_detail' pk=report.project.pk %}" class="text-decoration-none">
-                                {{ report.project.name }}
-                            </a>
-                        </p>
+            </div>
+            <div class="card-body">
+                <!-- 项目信息 -->
+                <div class="info-item mb-4">
+                    <div class="info-label">
+                        <i class="bi bi-folder me-2 text-primary"></i>
+                        所属项目
                     </div>
-
-                    <div class="mb-4">
-                        <h5 class="text-muted mb-2">描述</h5>
-                        <p>{{ report.description|default:"无描述" }}</p>
+                    <div class="info-value">
+                        <a href="{% url 'project_detail' pk=report.project.pk %}"
+                           class="text-decoration-none text-dark fw-medium">
+                            {{ report.project.name }}
+                        </a>
                     </div>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <h5 class="text-muted mb-2">报告类型</h5>
-                            <span class="badge
-                            {% if report.report_type == 'test_run' %}bg-primary
-                            {% elif report.report_type == 'test_suite_run' %}bg-success
-                            {% else %}bg-secondary{% endif %}">
-                            {% if report.report_type == 'test_run' %}单个测试用例
-                            {% elif report.report_type == 'test_suite_run' %}测试套件
-                            {% else %}自定义{% endif %}
+                <!-- 报告描述 -->
+                <div class="info-item mb-4">
+                    <div class="info-label">
+                        <i class="bi bi-text-paragraph me-2 text-primary"></i>
+                        报告描述
+                    </div>
+                    <div class="info-value">
+                        {{ report.description|default:"暂无描述"|linebreaksbr }}
+                    </div>
+                </div>
+
+                <!-- 报告类型 -->
+                <div class="info-item mb-4">
+                    <div class="info-label">
+                        <i class="bi bi-tag me-2 text-primary"></i>
+                        报告类型
+                    </div>
+                    <div class="info-value">
+                        {% if report.report_type == 'test_run' %}
+                        <span class="badge badge-primary">
+                            <i class="bi bi-check-circle me-1"></i>单个测试用例
                         </span>
-                        </div>
+                        {% elif report.report_type == 'test_suite_run' %}
+                        <span class="badge badge-success">
+                            <i class="bi bi-collection me-1"></i>测试套件
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary">
+                            <i class="bi bi-gear me-1"></i>自定义
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
 
-                        <div class="col-md-6 mb-3">
-                            <h5 class="text-muted mb-2">报告格式</h5>
-                            <span class="badge bg-info">{{ report.report_format|upper }}</span>
-                        </div>
+                <!-- 报告格式 -->
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-file-earmark me-2 text-primary"></i>
+                        报告格式
+                    </div>
+                    <div class="info-value">
+                        {% if report.report_format == 'html' %}
+                        <span class="badge badge-danger">
+                            <i class="bi bi-filetype-html me-1"></i>HTML
+                        </span>
+                        {% elif report.report_format == 'json' %}
+                        <span class="badge badge-warning">
+                            <i class="bi bi-filetype-json me-1"></i>JSON
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary">
+                            <i class="bi bi-filetype-txt me-1"></i>纯文本
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <div class="col-md-6">
-                            <h5 class="text-muted mb-2">创建时间</h5>
-                            <p class="mb-0">{{ report.created_at|date:"Y-m-d H:i" }}</p>
+        <!-- 时间信息卡片 -->
+        <div class="card glass-card mb-4">
+            <div class="card-header card-header-gradient">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper bg-info-soft">
+                        <i class="bi bi-clock text-info"></i>
+                    </div>
+                    <h5 class="card-title mb-0 ms-3">时间信息</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-primary">
+                            <i class="bi bi-plus-circle"></i>
                         </div>
-
-                        <div class="col-md-6">
-                            <h5 class="text-muted mb-2">最后更新</h5>
-                            <p class="mb-0">{{ report.updated_at|date:"Y-m-d H:i" }}</p>
+                        <div class="timeline-content">
+                            <div class="timeline-label">创建时间</div>
+                            <div class="timeline-value">{{ report.created_at|date:"Y年m月d日 H:i:s" }}</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-info">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">最后更新</div>
+                            <div class="timeline-value">{{ report.updated_at|date:"Y年m月d日 H:i:s" }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 快速操作卡片 -->
+        <div class="card glass-card">
+            <div class="card-header card-header-gradient">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper bg-success-soft">
+                        <i class="bi bi-lightning text-success"></i>
+                    </div>
+                    <h5 class="card-title mb-0 ms-3">快速操作</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <button id="copyReportBtn" class="btn btn-action btn-primary">
+                        <div class="btn-icon">
+                            <i class="bi bi-clipboard"></i>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-title">复制报告内容</span>
+                            <small class="btn-subtitle">复制到剪贴板</small>
+                        </div>
+                        <i class="bi bi-chevron-right btn-arrow"></i>
+                    </button>
+
+                    <button id="expandReportBtn" class="btn btn-action btn-secondary">
+                        <div class="btn-icon">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-title">全屏查看</span>
+                            <small class="btn-subtitle">沉浸式阅读体验</small>
+                        </div>
+                        <i class="bi bi-chevron-right btn-arrow"></i>
+                    </button>
+
+                    <button id="downloadRawBtn" class="btn btn-action btn-success">
+                        <div class="btn-icon">
+                            <i class="bi bi-download"></i>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-title">下载原始文件</span>
+                            <small class="btn-subtitle">下载.{{ report.report_format }}文件</small>
+                        </div>
+                        <i class="bi bi-chevron-right btn-arrow"></i>
+                    </button>
+
+                    <button class="btn btn-action btn-info" onclick="printReport()">
+                        <div class="btn-icon">
+                            <i class="bi bi-printer"></i>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-title">打印报告</span>
+                            <small class="btn-subtitle">生成纸质版本</small>
+                        </div>
+                        <i class="bi bi-chevron-right btn-arrow"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>报告内容</span>
-                    <div>
-                        <button id="copyReportBtn" class="btn btn-sm btn-outline-secondary" title="复制内容">
-                            <i class="bi bi-clipboard"></i>
-                        </button>
-                        <button id="expandReportBtn" class="btn btn-sm btn-outline-secondary ms-1" title="全屏查看">
-                            <i class="bi bi-arrows-fullscreen"></i>
-                        </button>
+    <!-- 右侧内容区域 -->
+    <div class="col-lg-8">
+        <!-- 报告内容主卡片 -->
+        <div class="card glass-card report-content-card">
+            <div class="card-header card-header-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-wrapper bg-gradient-primary">
+                            <i class="bi bi-file-text text-white"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h5 class="card-title mb-0">报告内容</h5>
+                            <small class="text-muted">报告ID: {{ report.pk }} | 文件大小: {{ report_content|length|filesizeformat }}</small>
+                        </div>
+                    </div>
+                    <div class="format-indicator">
+                        {% if report.report_format == 'html' %}
+                        <span class="badge badge-danger animate-pulse">
+                            <i class="bi bi-filetype-html me-1"></i>HTML
+                        </span>
+                        {% elif report.report_format == 'json' %}
+                        <span class="badge badge-warning animate-pulse">
+                            <i class="bi bi-filetype-json me-1"></i>JSON
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary animate-pulse">
+                            <i class="bi bi-filetype-txt me-1"></i>纯文本
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="card-body p-0" id="reportContentBody">
-                    {% if report.report_format == 'html' %}
-                        <div class="report-html-container">
-                            {% if 'Single run:' in report_content %}
-                                <div class="test-report-container">
-                                    {% with content=report_content|safe %}
-                                        <div class="test-report-header">
-                                            <h2 class="test-report-title">{{ content|extract_title }}</h2>
+            </div>
 
-                                            <div class="test-report-info">
-                                                <div class="test-info-grid">
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">项目:</div>
-                                                        <div class="info-value">{{ report.project.name }}</div>
-                                                    </div>
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">环境:</div>
-                                                        <div class="info-value">{{ content|extract_environment }}</div>
-                                                    </div>
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">状态:</div>
-                                                        <div class="info-value">
-                                                        <span class="status-badge status-{{ content|extract_status|lower }}">
-                                                            {{ content|extract_status }}
-                                                        </span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">开始时间:</div>
-                                                        <div class="info-value">{{ content|extract_start_time }}</div>
-                                                    </div>
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">结束时间:</div>
-                                                        <div class="info-value">{{ content|extract_end_time }}</div>
-                                                    </div>
-                                                    <div class="test-info-item">
-                                                        <div class="info-label">持续时间:</div>
-                                                        <div class="info-value">{{ content|extract_duration }}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
+            <div class="card-body p-0" id="reportContentBody">
+                {% if report.report_format == 'html' %}
+                    {% if 'Single run:' in report_content %}
+                        <!-- 结构化HTML报告 -->
+                        <div class="structured-report">
+                            <!-- 报告头部 -->
+                            <div class="report-header">
+                                <div class="report-header-content">
+                                    <div class="report-title-section">
+                                        <h1 class="report-title">{{ report.name }}</h1>
+                                        <div class="report-subtitle">
+                                            <span class="report-project">
+                                                <i class="bi bi-folder me-1"></i>{{ report.project.name }}
+                                            </span>
+                                            <span class="report-divider">•</span>
+                                            <span class="report-date">
+                                                <i class="bi bi-calendar me-1"></i>{{ report.created_at|date:"Y-m-d" }}
+                                            </span>
+                                            <span class="report-divider">•</span>
+                                            <span class="report-time">
+                                                <i class="bi bi-clock me-1"></i>{{ report.created_at|date:"H:i" }}
+                                            </span>
                                         </div>
+                                    </div>
 
-                                        <div class="test-report-results">
-                                            <h3 class="section-title">测试结果</h3>
-
-                                            <div class="test-case-details">
-                                                <div class="test-case-header">
-                                                    <h4 class="test-case-name">{{ content|extract_test_name }}</h4>
-                                                    <span class="status-badge status-{{ content|extract_test_status|lower }}">
-                                                    {{ content|extract_test_status }}
-                                                </span>
-                                                </div>
-
-                                                <div class="test-case-info">
-                                                    <div class="info-row">
-                                                        <div class="info-label">请求方法:</div>
-                                                        <div class="info-value">{{ content|extract_request_method }}</div>
-                                                    </div>
-                                                    <div class="info-row">
-                                                        <div class="info-label">请求URL:</div>
-                                                        <div class="info-value url-value">{{ content|extract_request_url }}</div>
-                                                    </div>
-
-                                                    {% if content|extract_request_headers %}
-                                                        <div class="collapsible-section">
-                                                            <div class="collapsible-header"
-                                                                 onclick="toggleCollapsible(this)">
-                                                                <span class="section-label">请求头</span>
-                                                                <i class="bi bi-chevron-down"></i>
-                                                            </div>
-                                                            <div class="collapsible-content">
-                                                                <pre class="code-block">{{ content|extract_request_headers }}</pre>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-
-                                                    {% if content|extract_request_body %}
-                                                        <div class="collapsible-section">
-                                                            <div class="collapsible-header"
-                                                                 onclick="toggleCollapsible(this)">
-                                                                <span class="section-label">请求体</span>
-                                                                <i class="bi bi-chevron-down"></i>
-                                                            </div>
-                                                            <div class="collapsible-content">
-                                                                <pre class="code-block">{{ content|extract_request_body }}</pre>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-
-                                                    {% if content|extract_response_headers %}
-                                                        <div class="collapsible-section">
-                                                            <div class="collapsible-header"
-                                                                 onclick="toggleCollapsible(this)">
-                                                                <span class="section-label">响应头</span>
-                                                                <i class="bi bi-chevron-down"></i>
-                                                            </div>
-                                                            <div class="collapsible-content">
-                                                                <pre class="code-block">{{ content|extract_response_headers }}</pre>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-
-                                                    {% if content|extract_response_body %}
-                                                        <div class="collapsible-section">
-                                                            <div class="collapsible-header"
-                                                                 onclick="toggleCollapsible(this)">
-                                                                <span class="section-label">响应体</span>
-                                                                <i class="bi bi-chevron-down"></i>
-                                                            </div>
-                                                            <div class="collapsible-content">
-                                                                <pre class="code-block">{{ content|extract_response_body }}</pre>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-
-                                                    {% if content|extract_error_message %}
-                                                        <div class="error-section">
-                                                            <div class="error-header">
-                                                                <span class="error-label">错误信息</span>
-                                                            </div>
-                                                            <div class="error-content">
-                                                                <pre class="error-message">{{ content|extract_error_message }}</pre>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
+                                    {% with status=report_content|extract_status %}
+                                    <div class="report-status-wrapper">
+                                        <div class="status-indicator status-{{ status|default:'unknown'|lower }}">
+                                            <div class="status-dot"></div>
+                                            <span class="status-text">{{ status|default:"UNKNOWN" }}</span>
                                         </div>
+                                    </div>
                                     {% endwith %}
                                 </div>
-                            {% else %}
-                                {{ report_content|safe }}
-                            {% endif %}
-                        </div>
-                    {% elif report.report_format == 'json' %}
-                        <div class="report-json">
-                            <pre class="json-content"><code
-                                    class="language-json">{{ report_content|pprint }}</code></pre>
+
+                                <!-- 统计卡片 -->
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-icon">
+                                            <i class="bi bi-globe"></i>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value">
+                                                {% with env=report_content|extract_environment %}
+                                                {{ env|default:"N/A" }}
+                                                {% endwith %}
+                                            </div>
+                                            <div class="stat-label">环境</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <div class="stat-icon">
+                                            <i class="bi bi-clock-history"></i>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value">
+                                                {% with duration=report_content|extract_duration %}
+                                                {{ duration|default:"N/A" }}
+                                                {% endwith %}
+                                            </div>
+                                            <div class="stat-label">持续时间</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <div class="stat-icon">
+                                            <i class="bi bi-play-circle"></i>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value">
+                                                {% with start_time=report_content|extract_start_time %}
+                                                {{ start_time|default:"N/A" }}
+                                                {% endwith %}
+                                            </div>
+                                            <div class="stat-label">开始时间</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <div class="stat-icon">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value">
+                                                {% with end_time=report_content|extract_end_time %}
+                                                {{ end_time|default:"N/A" }}
+                                                {% endwith %}
+                                            </div>
+                                            <div class="stat-label">结束时间</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 报告内容 -->
+                            <div class="report-content">
+                                <!-- 测试详情 -->
+                                <section class="report-section">
+                                    <div class="section-header">
+                                        <div class="section-icon">
+                                            <i class="bi bi-list-check"></i>
+                                        </div>
+                                        <h3 class="section-title">测试详情</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="test-case-card">
+                                            <div class="test-case-header">
+                                                <div class="test-case-info">
+                                                    <div class="test-case-name">
+                                                        <i class="bi bi-check-square me-2"></i>
+                                                        {% with test_name=report_content|extract_test_name %}
+                                                        {{ test_name|default:"未命名测试" }}
+                                                        {% endwith %}
+                                                    </div>
+                                                    <div class="test-case-meta">
+                                                        <span class="test-case-meta-item">
+                                                            <i class="bi bi-code me-1"></i>
+                                                            {% with method=report_content|extract_request_method %}
+                                                            {{ method|default:"GET"|upper }}
+                                                            {% endwith %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {% with status=report_content|extract_status %}
+                                                <div class="test-case-status status-{{ status|default:'unknown'|lower }}">
+                                                    <div class="status-dot"></div>
+                                                    <span class="status-text">{{ status|default:"UNKNOWN" }}</span>
+                                                </div>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- 请求信息 -->
+                                <section class="report-section">
+                                    <div class="section-header">
+                                        <div class="section-icon">
+                                            <i class="bi bi-send"></i>
+                                        </div>
+                                        <h3 class="section-title">请求信息</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="request-info">
+                                            <div class="request-url">
+                                                <div class="request-method">
+                                                    {% with method=report_content|extract_request_method %}
+                                                    <span class="method-badge method-{{ method|default:'get'|lower }}">
+                                                        {{ method|default:"GET"|upper }}
+                                                    </span>
+                                                    {% endwith %}
+                                                </div>
+                                                <div class="request-path">
+                                                    <i class="bi bi-link-45deg me-2 text-muted"></i>
+                                                    {% with url=report_content|extract_request_url %}
+                                                    <span class="url-text">{{ url|default:"N/A" }}</span>
+                                                    {% endwith %}
+                                                </div>
+                                            </div>
+
+                                            {% with headers=report_content|extract_request_headers %}
+                                            {% if headers %}
+                                            <div class="collapse-section">
+                                                <div class="collapse-header" data-bs-toggle="collapse" data-bs-target="#requestHeaders">
+                                                    <div class="collapse-title">
+                                                        <i class="bi bi-chevron-right collapse-icon"></i>
+                                                        <span>请求头</span>
+                                                        <span class="collapse-count">{{ headers|length }} 个</span>
+                                                    </div>
+                                                </div>
+                                                <div class="collapse" id="requestHeaders">
+                                                    <div class="collapse-body">
+                                                        <div class="code-block">
+                                                            <pre><code class="language-json">{{ headers }}</code></pre>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            {% endwith %}
+
+                                            {% with body=report_content|extract_request_body %}
+                                            {% if body %}
+                                            <div class="collapse-section">
+                                                <div class="collapse-header" data-bs-toggle="collapse" data-bs-target="#requestBody">
+                                                    <div class="collapse-title">
+                                                        <i class="bi bi-chevron-right collapse-icon"></i>
+                                                        <span>请求体</span>
+                                                    </div>
+                                                </div>
+                                                <div class="collapse" id="requestBody">
+                                                    <div class="collapse-body">
+                                                        <div class="code-block">
+                                                            <pre><code class="language-json">{{ body }}</code></pre>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- 响应信息 -->
+                                <section class="report-section">
+                                    <div class="section-header">
+                                        <div class="section-icon">
+                                            <i class="bi bi-reply"></i>
+                                        </div>
+                                        <h3 class="section-title">响应信息</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        {% with headers=report_content|extract_response_headers %}
+                                        {% if headers %}
+                                        <div class="collapse-section">
+                                            <div class="collapse-header" data-bs-toggle="collapse" data-bs-target="#responseHeaders">
+                                                <div class="collapse-title">
+                                                    <i class="bi bi-chevron-right collapse-icon"></i>
+                                                    <span>响应头</span>
+                                                    <span class="collapse-count">{{ headers|length }} 个</span>
+                                                </div>
+                                            </div>
+                                            <div class="collapse" id="responseHeaders">
+                                                <div class="collapse-body">
+                                                    <div class="code-block">
+                                                        <pre><code class="language-json">{{ headers }}</code></pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
+
+                                        {% with body=report_content|extract_response_body %}
+                                        {% if body %}
+                                        <div class="collapse-section">
+                                            <div class="collapse-header" data-bs-toggle="collapse" data-bs-target="#responseBody">
+                                                <div class="collapse-title">
+                                                    <i class="bi bi-chevron-right collapse-icon"></i>
+                                                    <span>响应体</span>
+                                                </div>
+                                            </div>
+                                            <div class="collapse" id="responseBody">
+                                                <div class="collapse-body">
+                                                    <div class="code-block">
+                                                        <pre><code class="language-json">{{ body }}</code></pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
+
+                                        {% with error=report_content|extract_error_message %}
+                                        {% if error %}
+                                        <div class="error-section">
+                                            <div class="error-header">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <span>错误信息</span>
+                                            </div>
+                                            <div class="error-body">
+                                                <pre class="error-message">{{ error }}</pre>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </section>
+                            </div>
                         </div>
                     {% else %}
-                        <div class="report-content">
-                            <pre class="text-content"><code>{{ report_content }}</code></pre>
+                        <!-- 原始HTML内容 -->
+                        <div class="html-preview-container">
+                            {{ report_content|safe }}
                         </div>
                     {% endif %}
+                {% elif report.report_format == 'json' %}
+                    <!-- JSON格式报告 -->
+                    <div class="json-viewer">
+                        <div class="viewer-toolbar">
+                            <div class="toolbar-left">
+                                <div class="format-badge">
+                                    <i class="bi bi-filetype-json me-2"></i>
+                                    JSON 数据
+                                </div>
+                                <div class="file-info">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    {{ report_content|length }} 字符
+                                </div>
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="btn btn-sm btn-outline-primary" onclick="formatJSON()">
+                                    <i class="bi bi-justify-left me-1"></i>格式化
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="toggleJSONView()">
+                                    <i class="bi bi-braces me-1"></i>切换视图
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="copyJSON()">
+                                    <i class="bi bi-clipboard me-1"></i>复制
+                                </button>
+                            </div>
+                        </div>
+                        <div class="json-content-container">
+                            <pre class="json-content"><code class="language-json" id="jsonContent">{{ report_content }}</code></pre>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- 纯文本报告 -->
+                    <div class="text-viewer">
+                        <div class="viewer-toolbar">
+                            <div class="toolbar-left">
+                                <div class="format-badge">
+                                    <i class="bi bi-filetype-txt me-2"></i>
+                                    纯文本
+                                </div>
+                                <div class="file-info">
+                                    <i class="bi bi-file-text me-1"></i>
+                                    {{ report_content|length }} 字符
+                                </div>
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="btn btn-sm btn-outline-primary" onclick="wrapText()">
+                                    <i class="bi bi-text-wrap me-1"></i>换行切换
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="copyText()">
+                                    <i class="bi bi-clipboard me-1"></i>复制
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-content-container">
+                            <pre class="text-content"><code class="language-text" id="textContent">{{ report_content }}</code></pre>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 报告页脚 -->
+            <div class="card-footer card-footer-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="report-footer-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span>报告生成时间: {{ report.created_at|date:"Y-m-d H:i:s" }}</span>
+                    </div>
+                    <div class="report-footer-actions">
+                        <button class="btn btn-sm btn-outline-light me-2" onclick="scrollToTop()">
+                            <i class="bi bi-arrow-up me-1"></i>返回顶部
+                        </button>
+                        <button class="btn btn-sm btn-light" onclick="printReport()">
+                            <i class="bi bi-printer me-1"></i>打印
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        /* 基础样式 */
-        :root {
-            --primary-color: #4a6cf7;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #17a2b8;
-            --secondary-color: #6c757d;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --border-color: #e9ecef;
-            --shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
-            --shadow-md: 0 .5rem 1rem rgba(0, 0, 0, .15);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal">
+            <div class="modal-header border-0">
+                <div class="modal-icon danger">
+                    <i class="bi bi-trash"></i>
+                </div>
+                <h5 class="modal-title">删除报告</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="mb-3">确定要删除此报告吗？</h5>
+                <p class="text-muted">
+                    报告 "{{ report.name }}" 将被永久删除，此操作不可恢复。
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">取消</button>
+                <a href="{% url 'test_report_delete' report.pk %}" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>确认删除
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-        /* 测试报告容器 */
-        .test-report-container {
-            font-family: var(--font-family);
-            color: #333;
-            background-color: #fff;
-            padding: 0;
-        }
+{% block extra_css %}
+<style>
+:root {
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --primary-dark: #3730a3;
+    --primary-soft: rgba(79, 70, 229, 0.1);
 
-        /* 报告标题和头部 */
-        .test-report-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            background-color: #f8f9fa;
-        }
+    --success: #10b981;
+    --success-light: #34d399;
+    --success-dark: #047857;
+    --success-soft: rgba(16, 185, 129, 0.1);
 
-        .test-report-title {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 1.5rem;
-        }
+    --danger: #ef4444;
+    --danger-light: #f87171;
+    --danger-dark: #b91c1c;
+    --danger-soft: rgba(239, 68, 68, 0.1);
 
-        /* 信息网格 */
-        .test-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
+    --warning: #f59e0b;
+    --warning-light: #fbbf24;
+    --warning-dark: #b45309;
+    --warning-soft: rgba(245, 158, 11, 0.1);
 
-        .test-info-item {
-            display: flex;
-            align-items: baseline;
-        }
+    --info: #3b82f6;
+    --info-light: #60a5fa;
+    --info-dark: #1d4ed8;
+    --info-soft: rgba(59, 130, 246, 0.1);
 
-        .info-label {
-            font-weight: 600;
-            color: #555;
-            min-width: 100px;
-            margin-right: 0.5rem;
-        }
+    --secondary: #6b7280;
+    --secondary-light: #9ca3af;
+    --secondary-dark: #374151;
+    --secondary-soft: rgba(107, 114, 128, 0.1);
 
-        .info-value {
-            color: #333;
-        }
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 
-        /* 状态标签 */
-        .status-badge {
-            display: inline-block;
-            padding: 0.25em 0.6em;
-            font-size: 0.85em;
-            font-weight: 600;
-            line-height: 1;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: 0.25rem;
-        }
+/* 毛玻璃效果 */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+}
 
-        .status-passed {
-            background-color: rgba(40, 167, 69, 0.15);
-            color: var(--success-color);
-        }
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+}
 
-        .status-failed {
-            background-color: rgba(220, 53, 69, 0.15);
-            color: var(--danger-color);
-        }
+.glass-modal {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+}
 
-        .status-error {
-            background-color: rgba(255, 193, 7, 0.15);
-            color: #d97706;
-        }
+/* 渐变头部 */
+.card-header-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+    border-radius: 16px 16px 0 0 !important;
+}
 
-        /* 测试结果部分 */
-        .test-report-results {
-            padding: 1.5rem;
-        }
+.card-footer-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+}
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-color);
-            color: var(--primary-color);
-        }
+/* 图标包装器 */
+.icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
 
-        /* 测试用例详情 */
-        .test-case-details {
-            background-color: #fff;
-            border-radius: 0.375rem;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-        }
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+}
 
-        .test-case-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid var(--border-color);
-        }
+/* 页头图标 */
+.report-header-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
 
-        .test-case-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 0;
-        }
+/* 信息项样式 */
+.info-item {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
 
-        .test-case-info {
-            padding: 1rem;
-        }
+.info-item:hover {
+    background: white;
+    border-color: var(--primary-light);
+    transform: translateX(4px);
+}
 
-        .info-row {
-            display: flex;
-            margin-bottom: 0.75rem;
-            align-items: baseline;
-        }
+.info-label {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
 
-        .url-value {
-            word-break: break-all;
-        }
+.info-value {
+    font-weight: 500;
+    color: var(--secondary-dark);
+}
 
-        /* 可折叠部分 */
-        .collapsible-section {
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            overflow: hidden;
-        }
+/* 时间线 */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
 
-        .collapsible-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background-color: #f8f9fa;
-            cursor: pointer;
-            user-select: none;
-        }
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom,
+        rgba(79, 70, 229, 0.2) 0%,
+        rgba(79, 70, 229, 0.1) 100%);
+}
 
-        .section-label {
-            font-weight: 600;
-            color: #555;
-        }
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
 
-        .collapsible-content {
-            display: none;
-            padding: 0;
-            background-color: #fff;
-            border-top: 1px solid var(--border-color);
-        }
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
 
-        /* 代码块 */
-        .code-block {
-            margin: 0;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 0;
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.875rem;
-            color: #333;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 300px;
-            overflow-y: auto;
-        }
+.timeline-icon {
+    position: absolute;
+    left: -30px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    z-index: 1;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
-        /* 错误部分 */
-        .error-section {
-            margin-top: 1rem;
-            border: 1px solid var(--danger-color);
-            border-radius: 0.375rem;
-            overflow: hidden;
-        }
+.timeline-label {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
 
-        .error-header {
-            padding: 0.75rem 1rem;
-            background-color: rgba(220, 53, 69, 0.15);
-        }
+.timeline-value {
+    font-weight: 500;
+    color: var(--secondary-dark);
+}
 
-        .error-label {
-            font-weight: 600;
-            color: var(--danger-color);
-        }
+/* 操作按钮 */
+.btn-action {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    text-align: left;
+    background: white;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
 
-        .error-content {
-            padding: 0;
-        }
+.btn-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+        rgba(79, 70, 229, 0.1) 0%,
+        rgba(79, 70, 229, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
-        .error-message {
-            margin: 0;
-            padding: 1rem;
-            background-color: #fff;
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.875rem;
-            color: var(--danger-color);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
+.btn-action:hover::before {
+    opacity: 1;
+}
 
-        /* JSON 和文本内容 */
-        .report-json, .report-content {
-            padding: 0;
-        }
+.btn-action:hover {
+    transform: translateX(8px);
+}
 
-        .json-content, .text-content {
-            margin: 0;
-            padding: 1.5rem;
-            background-color: #f8f9fa;
-            border-radius: 0;
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.875rem;
-            color: #333;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 600px;
-            overflow-y: auto;
-        }
+.btn-action.btn-primary {
+    color: var(--primary-dark);
+    border-left: 4px solid var(--primary);
+}
 
-        /* 滚动条美化 */
-        .code-block::-webkit-scrollbar,
-        .json-content::-webkit-scrollbar,
-        .text-content::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
+.btn-action.btn-secondary {
+    color: var(--secondary-dark);
+    border-left: 4px solid var(--secondary);
+}
 
-        .code-block::-webkit-scrollbar-track,
-        .json-content::-webkit-scrollbar-track,
-        .text-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
+.btn-action.btn-success {
+    color: var(--success-dark);
+    border-left: 4px solid var(--success);
+}
 
-        .code-block::-webkit-scrollbar-thumb,
-        .json-content::-webkit-scrollbar-thumb,
-        .text-content::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 10px;
-        }
+.btn-action.btn-info {
+    color: var(--info-dark);
+    border-left: 4px solid var(--info);
+}
 
-        .code-block::-webkit-scrollbar-thumb:hover,
-        .json-content::-webkit-scrollbar-thumb:hover,
-        .text-content::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: var(--primary);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
 
-        /* 响应式调整 */
-        @media (max-width: 768px) {
-            .test-info-grid {
-                grid-template-columns: 1fr;
+.btn-action.btn-secondary .btn-icon {
+    background: var(--secondary-soft);
+    color: var(--secondary);
+}
+
+.btn-action.btn-success .btn-icon {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.btn-action.btn-info .btn-icon {
+    background: var(--info-soft);
+    color: var(--info);
+}
+
+.btn-content {
+    flex: 1;
+}
+
+.btn-title {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.btn-subtitle {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--secondary);
+}
+
+.btn-arrow {
+    color: var(--secondary-light);
+    transition: transform 0.3s ease;
+}
+
+.btn-action:hover .btn-arrow {
+    transform: translateX(4px);
+    color: currentColor;
+}
+
+/* 徽章样式 */
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-primary {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.badge-success {
+    background: var(--success-soft);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge-warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-secondary {
+    background: var(--secondary-soft);
+    color: var(--secondary);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* 结构化报告 */
+.structured-report {
+    background: white;
+}
+
+.report-header {
+    background: linear-gradient(135deg,
+        rgba(79, 70, 229, 0.95) 0%,
+        rgba(124, 58, 237, 0.95) 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.report-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    transform: rotate(30deg);
+}
+
+.report-header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.report-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #ffffff, #f0f0f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.report-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.report-divider {
+    opacity: 0.5;
+}
+
+.report-status-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-passed .status-dot {
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+.status-failed .status-dot {
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+}
+
+.status-error .status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 10px #f59e0b;
+}
+
+.status-running .status-dot {
+    background: #3b82f6;
+    box-shadow: 0 0 10px #3b82f6;
+}
+
+.status-text {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* 统计卡片网格 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* 报告内容区域 */
+.report-content {
+    padding: 2rem;
+}
+
+.report-section {
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.report-section:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.1);
+}
+
+.section-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--secondary-dark);
+    margin: 0;
+}
+
+.section-body {
+    padding: 1.5rem;
+}
+
+/* 测试用例卡片 */
+.test-case-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+}
+
+.test-case-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.test-case-info {
+    flex: 1;
+}
+
+.test-case-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--secondary-dark);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.test-case-meta {
+    display: flex;
+    gap: 1rem;
+}
+
+.test-case-meta-item {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    display: flex;
+    align-items: center;
+}
+
+.test-case-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* 请求信息 */
+.request-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.request-url {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.request-method .method-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.method-get {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.method-post {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.method-put {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.method-delete {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.method-patch {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    color: #7c3aed;
+    border: 1px solid #e9d5ff;
+}
+
+.request-path {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    color: var(--secondary-dark);
+    font-family: 'SFMono-Regular', monospace;
+    font-size: 0.9375rem;
+}
+
+.url-text {
+    word-break: break-all;
+}
+
+/* 折叠区域 */
+.collapse-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.collapse-section:hover {
+    border-color: var(--primary-light);
+}
+
+.collapse-header {
+    padding: 1rem;
+    background: #f8fafc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.collapse-header:hover {
+    background: #f1f5f9;
+}
+
+.collapse-header[aria-expanded="true"] {
+    background: var(--primary-soft);
+}
+
+.collapse-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    color: var(--secondary-dark);
+    flex: 1;
+}
+
+.collapse-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.collapse-header[aria-expanded="true"] .collapse-icon {
+    transform: rotate(90deg);
+}
+
+.collapse-count {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    background: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.collapse-body {
+    border-top: 1px solid #e2e8f0;
+}
+
+.code-block {
+    position: relative;
+    background: #1e293b;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+}
+
+.code-block pre {
+    margin: 0;
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.code-block code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #e2e8f0;
+}
+
+/* 错误区域 */
+.error-section {
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
+}
+
+.error-header {
+    padding: 1rem;
+    background: var(--danger-soft);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex;
+    align-items: center;
+    color: var(--danger);
+    font-weight: 500;
+}
+
+.error-body {
+    padding: 1.5rem;
+}
+
+.error-message {
+    margin: 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--danger);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* JSON和文本查看器 */
+.json-viewer, .text-viewer {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.viewer-toolbar {
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.format-badge {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--secondary-dark);
+}
+
+.file-info {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    display: flex;
+    align-items: center;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.json-content-container, .text-content-container {
+    max-height: 600px;
+    overflow: auto;
+}
+
+.json-content, .text-content {
+    margin: 0;
+    padding: 1.5rem;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* HTML预览 */
+.html-preview-container {
+    padding: 1.5rem;
+    background: white;
+}
+
+/* 页脚 */
+.report-footer-info {
+    display: flex;
+    align-items: center;
+    color: var(--secondary);
+    font-size: 0.875rem;
+}
+
+.report-footer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 按钮样式 */
+.btn-soft-primary {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-soft-primary:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-soft-secondary {
+    background: var(--secondary-soft);
+    color: var(--secondary);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-soft-secondary:hover {
+    background: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+.btn-soft-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-soft-danger:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .report-header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .report-status-wrapper {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .request-url {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .viewer-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .toolbar-right {
+        align-self: flex-end;
+    }
+
+    .report-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media print {
+    .card-header-gradient,
+    .card-footer-gradient,
+    .btn-group,
+    .report-footer-actions {
+        display: none !important;
+    }
+
+    .glass-card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .structured-report {
+        break-inside: avoid;
+    }
+
+    .code-block {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化代码高亮
+    if (typeof hljs !== 'undefined') {
+        hljs.configure({
+            languages: ['json', 'javascript', 'python', 'html', 'xml', 'bash']
+        });
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    }
+
+    // 初始化折叠面板
+    const collapseHeaders = document.querySelectorAll('.collapse-header');
+    collapseHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const icon = this.querySelector('.collapse-icon');
+            if (icon) {
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+            }
+        });
+    });
+
+    // 复制报告内容
+    const copyReportBtn = document.getElementById('copyReportBtn');
+    if (copyReportBtn) {
+        copyReportBtn.addEventListener('click', async function() {
+            let textToCopy = '';
+
+            if (document.querySelector('.json-content')) {
+                textToCopy = document.querySelector('.json-content').textContent;
+            } else if (document.querySelector('.structured-report')) {
+                textToCopy = document.querySelector('.structured-report').innerText;
+            } else if (document.querySelector('.text-content')) {
+                textToCopy = document.querySelector('.text-content').textContent;
             }
 
-            .info-row {
-                flex-direction: column;
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                showToast('报告内容已复制到剪贴板', 'success');
+
+                // 按钮反馈动画
+                const originalIcon = copyReportBtn.querySelector('.btn-icon i').className;
+                copyReportBtn.querySelector('.btn-icon i').className = 'bi bi-check-lg';
+                copyReportBtn.classList.add('copied');
+
+                setTimeout(() => {
+                    copyReportBtn.querySelector('.btn-icon i').className = originalIcon;
+                    copyReportBtn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动选择内容后复制', 'error');
             }
+        });
+    }
 
-            .info-label {
-                margin-bottom: 0.25rem;
-            }
-        }
-    </style>
+    // 全屏查看
+    const expandReportBtn = document.getElementById('expandReportBtn');
+    if (expandReportBtn) {
+        expandReportBtn.addEventListener('click', function() {
+            const content = document.getElementById('reportContentBody').innerHTML;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // 初始化代码高亮
-            if (typeof hljs !== 'undefined') {
-                document.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-            }
+            const fullscreenModal = document.createElement('div');
+            fullscreenModal.className = 'modal fade';
+            fullscreenModal.id = 'fullscreenModal';
+            fullscreenModal.innerHTML = `
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title">全屏预览 - {{ report.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <div class="fullscreen-content">
+                                ${content}
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-fullscreen-exit me-2"></i>退出全屏 (ESC)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
 
-            // 复制报告内容
-            const copyReportBtn = document.getElementById('copyReportBtn');
-            if (copyReportBtn) {
-                copyReportBtn.addEventListener('click', function () {
-                    const reportContent = document.querySelector('.report-json pre') ||
-                        document.querySelector('.test-report-container') ||
-                        document.querySelector('.report-content pre');
+            document.body.appendChild(fullscreenModal);
+            const modal = new bootstrap.Modal(fullscreenModal);
+            modal.show();
 
-                    if (reportContent) {
-                        const textToCopy = reportContent.innerText || reportContent.textContent;
-                        navigator.clipboard.writeText(textToCopy).then(() => {
-                            // 显示复制成功提示
-                            const originalIcon = copyReportBtn.querySelector('i').className;
-                            copyReportBtn.querySelector('i').className = 'bi bi-check-lg';
-
-                            setTimeout(() => {
-                                copyReportBtn.querySelector('i').className = originalIcon;
-                            }, 2000);
-                        }).catch(err => {
-                            console.error('无法复制内容: ', err);
-                        });
-                    }
-                });
-            }
-
-            // 全屏查看报告
-            const expandReportBtn = document.getElementById('expandReportBtn');
-            const reportContentBody = document.getElementById('reportContentBody');
-
-            if (expandReportBtn && reportContentBody) {
-                expandReportBtn.addEventListener('click', function () {
-                    if (!document.querySelector('.report-fullscreen')) {
-                        // 创建全屏容器
-                        const fullscreenContainer = document.createElement('div');
-                        fullscreenContainer.className = 'report-fullscreen';
-
-                        // 创建全屏头部
-                        const fullscreenHeader = document.createElement('div');
-                        fullscreenHeader.className = 'report-fullscreen-header';
-
-                        // 创建标题
-                        const title = document.createElement('h2');
-                        title.textContent = '{{ report.name }}';
-
-                        // 创建关闭按钮
-                        const closeBtn = document.createElement('button');
-                        closeBtn.className = 'btn btn-outline-secondary';
-                        closeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
-                        closeBtn.addEventListener('click', function () {
-                            document.body.removeChild(fullscreenContainer);
-                            document.body.style.overflow = 'auto';
-                        });
-
-                        // 组装全屏头部
-                        fullscreenHeader.appendChild(title);
-                        fullscreenHeader.appendChild(closeBtn);
-
-                        // 复制报告内容
-                        const contentClone = reportContentBody.cloneNode(true);
-
-                        // 组装全屏容器
-                        fullscreenContainer.appendChild(fullscreenHeader);
-                        fullscreenContainer.appendChild(contentClone);
-
-                        // 添加到body
-                        document.body.appendChild(fullscreenContainer);
-                        document.body.style.overflow = 'hidden';
-                    } else {
-                        // 退出全屏
-                        const fullscreenContainer = document.querySelector('.report-fullscreen');
-                        document.body.removeChild(fullscreenContainer);
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
-
-            // 导出功能
-            document.getElementById('exportPDF')?.addEventListener('click', function (e) {
-                e.preventDefault();
-                alert('PDF导出功能即将上线');
+            // ESC键退出
+            fullscreenModal.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    modal.hide();
+                }
             });
 
-            document.getElementById('exportExcel')?.addEventListener('click', function (e) {
-                e.preventDefault();
-                alert('Excel导出功能即将上线');
-            });
-
-            document.getElementById('exportJSON')?.addEventListener('click', function (e) {
-                e.preventDefault();
-                alert('JSON导出功能即将上线');
+            // 模态框隐藏后清理
+            fullscreenModal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(fullscreenModal);
             });
         });
+    }
 
-        // 折叠/展开功能
-        function toggleCollapsible(element) {
-            const content = element.nextElementSibling;
-            const icon = element.querySelector('i');
+    // 下载原始文件
+    const downloadRawBtn = document.getElementById('downloadRawBtn');
+    if (downloadRawBtn) {
+        downloadRawBtn.addEventListener('click', function() {
+            const content = `{{ report_content|escapejs }}`;
+            const blob = new Blob([content], {
+                type: 'text/plain;charset=utf-8'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '{{ report.name|slugify }}_{{ report.created_at|date:"Ymd_His" }}.{{ report.report_format }}';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-                icon.className = 'bi bi-chevron-down';
-            } else {
-                content.style.display = 'block';
-                icon.className = 'bi bi-chevron-up';
-            }
-        }
-    </script>
+            showToast('文件下载开始', 'success');
+        });
+    }
+
+    // 导出功能
+    const exportButtons = {
+        exportPDF: 'PDF',
+        exportExcel: 'Excel',
+        exportJSON: 'JSON'
+    };
+
+    Object.keys(exportButtons).forEach(id => {
+        document.getElementById(id)?.addEventListener('click', (e) => {
+            e.preventDefault();
+            showExportModal(exportButtons[id]);
+        });
+    });
+});
+
+// 显示Toast消息
+function showToast(message, type = 'success') {
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+
+    // 清理
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
+
+// JSON格式化
+function formatJSON() {
+    const jsonContent = document.getElementById('jsonContent');
+    if (!jsonContent) return;
+
+    try {
+        const jsonObj = JSON.parse(jsonContent.textContent);
+        jsonContent.textContent = JSON.stringify(jsonObj, null, 2);
+        hljs.highlightElement(jsonContent);
+        showToast('JSON已格式化', 'success');
+    } catch (e) {
+        showToast('JSON格式错误，无法格式化', 'error');
+    }
+}
+
+// JSON视图切换
+function toggleJSONView() {
+    const jsonContent = document.getElementById('jsonContent');
+    if (!jsonContent) return;
+
+    const preElement = jsonContent.parentElement;
+    if (preElement.style.whiteSpace === 'nowrap') {
+        preElement.style.whiteSpace = 'pre-wrap';
+        preElement.style.overflow = 'auto';
+        showToast('已切换到换行模式', 'info');
+    } else {
+        preElement.style.whiteSpace = 'nowrap';
+        preElement.style.overflow = 'hidden';
+        preElement.scrollLeft = 0;
+        showToast('已切换到单行模式', 'info');
+    }
+}
+
+// 复制JSON
+function copyJSON() {
+    const jsonContent = document.getElementById('jsonContent');
+    if (!jsonContent) return;
+
+    navigator.clipboard.writeText(jsonContent.textContent)
+        .then(() => showToast('JSON内容已复制', 'success'))
+        .catch(() => showToast('复制失败', 'error'));
+}
+
+// 复制文本
+function copyText() {
+    const textContent = document.getElementById('textContent');
+    if (!textContent) return;
+
+    navigator.clipboard.writeText(textContent.textContent)
+        .then(() => showToast('文本内容已复制', 'success'))
+        .catch(() => showToast('复制失败', 'error'));
+}
+
+// 文本换行切换
+function wrapText() {
+    const textContent = document.getElementById('textContent');
+    if (!textContent) return;
+
+    const preElement = textContent.parentElement;
+    if (preElement.style.whiteSpace === 'nowrap') {
+        preElement.style.whiteSpace = 'pre-wrap';
+        showToast('已启用自动换行', 'info');
+    } else {
+        preElement.style.whiteSpace = 'nowrap';
+        showToast('已禁用自动换行', 'info');
+    }
+}
+
+// 打印报告
+function printReport() {
+    window.print();
+}
+
+// 滚动到顶部
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 显示导出模态框
+function showExportModal(format) {
+    const modalHtml = `
+        <div class="modal fade" id="exportModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-modal">
+                    <div class="modal-header border-0">
+                        <div class="modal-icon ${format.toLowerCase()}">
+                            <i class="bi bi-download"></i>
+                        </div>
+                        <h5 class="modal-title">导出 ${format} 报告</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="mb-4">
+                            <div class="export-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                        </div>
+                        <h5 class="mb-3">${format} 导出功能</h5>
+                        <p class="text-muted mb-4">
+                            该功能正在积极开发中，即将上线。
+                            您当前可以：
+                        </p>
+                        <div class="text-start">
+                            <div class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <span>使用浏览器的打印功能（Ctrl+P）导出为PDF</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <span>复制内容到剪贴板后粘贴到其他工具</span>
+                            </div>
+                            <div>
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <span>下载原始文件进行二次处理</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="showToast('导出功能即将上线！', 'info')">
+                            <i class="bi bi-rocket me-2"></i>关注更新
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 移除现有modal
+    const existingModal = document.getElementById('exportModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // 添加新modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
+}
+</script>
 {% endblock %}

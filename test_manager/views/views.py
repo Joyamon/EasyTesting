@@ -1,5 +1,7 @@
 import datetime
 import json
+from uuid import UUID
+
 import pytz
 from django.conf import settings
 from django.core import serializers
@@ -1183,7 +1185,7 @@ def test_report_detail(request, pk):
     elif report.report_format == 'json':
         # 如果是JSON格式，解析并格式化显示
         try:
-            context['report_content'] = json.loads(report.content)
+            context['report_content'] = json.dumps(json.loads(report.content), indent=2, ensure_ascii=False,default= str)
         except:
             context['report_content'] = report.content
     else:
@@ -1288,7 +1290,7 @@ def generate_test_run_report(request, pk):
 
                     content['results'].append(result_data)
 
-                report.content = json.dumps(content, indent=2)
+                report.content = json.dumps(content, indent=2,ensure_ascii= False,default= str)
             else:
                 # 生成HTML格式的报告
                 html_content = f"""

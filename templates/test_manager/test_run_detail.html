@@ -998,22 +998,6 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.reload();
     });
 
-    // 停止运行按钮
-    document.getElementById('stopRunBtn')?.addEventListener('click', function() {
-        if (confirm('确定要停止当前测试运行吗？')) {
-            fetch(`{% url 'test_run_stop' pk=test_run.pk %}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    location.reload();
-                }
-            });
-        }
-    });
 
     startAutoRefresh();
     {% endif %}
