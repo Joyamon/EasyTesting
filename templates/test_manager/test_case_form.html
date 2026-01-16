@@ -9,7 +9,7 @@
     <div class="col-md-10">
         <div class="card">
             <div class="card-body p-4">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <!-- 基本信息部分 -->
@@ -89,7 +89,6 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <label class="form-label fw-medium mb-0">请求参数</label>
                             <div class="btn-group" role="group">
-
                                 <button type="button" class="btn btn-sm btn-outline-secondary active" id="toggle-params-table-view-btn" title="Switch to table view">
                                     <i class="bi bi-table"></i> Table
                                 </button>
@@ -98,7 +97,6 @@
                                 </button>
                             </div>
                         </div>
-
 
                         <div id="params-text-container" style="display: none;">
                             <div class="card">
@@ -156,7 +154,6 @@
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-headers-btn">
                                     Bulk Edit
                                 </button>
-
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-headers-mode-btn" title="Switch between table and text mode">
                                     Key-Value Edit
                                 </button>
@@ -165,7 +162,6 @@
                                 </button>
                             </div>
                         </div>
-
 
                         <div id="headers-text-container" style="display: none;">
                             <textarea class="form-control font-monospace" id="headers-text-area" rows="6" placeholder="每行一个请求头，格式为: Key: Value"></textarea>
@@ -247,7 +243,6 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-medium mb-0">请求体 (Form Data)</label>
                             <div>
-
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-form-data-mode-btn" title="Switch between table and text mode">
                                     Key-Value Edit
                                 </button>
@@ -257,7 +252,6 @@
                             </div>
                         </div>
                         {{ form.request_body_form_data.errors }}
-
 
                         <div id="form-data-text-container" style="display: none;">
                             <textarea class="form-control font-monospace" id="form-data-text-area" rows="8" placeholder="每行一个参数，格式为: key=value"></textarea>
@@ -274,7 +268,7 @@
                                                     <th style="width: 40px;" class="text-center">
                                                         <input type="checkbox" class="form-check-input" id="select-all-form-data" checked>
                                                     </th>
-                                                    <th style="width: 30%;">Key</th>
+                                                    <th style="width: 25%;">Key</th>
                                                     <th style="width: 15%;">Type</th>
                                                     <th>Value</th>
                                                     <th style="width: 20%;">Description</th>
@@ -314,7 +308,6 @@
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-extract-btn">
                                     Bulk Edit
                                 </button>
-                                <!-- Add Key-Value Edit toggle button for extract text mode -->
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-extract-mode-btn" title="Switch between table and text mode">
                                     Key-Value Edit
                                 </button>
@@ -323,7 +316,6 @@
                                 </button>
                             </div>
                         </div>
-
 
                         <div id="extract-text-container" style="display: none;">
                             <textarea class="form-control font-monospace" id="extract-text-area" rows="6" placeholder="JSON格式，每行一个提取参数"></textarea>
@@ -380,7 +372,6 @@
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-validation-btn">
                                     Bulk Edit
                                 </button>
-
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-validation-mode-btn" title="Switch between table and text mode">
                                     Key-Value Edit
                                 </button>
@@ -389,7 +380,6 @@
                                 </button>
                             </div>
                         </div>
-
 
                         <div id="validation-text-container" style="display: none;">
                             <textarea class="form-control font-monospace" id="validation-text-area" rows="6" placeholder="JSON格式，每行一个断言规则"></textarea>
@@ -408,7 +398,6 @@
                                                     </th>
                                                     <th style="width: 20%;">Validator</th>
                                                     <th style="width: 25%;">Path/Expected</th>
-                                                    <!-- 添加type用于转换Value类型 -->
                                                     <th style="width: 15%;">Type</th>
                                                     <th style="width: 20%;">Value</th>
                                                     <th>Description</th>
@@ -493,6 +482,59 @@
 
 {% block extra_js %}
 <script>
+    // 文件上传处理
+    class FileUploadManager {
+        async uploadFile(file, rowId) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('{% url "file_upload" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`上传失败: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    return {
+                        success: true,
+                        fileName: result.file_name,
+                        filePath: result.file_path
+                    };
+                } else {
+                    throw new Error(result.message || '上传失败');
+                }
+            } catch (error) {
+                console.error('文件上传错误:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        createFileDisplay(fileName) {
+            return fileName;
+        }
+
+        parseFileValue(value) {
+            return {
+                isFile: false,
+                value: value
+            };
+        }
+    }
+
+    const fileUploadManager = new FileUploadManager();
+
     const BulkEditManager = {
         currentTable: null,
         selectedRows: [],
@@ -523,11 +565,11 @@
                 fields: ['key', 'type', 'value', 'description'],
                 labels: { key: 'Key', type: 'Type', value: 'Value', description: 'Description' },
                 getRow: (elem) => elem.closest('tr'),
-                getCheckbox: (row) => row.querySelector('input[type="checkbox"]'),
+                getCheckbox: (row) => row.querySelector('.form-data-checkbox'),
                 getFields: (row) => ({
                     key: row.querySelector('.form-key'),
                     type: row.querySelector('.form-type'),
-                    value: row.querySelector('.form-value'),
+                    value: row.querySelector('.form-value-input'),
                     description: row.querySelector('.form-description')
                 })
             },
@@ -625,7 +667,6 @@
 
                 let input = '';
                 if (field === 'type' && this.currentTable === 'form-data') {
-                    // 针对Form Data的type字段
                     input = `
                         <label class="form-label" for="input_${field}">${label}</label>
                         <select class="form-select bulk-input" id="input_${field}" data-field="${field}">
@@ -645,7 +686,6 @@
                         </select>
                     `;
                 } else if (field === 'validator') {
-                    // 针对断言的validator字段
                     input = `
                         <label class="form-label" for="input_${field}">${label}</label>
                         <select class="form-select bulk-input" id="input_${field}" data-field="${field}">
@@ -688,14 +728,23 @@
                 const fields = config.getFields(row);
                 Object.keys(updates).forEach(field => {
                     if (fields[field]) {
-                        fields[field].value = updates[field];
-                        // 触发change事件以更新关联的文本区域
-                        fields[field].dispatchEvent(new Event('input', { bubbles: true }));
+                        if (field === 'type' && this.currentTable === 'form-data') {
+                            const currentType = fields.type.value;
+                            const newType = updates.type;
+                            if (currentType !== newType) {
+                                fields.type.value = newType;
+                                const event = new Event('change', { bubbles: true });
+                                fields.type.dispatchEvent(event);
+                            }
+                        } else {
+                            fields[field].value = updates[field];
+                            const event = new Event('input', { bubbles: true });
+                            fields[field].dispatchEvent(event);
+                        }
                     }
                 });
             });
 
-            // 关闭模态框
             bootstrap.Modal.getInstance(document.getElementById('bulkEditModal')).hide();
             alert(`已成功编辑 ${this.selectedRows.length} 项`);
         }
@@ -837,15 +886,12 @@
             paramsTextArea.value = lines.join('\n');
         }
 
-
         function toggleParamsMode(showTextMode) {
             if (showTextMode === undefined) {
-                // Toggle based on current state
                 showTextMode = paramsTableContainer.style.display !== 'none';
             }
 
             if (showTextMode) {
-                // Switch to text mode
                 paramsTextContainer.style.display = 'block';
                 paramsTableContainer.style.display = 'none';
                 paramsTextArea.value = '';
@@ -862,7 +908,6 @@
                 toggleParamsTextViewBtn.classList.add('active');
                 toggleParamsTableViewBtn.classList.remove('active');
             } else {
-                // Switch to table mode
                 paramsTextContainer.style.display = 'none';
                 paramsTableContainer.style.display = 'block';
                 paramsContainer.innerHTML = '';
@@ -906,7 +951,6 @@
         });
 
         paramsTextArea.addEventListener('input', updateParamsTextArea);
-
     }
 
     // 请求头表格初始化
@@ -1039,13 +1083,11 @@
         toggleHeadersModeBtn.addEventListener('click', () => {
             const isTableVisible = headersTableContainer.style.display !== 'none';
             if (isTableVisible) {
-                // Switch to text mode
                 updateHeadersTextArea();
                 headersTableContainer.style.display = 'none';
                 headersTextContainer.style.display = 'block';
                 toggleHeadersModeBtn.textContent = 'Table Edit';
             } else {
-                // Switch to table mode
                 headersContainer.innerHTML = '';
                 const headers = parseHeadersFromText();
                 if (headers.length > 0) {
@@ -1066,12 +1108,15 @@
         });
     }
 
-    // Form Data 表格初始化
+    // Form Data 表格初始化 - 修复版
     function initFormDataTable() {
         const textarea = document.getElementById('{{ form.request_body_form_data.id_for_label }}');
         const paramsContainer = document.getElementById('form-data-params');
         const addParamBtn = document.getElementById('add-form-data-btn');
         const selectAllCheckbox = document.getElementById('select-all-form-data');
+
+        // 存储类型信息的临时对象
+        const typeStore = {};
 
         function parseParams() {
             const params = [];
@@ -1080,12 +1125,31 @@
                 for (const line of lines) {
                     if (line.includes('=')) {
                         const [key, value] = line.split('=', 2);
+                        const trimmedKey = key.trim();
+
+                        // 尝试推断类型
+                        let type = 'Text';
+
+                        // 检查是否是数字
+                        if (!isNaN(value) && value.trim() !== '') {
+                            type = 'Number';
+                        }
+                        // 检查是否是文件（有扩展名且不包含特殊字符）
+                        else if (value.includes('.') && !value.includes(' ') && !value.includes('=') &&
+                                 value.match(/\.\w{1,5}$/) && !value.startsWith('{') && !value.startsWith('[')) {
+                            // 可能是文件，但需要用户确认
+                            type = 'Text'; // 默认设为Text，让用户手动选择File
+                        }
+
                         params.push({
-                            key: key.trim(),
-                            value: value.trim(),
-                            type: 'Text',
+                            key: trimmedKey,
+                            value: value,
+                            type: type,
                             description: ''
                         });
+
+                        // 存储类型信息
+                        typeStore[trimmedKey] = type;
                     }
                 }
             }
@@ -1103,24 +1167,161 @@
         function updateTextarea() {
             const rows = paramsContainer.querySelectorAll('tr');
             const lines = [];
+
             rows.forEach(row => {
                 const checkbox = row.querySelector('input[type="checkbox"]');
                 if (checkbox && checkbox.checked) {
                     const keyInput = row.querySelector('.form-key');
-                    const valueInput = row.querySelector('.form-value');
-                    if (keyInput && valueInput && keyInput.value.trim()) {
-                        lines.push(`${keyInput.value.trim()}=${valueInput.value.trim()}`);
+                    const typeSelect = row.querySelector('.form-type');
+                    const valueContainer = row.querySelector('.value-container');
+
+                    if (keyInput && keyInput.value.trim()) {
+                        let value = '';
+                        const key = keyInput.value.trim();
+
+                        if (typeSelect.value === 'File') {
+                            const fileInput = valueContainer.querySelector('.file-input');
+                            const fileInfo = valueContainer.querySelector('.file-info');
+                            if (fileInput && fileInfo) {
+                                if (fileInput.files.length > 0) {
+                                    value = fileInput.files[0].name;
+                                } else {
+                                    value = fileInfo.textContent.replace('已上传: ', '');
+                                }
+                            } else {
+                                const textInput = valueContainer.querySelector('.text-input');
+                                if (textInput) {
+                                    value = textInput.value;
+                                }
+                            }
+                        } else {
+                            const textInput = valueContainer.querySelector('.text-input');
+                            const numberInput = valueContainer.querySelector('.number-input');
+
+                            if (typeSelect.value === 'Number' && numberInput) {
+                                value = numberInput.value;
+                            } else if (textInput) {
+                                value = textInput.value;
+                            }
+                        }
+
+                        if (value !== undefined && value !== null) {
+                            lines.push(`${key}=${value}`);
+                        }
+
+                        // 更新类型存储
+                        typeStore[key] = typeSelect.value;
                     }
                 }
             });
+
             textarea.value = lines.join('\n');
+        }
+
+        function createValueInput(type, currentValue = '', rowKey = '') {
+            const container = document.createElement('div');
+            container.className = 'value-container';
+
+            if (type === 'File') {
+                container.innerHTML = `
+                    <div class="file-upload-wrapper">
+                        <div class="input-group">
+                            <input type="file" class="form-control file-input" style="display: none;">
+                            <input type="text" class="form-control text-input"
+                                   value="${currentValue}"
+                                   placeholder="选择文件或输入文件名"
+                                   readonly>
+                            <button type="button" class="btn btn-outline-secondary file-browse-btn">
+                                <i class="bi bi-folder2-open"></i>
+                            </button>
+                        </div>
+                        ${currentValue ? `<div class="file-info small text-muted mt-1">已上传: ${currentValue}</div>` : ''}
+                        <div class="file-upload-progress" style="display: none; margin-top: 5px;">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="upload-status small text-muted mt-1"></div>
+                        </div>
+                    </div>
+                `;
+
+                const fileInput = container.querySelector('.file-input');
+                const textInput = container.querySelector('.text-input');
+                const browseBtn = container.querySelector('.file-browse-btn');
+                const progressDiv = container.querySelector('.file-upload-progress');
+                const progressBar = container.querySelector('.progress-bar');
+                const uploadStatus = container.querySelector('.upload-status');
+                const fileInfo = container.querySelector('.file-info');
+
+                browseBtn.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', async function() {
+                    if (this.files.length > 0) {
+                        const file = this.files[0];
+                        textInput.value = file.name;
+
+                        progressDiv.style.display = 'block';
+                        progressBar.style.width = '0%';
+                        uploadStatus.textContent = '正在上传...';
+
+                        try {
+                            const result = await fileUploadManager.uploadFile(file, Date.now().toString());
+
+                            if (result.success) {
+                                progressBar.style.width = '100%';
+                                uploadStatus.textContent = '上传成功';
+                                textInput.value = result.fileName;
+
+                                if (fileInfo) {
+                                    fileInfo.textContent = `已上传: ${result.fileName}`;
+                                } else {
+                                    const newFileInfo = document.createElement('div');
+                                    newFileInfo.className = 'file-info small text-muted mt-1';
+                                    newFileInfo.textContent = `已上传: ${result.fileName}`;
+                                    container.appendChild(newFileInfo);
+                                }
+
+                                setTimeout(() => {
+                                    updateTextarea();
+                                }, 500);
+                            } else {
+                                uploadStatus.textContent = `上传失败: ${result.error}`;
+                                progressBar.classList.add('bg-danger');
+                            }
+                        } catch (error) {
+                            uploadStatus.textContent = `上传失败: ${error.message}`;
+                            progressBar.classList.add('bg-danger');
+                        }
+                    }
+                });
+            } else {
+                const inputType = type === 'Number' ? 'number' : 'text';
+                const inputClass = type === 'Number' ? 'number-input' : 'text-input';
+                const inputValue = type === 'Number' ? (currentValue || '') : currentValue;
+
+                container.innerHTML = `
+                    <input type="${inputType}"
+                           class="form-control ${inputClass}"
+                           value="${inputValue}"
+                           placeholder="输入值">
+                `;
+
+                const input = container.querySelector('input');
+                input.addEventListener('input', updateTextarea);
+            }
+
+            return container;
         }
 
         function addParamRow(param = { key: '', value: '', type: 'Text', description: '' }) {
             const row = document.createElement('tr');
+            const rowId = Date.now().toString();
+
             row.innerHTML = `
                 <td class="text-center align-middle">
-                    <input type="checkbox" class="form-check-input" checked>
+                    <input type="checkbox" class="form-check-input form-data-checkbox" checked>
                 </td>
                 <td><input type="text" class="form-control form-key" value="${param.key}" placeholder="Key"></td>
                 <td>
@@ -1130,7 +1331,7 @@
                         <option value="Number" ${param.type === 'Number' ? 'selected' : ''}>Number</option>
                     </select>
                 </td>
-                <td><input type="text" class="form-control form-value" value="${param.value}" placeholder="Value"></td>
+                <td class="value-cell"></td>
                 <td><input type="text" class="form-control form-description" value="${param.description}" placeholder="Description"></td>
                 <td class="text-center align-middle">
                     <button type="button" class="btn btn-sm btn-link text-danger p-0 delete-param-btn">
@@ -1139,32 +1340,126 @@
                 </td>
             `;
 
-            const inputs = row.querySelectorAll('input, select');
-            inputs.forEach(input => input.addEventListener('change', updateTextarea));
-
+            const keyInput = row.querySelector('.form-key');
+            const typeSelect = row.querySelector('.form-type');
+            const valueCell = row.querySelector('.value-cell');
+            const descriptionInput = row.querySelector('.form-description');
+            const checkbox = row.querySelector('.form-data-checkbox');
             const deleteBtn = row.querySelector('.delete-param-btn');
+
+            // 确定初始类型（优先使用存储的类型，然后是参数类型）
+            const initialKey = param.key.trim();
+            const initialType = typeStore[initialKey] || param.type || 'Text';
+            typeSelect.value = initialType;
+
+            // 创建初始值输入
+            const valueContainer = createValueInput(initialType, param.value, initialKey);
+            valueCell.appendChild(valueContainer);
+
+            // 事件监听
+            keyInput.addEventListener('input', function() {
+                const oldKey = initialKey;
+                const newKey = this.value.trim();
+
+                // 如果键名改变，更新类型存储
+                if (oldKey && newKey && oldKey !== newKey) {
+                    typeStore[newKey] = typeStore[oldKey] || initialType;
+                    delete typeStore[oldKey];
+                }
+                updateTextarea();
+            });
+
+            descriptionInput.addEventListener('input', updateTextarea);
+            checkbox.addEventListener('change', updateTextarea);
+
+            // 类型切换事件
+            typeSelect.addEventListener('change', function() {
+                // 获取当前值
+                let currentValue = '';
+                const currentValueContainer = valueCell.querySelector('.value-container');
+
+                if (currentValueContainer) {
+                    if (this.value === 'File') {
+                        const textInput = currentValueContainer.querySelector('.text-input');
+                        const numberInput = currentValueContainer.querySelector('.number-input');
+
+                        if (textInput) {
+                            currentValue = textInput.value;
+                        } else if (numberInput) {
+                            currentValue = numberInput.value;
+                        }
+                    } else if (this.value === 'Number') {
+                        const textInput = currentValueContainer.querySelector('.text-input');
+                        if (textInput) {
+                            currentValue = textInput.value;
+                        }
+                    } else {
+                        const numberInput = currentValueContainer.querySelector('.number-input');
+                        const fileInput = currentValueContainer.querySelector('.file-input');
+                        const textInput = currentValueContainer.querySelector('.text-input');
+
+                        if (numberInput) {
+                            currentValue = numberInput.value;
+                        } else if (fileInput) {
+                            const fileInfo = currentValueContainer.querySelector('.file-info');
+                            currentValue = fileInfo ? fileInfo.textContent.replace('已上传: ', '') : '';
+                        } else if (textInput) {
+                            currentValue = textInput.value;
+                        }
+                    }
+                }
+
+                valueCell.innerHTML = '';
+                const newValueContainer = createValueInput(this.value, currentValue, keyInput.value.trim());
+                valueCell.appendChild(newValueContainer);
+
+                // 更新类型存储
+                const key = keyInput.value.trim();
+                if (key) {
+                    typeStore[key] = this.value;
+                }
+
+                updateTextarea();
+            });
+
             deleteBtn.addEventListener('click', () => {
+                // 删除时清除类型存储
+                const key = keyInput.value.trim();
+                if (key) {
+                    delete typeStore[key];
+                }
                 row.remove();
                 updateTextarea();
             });
 
             paramsContainer.appendChild(row);
+            return row;
         }
 
+        // 加载初始数据
         const params = parseParams();
-        params.forEach(param => addParamRow(param));
+        console.log('加载Form Data参数:', params);
+        params.forEach(param => {
+            addParamRow(param);
+        });
+
+        // 初始化后立即更新一次textarea
+        setTimeout(() => {
+            updateTextarea();
+        }, 100);
 
         addParamBtn.addEventListener('click', () => {
             addParamRow();
             updateTextarea();
         });
+
         selectAllCheckbox.addEventListener('change', () => {
-            paramsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            paramsContainer.querySelectorAll('.form-data-checkbox').forEach(cb => {
                 cb.checked = selectAllCheckbox.checked;
             });
         });
-        // bulkEditBtn is not present for form-data, add it if needed
 
+        // 文本模式切换
         const formDataTableContainer = document.getElementById('form-data-table-container');
         const formDataTextContainer = document.getElementById('form-data-text-container');
         const formDataTextArea = document.getElementById('form-data-text-area');
@@ -1176,9 +1471,41 @@
                 const checkbox = row.querySelector('input[type="checkbox"]');
                 if (checkbox && checkbox.checked) {
                     const keyInput = row.querySelector('.form-key');
-                    const valueInput = row.querySelector('.form-value');
-                    if (keyInput && valueInput && keyInput.value.trim()) {
-                        lines.push(`${keyInput.value.trim()}=${valueInput.value.trim()}`);
+                    const typeSelect = row.querySelector('.form-type');
+                    const valueContainer = row.querySelector('.value-container');
+
+                    if (keyInput && keyInput.value.trim()) {
+                        let value = '';
+
+                        if (typeSelect.value === 'File') {
+                            const fileInput = valueContainer.querySelector('.file-input');
+                            const fileInfo = valueContainer.querySelector('.file-info');
+                            if (fileInput && fileInfo) {
+                                if (fileInput.files.length > 0) {
+                                    value = fileInput.files[0].name;
+                                } else {
+                                    value = fileInfo.textContent.replace('已上传: ', '');
+                                }
+                            } else {
+                                const textInput = valueContainer.querySelector('.text-input');
+                                if (textInput) {
+                                    value = textInput.value;
+                                }
+                            }
+                        } else {
+                            const textInput = valueContainer.querySelector('.text-input');
+                            const numberInput = valueContainer.querySelector('.number-input');
+
+                            if (typeSelect.value === 'Number' && numberInput) {
+                                value = numberInput.value;
+                            } else if (textInput) {
+                                value = textInput.value;
+                            }
+                        }
+
+                        if (value !== undefined) {
+                            lines.push(`${keyInput.value.trim()}=${value}`);
+                        }
                     }
                 }
             });
@@ -1191,7 +1518,20 @@
             lines.forEach(line => {
                 if (line.includes('=')) {
                     const [key, value] = line.split('=', 2);
-                    params.push({ key: key.trim(), value: value.trim(), type: 'Text', description: '' });
+                    const trimmedKey = key.trim();
+
+                    // 使用存储的类型或推断类型
+                    let type = typeStore[trimmedKey] || 'Text';
+                    if (!isNaN(value) && value.trim() !== '') {
+                        type = 'Number';
+                    }
+
+                    params.push({
+                        key: trimmedKey,
+                        value: value,
+                        type: type,
+                        description: ''
+                    });
                 }
             });
             return params;
@@ -1200,13 +1540,11 @@
         toggleFormDataModeBtn.addEventListener('click', () => {
             const isTableVisible = formDataTableContainer.style.display !== 'none';
             if (isTableVisible) {
-                // Switch to text mode
                 updateFormDataTextArea();
                 formDataTableContainer.style.display = 'none';
                 formDataTextContainer.style.display = 'block';
                 toggleFormDataModeBtn.textContent = 'Table Edit';
             } else {
-                // Switch to table mode
                 paramsContainer.innerHTML = '';
                 const params = parseFormDataFromText();
                 if (params.length > 0) {
@@ -1359,13 +1697,11 @@
         toggleExtractModeBtn.addEventListener('click', () => {
             const isTableVisible = extractTableContainer.style.display !== 'none';
             if (isTableVisible) {
-                // Switch to text mode
                 updateExtractTextArea();
                 extractTableContainer.style.display = 'none';
                 extractTextContainer.style.display = 'block';
                 toggleExtractModeBtn.textContent = 'Table Edit';
             } else {
-                // Switch to table mode
                 container.innerHTML = '';
                 const params = parseExtractFromText();
                 if (params.length > 0) {
@@ -1385,7 +1721,6 @@
             containerDiv.style.display = containerDiv.style.display === 'none' ? 'block' : 'none';
         });
     }
-
 
     // 断言表格初始化
     function initValidationRulesTable() {
@@ -1592,24 +1927,21 @@
         toggleValidationModeBtn.addEventListener('click', () => {
             const isTableVisible = validationTableContainer.style.display !== 'none';
             if (isTableVisible) {
-                // Switch to text mode
                 updateValidationTextArea();
                 validationTableContainer.style.display = 'none';
                 validationTextContainer.style.display = 'block';
                 toggleValidationModeBtn.textContent = 'Table Edit';
             } else {
-                // Switch to table mode
                 container.innerHTML = '';
                 const rulesData = parseValidationFromText();
                 if (rulesData.length > 0) {
-                    // Convert JSON format to rule objects
                     rulesData.forEach(ruleData => {
                         const validator = Object.keys(ruleData)[0];
                         const value = ruleData[validator];
                         addRow({
                             validator,
                             path: Array.isArray(value) ? value[0] : '',
-                            type: ruleData.type || 'String', // Use the stored type
+                            type: ruleData.type || 'String',
                             value: Array.isArray(value) ? value[1] : value,
                             description: ruleData.description || ''
                         });
@@ -1735,6 +2067,38 @@
     .btn-group .btn:last-child {
         border-right: 1px solid #dee2e6;
     }
+
+    /* Form Data文件上传样式 */
+    .file-upload-wrapper {
+        width: 100%;
+    }
+
+    .file-upload-wrapper .input-group {
+        width: 100%;
+    }
+
+    .file-upload-wrapper .file-browse-btn {
+        border-left: none;
+    }
+
+    .file-info {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-upload-progress {
+        transition: all 0.3s ease;
+    }
+
+    /* Number输入框样式 */
+    .number-input::-webkit-inner-spin-button,
+    .number-input::-webkit-outer-spin-button {
+        opacity: 1;
+        height: 20px;
+    }
 </style>
 {% endblock %}
-</existing_code>

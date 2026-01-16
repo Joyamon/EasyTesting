@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from test_manager.views import views, debug_views, tools_views, test_views, visitor_views, scheduled_views, \
-    mockdata_views, email_views, domain_views
+    mockdata_views, email_views, domain_views, file_views
 from test_manager.views import auth_views as custom_auth_views
 
 urlpatterns = [
@@ -171,6 +171,9 @@ urlpatterns = [
 
     # 域名检测
     path('domain-check/', domain_views.check_website, name='domain_check'),
+
+    # 文件上传
+    path('file-upload/', file_views.upload_file, name='file_upload'),
 
 
 ]
