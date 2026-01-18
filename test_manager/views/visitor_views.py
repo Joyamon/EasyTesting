@@ -1,10 +1,10 @@
 from datetime import timedelta
 
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
-from django_plotly_dash.access import login_required
 from django.utils import timezone
 from test_manager.model.visitor import VisitorLog
 from test_manager.views.common import paginate_queryset

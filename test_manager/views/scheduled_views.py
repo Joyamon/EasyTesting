@@ -1,11 +1,11 @@
 import traceback
 
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_POST
-from django_plotly_dash.access import login_required
 from django.contrib import messages
 from test_manager.async_executor import logger
 from test_manager.forms import ScheduledTaskForm
