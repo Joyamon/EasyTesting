@@ -34,6 +34,7 @@
                         <th>名称</th>
                         <th>项目</th>
                         <th>域名</th>
+                        <th>环境变量</th>
                         <th>创建时间</th>
                         <th class="text-end">操作</th>
                     </tr>
@@ -53,6 +54,11 @@
                             </td>
                             <td>
                                 <code class="bg-light px-2 py-1 rounded">{{ environment.base_url }}</code>
+                            </td>
+                            <td>
+                                <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 200px;"
+                                      data-toggle="tooltip" title="{{ environment.variables }}" >
+                                    {{ environment.variables }}</code>
                             </td>
                             <td>{{ environment.created_at|date:"Y-m-d H:i" }}</td>
                             <td class="text-end">
