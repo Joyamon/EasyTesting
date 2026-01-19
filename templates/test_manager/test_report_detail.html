@@ -552,9 +552,7 @@
                                 </div>
                             </div>
                             <div class="toolbar-right">
-                                <button class="btn btn-sm btn-outline-primary" onclick="formatJSON()">
-                                    <i class="bi bi-justify-left me-1"></i>格式化
-                                </button>
+
                                 <button class="btn btn-sm btn-outline-secondary" onclick="toggleJSONView()">
                                     <i class="bi bi-braces me-1"></i>切换视图
                                 </button>
@@ -1822,20 +1820,6 @@ function showToast(message, type = 'success') {
     });
 }
 
-// JSON格式化
-function formatJSON() {
-    const jsonContent = document.getElementById('jsonContent');
-    if (!jsonContent) return;
-
-    try {
-        const jsonObj = JSON.parse(jsonContent.textContent);
-        jsonContent.textContent = JSON.stringify(jsonObj, null, 2);
-        hljs.highlightElement(jsonContent);
-        showToast('JSON已格式化', 'success');
-    } catch (e) {
-        showToast('JSON格式错误，无法格式化', 'error');
-    }
-}
 
 // JSON视图切换
 function toggleJSONView() {
