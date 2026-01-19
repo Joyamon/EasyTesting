@@ -1109,461 +1109,453 @@
     }
 
     // Form Data 表格初始化 - 修复版
-    function initFormDataTable() {
-        const textarea = document.getElementById('{{ form.request_body_form_data.id_for_label }}');
-        const paramsContainer = document.getElementById('form-data-params');
-        const addParamBtn = document.getElementById('add-form-data-btn');
-        const selectAllCheckbox = document.getElementById('select-all-form-data');
+    // Form Data 表格初始化 - 优化版
+function initFormDataTable() {
+    const textarea = document.getElementById('{{ form.request_body_form_data.id_for_label }}');
+    const paramsContainer = document.getElementById('form-data-params');
+    const addParamBtn = document.getElementById('add-form-data-btn');
+    const selectAllCheckbox = document.getElementById('select-all-form-data');
+    const bulkEditBtn = document.getElementById('bulk-edit-extract-btn'); // 注意：这里应该是专门给form-data的批量编辑按钮
 
-        // 存储类型信息的临时对象
-        const typeStore = {};
-
-        function parseParams() {
-            const params = [];
-            if (textarea.value) {
-                const lines = textarea.value.trim().split('\n');
-                for (const line of lines) {
-                    if (line.includes('=')) {
-                        const [key, value] = line.split('=', 2);
-                        const trimmedKey = key.trim();
-
-                        // 尝试推断类型
-                        let type = 'Text';
-
-                        // 检查是否是数字
-                        if (!isNaN(value) && value.trim() !== '') {
-                            type = 'Number';
-                        }
-                        // 检查是否是文件（有扩展名且不包含特殊字符）
-                        else if (value.includes('.') && !value.includes(' ') && !value.includes('=') &&
-                                 value.match(/\.\w{1,5}$/) && !value.startsWith('{') && !value.startsWith('[')) {
-                            // 可能是文件，但需要用户确认
-                            type = 'Text'; // 默认设为Text，让用户手动选择File
-                        }
-
+    function parseParams() {
+        const params = [];
+        if (textarea.value) {
+            try {
+                // 尝试解析JSON格式，支持带类型信息
+                const parsed = JSON.parse(textarea.value);
+                if (Array.isArray(parsed)) {
+                    // JSON数组格式，包含完整的类型信息
+                    parsed.forEach(item => {
                         params.push({
-                            key: trimmedKey,
-                            value: value,
-                            type: type,
-                            description: ''
+                            key: item.key || '',
+                            value: item.value || '',
+                            type: item.type || 'Text',
+                            description: item.description || ''
                         });
-
-                        // 存储类型信息
-                        typeStore[trimmedKey] = type;
-                    }
+                    });
+                    return params;
                 }
-            }
-            if (params.length === 0) {
-                params.push({
-                    key: '',
-                    value: '',
-                    type: 'Text',
-                    description: ''
-                });
-            }
-            return params;
-        }
-
-        function updateTextarea() {
-            const rows = paramsContainer.querySelectorAll('tr');
-            const lines = [];
-
-            rows.forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    const keyInput = row.querySelector('.form-key');
-                    const typeSelect = row.querySelector('.form-type');
-                    const valueContainer = row.querySelector('.value-container');
-
-                    if (keyInput && keyInput.value.trim()) {
-                        let value = '';
-                        const key = keyInput.value.trim();
-
-                        if (typeSelect.value === 'File') {
-                            const fileInput = valueContainer.querySelector('.file-input');
-                            const fileInfo = valueContainer.querySelector('.file-info');
-                            if (fileInput && fileInfo) {
-                                if (fileInput.files.length > 0) {
-                                    value = fileInput.files[0].name;
-                                } else {
-                                    value = fileInfo.textContent.replace('已上传: ', '');
-                                }
-                            } else {
-                                const textInput = valueContainer.querySelector('.text-input');
-                                if (textInput) {
-                                    value = textInput.value;
-                                }
-                            }
-                        } else {
-                            const textInput = valueContainer.querySelector('.text-input');
-                            const numberInput = valueContainer.querySelector('.number-input');
-
-                            if (typeSelect.value === 'Number' && numberInput) {
-                                value = numberInput.value;
-                            } else if (textInput) {
-                                value = textInput.value;
-                            }
-                        }
-
-                        if (value !== undefined && value !== null) {
-                            lines.push(`${key}=${value}`);
-                        }
-
-                        // 更新类型存储
-                        typeStore[key] = typeSelect.value;
-                    }
-                }
-            });
-
-            textarea.value = lines.join('\n');
-        }
-
-        function createValueInput(type, currentValue = '', rowKey = '') {
-            const container = document.createElement('div');
-            container.className = 'value-container';
-
-            if (type === 'File') {
-                container.innerHTML = `
-                    <div class="file-upload-wrapper">
-                        <div class="input-group">
-                            <input type="file" class="form-control file-input" style="display: none;">
-                            <input type="text" class="form-control text-input"
-                                   value="${currentValue}"
-                                   placeholder="选择文件或输入文件名"
-                                   readonly>
-                            <button type="button" class="btn btn-outline-secondary file-browse-btn">
-                                <i class="bi bi-folder2-open"></i>
-                            </button>
-                        </div>
-                        ${currentValue ? `<div class="file-info small text-muted mt-1">已上传: ${currentValue}</div>` : ''}
-                        <div class="file-upload-progress" style="display: none; margin-top: 5px;">
-                            <div class="progress" style="height: 5px;">
-                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                            </div>
-                            <div class="upload-status small text-muted mt-1"></div>
-                        </div>
-                    </div>
-                `;
-
-                const fileInput = container.querySelector('.file-input');
-                const textInput = container.querySelector('.text-input');
-                const browseBtn = container.querySelector('.file-browse-btn');
-                const progressDiv = container.querySelector('.file-upload-progress');
-                const progressBar = container.querySelector('.progress-bar');
-                const uploadStatus = container.querySelector('.upload-status');
-                const fileInfo = container.querySelector('.file-info');
-
-                browseBtn.addEventListener('click', () => {
-                    fileInput.click();
-                });
-
-                fileInput.addEventListener('change', async function() {
-                    if (this.files.length > 0) {
-                        const file = this.files[0];
-                        textInput.value = file.name;
-
-                        progressDiv.style.display = 'block';
-                        progressBar.style.width = '0%';
-                        uploadStatus.textContent = '正在上传...';
-
-                        try {
-                            const result = await fileUploadManager.uploadFile(file, Date.now().toString());
-
-                            if (result.success) {
-                                progressBar.style.width = '100%';
-                                uploadStatus.textContent = '上传成功';
-                                textInput.value = result.fileName;
-
-                                if (fileInfo) {
-                                    fileInfo.textContent = `已上传: ${result.fileName}`;
-                                } else {
-                                    const newFileInfo = document.createElement('div');
-                                    newFileInfo.className = 'file-info small text-muted mt-1';
-                                    newFileInfo.textContent = `已上传: ${result.fileName}`;
-                                    container.appendChild(newFileInfo);
-                                }
-
-                                setTimeout(() => {
-                                    updateTextarea();
-                                }, 500);
-                            } else {
-                                uploadStatus.textContent = `上传失败: ${result.error}`;
-                                progressBar.classList.add('bg-danger');
-                            }
-                        } catch (error) {
-                            uploadStatus.textContent = `上传失败: ${error.message}`;
-                            progressBar.classList.add('bg-danger');
-                        }
-                    }
-                });
-            } else {
-                const inputType = type === 'Number' ? 'number' : 'text';
-                const inputClass = type === 'Number' ? 'number-input' : 'text-input';
-                const inputValue = type === 'Number' ? (currentValue || '') : currentValue;
-
-                container.innerHTML = `
-                    <input type="${inputType}"
-                           class="form-control ${inputClass}"
-                           value="${inputValue}"
-                           placeholder="输入值">
-                `;
-
-                const input = container.querySelector('input');
-                input.addEventListener('input', updateTextarea);
+            } catch (e) {
+                console.log('JSON解析失败，尝试解析旧格式:', e);
             }
 
-            return container;
-        }
-
-        function addParamRow(param = { key: '', value: '', type: 'Text', description: '' }) {
-            const row = document.createElement('tr');
-            const rowId = Date.now().toString();
-
-            row.innerHTML = `
-                <td class="text-center align-middle">
-                    <input type="checkbox" class="form-check-input form-data-checkbox" checked>
-                </td>
-                <td><input type="text" class="form-control form-key" value="${param.key}" placeholder="Key"></td>
-                <td>
-                    <select class="form-select form-type">
-                        <option value="Text" ${param.type === 'Text' ? 'selected' : ''}>Text</option>
-                        <option value="File" ${param.type === 'File' ? 'selected' : ''}>File</option>
-                        <option value="Number" ${param.type === 'Number' ? 'selected' : ''}>Number</option>
-                    </select>
-                </td>
-                <td class="value-cell"></td>
-                <td><input type="text" class="form-control form-description" value="${param.description}" placeholder="Description"></td>
-                <td class="text-center align-middle">
-                    <button type="button" class="btn btn-sm btn-link text-danger p-0 delete-param-btn">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-
-            const keyInput = row.querySelector('.form-key');
-            const typeSelect = row.querySelector('.form-type');
-            const valueCell = row.querySelector('.value-cell');
-            const descriptionInput = row.querySelector('.form-description');
-            const checkbox = row.querySelector('.form-data-checkbox');
-            const deleteBtn = row.querySelector('.delete-param-btn');
-
-            // 确定初始类型（优先使用存储的类型，然后是参数类型）
-            const initialKey = param.key.trim();
-            const initialType = typeStore[initialKey] || param.type || 'Text';
-            typeSelect.value = initialType;
-
-            // 创建初始值输入
-            const valueContainer = createValueInput(initialType, param.value, initialKey);
-            valueCell.appendChild(valueContainer);
-
-            // 事件监听
-            keyInput.addEventListener('input', function() {
-                const oldKey = initialKey;
-                const newKey = this.value.trim();
-
-                // 如果键名改变，更新类型存储
-                if (oldKey && newKey && oldKey !== newKey) {
-                    typeStore[newKey] = typeStore[oldKey] || initialType;
-                    delete typeStore[oldKey];
-                }
-                updateTextarea();
-            });
-
-            descriptionInput.addEventListener('input', updateTextarea);
-            checkbox.addEventListener('change', updateTextarea);
-
-            // 类型切换事件
-            typeSelect.addEventListener('change', function() {
-                // 获取当前值
-                let currentValue = '';
-                const currentValueContainer = valueCell.querySelector('.value-container');
-
-                if (currentValueContainer) {
-                    if (this.value === 'File') {
-                        const textInput = currentValueContainer.querySelector('.text-input');
-                        const numberInput = currentValueContainer.querySelector('.number-input');
-
-                        if (textInput) {
-                            currentValue = textInput.value;
-                        } else if (numberInput) {
-                            currentValue = numberInput.value;
-                        }
-                    } else if (this.value === 'Number') {
-                        const textInput = currentValueContainer.querySelector('.text-input');
-                        if (textInput) {
-                            currentValue = textInput.value;
-                        }
-                    } else {
-                        const numberInput = currentValueContainer.querySelector('.number-input');
-                        const fileInput = currentValueContainer.querySelector('.file-input');
-                        const textInput = currentValueContainer.querySelector('.text-input');
-
-                        if (numberInput) {
-                            currentValue = numberInput.value;
-                        } else if (fileInput) {
-                            const fileInfo = currentValueContainer.querySelector('.file-info');
-                            currentValue = fileInfo ? fileInfo.textContent.replace('已上传: ', '') : '';
-                        } else if (textInput) {
-                            currentValue = textInput.value;
-                        }
-                    }
-                }
-
-                valueCell.innerHTML = '';
-                const newValueContainer = createValueInput(this.value, currentValue, keyInput.value.trim());
-                valueCell.appendChild(newValueContainer);
-
-                // 更新类型存储
-                const key = keyInput.value.trim();
-                if (key) {
-                    typeStore[key] = this.value;
-                }
-
-                updateTextarea();
-            });
-
-            deleteBtn.addEventListener('click', () => {
-                // 删除时清除类型存储
-                const key = keyInput.value.trim();
-                if (key) {
-                    delete typeStore[key];
-                }
-                row.remove();
-                updateTextarea();
-            });
-
-            paramsContainer.appendChild(row);
-            return row;
-        }
-
-        // 加载初始数据
-        const params = parseParams();
-        console.log('加载Form Data参数:', params);
-        params.forEach(param => {
-            addParamRow(param);
-        });
-
-        // 初始化后立即更新一次textarea
-        setTimeout(() => {
-            updateTextarea();
-        }, 100);
-
-        addParamBtn.addEventListener('click', () => {
-            addParamRow();
-            updateTextarea();
-        });
-
-        selectAllCheckbox.addEventListener('change', () => {
-            paramsContainer.querySelectorAll('.form-data-checkbox').forEach(cb => {
-                cb.checked = selectAllCheckbox.checked;
-            });
-        });
-
-        // 文本模式切换
-        const formDataTableContainer = document.getElementById('form-data-table-container');
-        const formDataTextContainer = document.getElementById('form-data-text-container');
-        const formDataTextArea = document.getElementById('form-data-text-area');
-        const toggleFormDataModeBtn = document.getElementById('toggle-form-data-mode-btn');
-
-        function updateFormDataTextArea() {
-            const lines = [];
-            paramsContainer.querySelectorAll('tr').forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    const keyInput = row.querySelector('.form-key');
-                    const typeSelect = row.querySelector('.form-type');
-                    const valueContainer = row.querySelector('.value-container');
-
-                    if (keyInput && keyInput.value.trim()) {
-                        let value = '';
-
-                        if (typeSelect.value === 'File') {
-                            const fileInput = valueContainer.querySelector('.file-input');
-                            const fileInfo = valueContainer.querySelector('.file-info');
-                            if (fileInput && fileInfo) {
-                                if (fileInput.files.length > 0) {
-                                    value = fileInput.files[0].name;
-                                } else {
-                                    value = fileInfo.textContent.replace('已上传: ', '');
-                                }
-                            } else {
-                                const textInput = valueContainer.querySelector('.text-input');
-                                if (textInput) {
-                                    value = textInput.value;
-                                }
-                            }
-                        } else {
-                            const textInput = valueContainer.querySelector('.text-input');
-                            const numberInput = valueContainer.querySelector('.number-input');
-
-                            if (typeSelect.value === 'Number' && numberInput) {
-                                value = numberInput.value;
-                            } else if (textInput) {
-                                value = textInput.value;
-                            }
-                        }
-
-                        if (value !== undefined) {
-                            lines.push(`${keyInput.value.trim()}=${value}`);
-                        }
-                    }
-                }
-            });
-            formDataTextArea.value = lines.join('\n');
-        }
-
-        function parseFormDataFromText() {
-            const lines = formDataTextArea.value.trim().split('\n');
-            const params = [];
-            lines.forEach(line => {
+            // 旧格式兼容：每行 key=value
+            const lines = textarea.value.trim().split('\n');
+            for (const line of lines) {
                 if (line.includes('=')) {
                     const [key, value] = line.split('=', 2);
                     const trimmedKey = key.trim();
 
-                    // 使用存储的类型或推断类型
-                    let type = typeStore[trimmedKey] || 'Text';
+                    // 推断类型
+                    let type = 'Text';
+
+                    // 检查是否是数字
                     if (!isNaN(value) && value.trim() !== '') {
                         type = 'Number';
+                    }
+                    // 检查是否是文件（基于文件名格式）
+                    else if (value.match(/\.\w{1,10}$/) &&
+                             !value.includes(' ') &&
+                             !value.startsWith('{') &&
+                             !value.startsWith('[')) {
+                        type = 'File';
                     }
 
                     params.push({
                         key: trimmedKey,
-                        value: value,
+                        value: value.trim(),
                         type: type,
                         description: ''
                     });
                 }
-            });
-            return params;
+            }
         }
 
-        toggleFormDataModeBtn.addEventListener('click', () => {
-            const isTableVisible = formDataTableContainer.style.display !== 'none';
-            if (isTableVisible) {
-                updateFormDataTextArea();
-                formDataTableContainer.style.display = 'none';
-                formDataTextContainer.style.display = 'block';
-                toggleFormDataModeBtn.textContent = 'Table Edit';
-            } else {
-                paramsContainer.innerHTML = '';
-                const params = parseFormDataFromText();
-                if (params.length > 0) {
-                    params.forEach(param => addParamRow(param));
-                } else {
-                    addParamRow();
+        if (params.length === 0) {
+            params.push({
+                key: '',
+                value: '',
+                type: 'Text',
+                description: ''
+            });
+        }
+        return params;
+    }
+
+    function updateTextarea() {
+        const rows = paramsContainer.querySelectorAll('tr');
+        const params = [];
+
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const keyInput = row.querySelector('.form-key');
+                const typeSelect = row.querySelector('.form-type');
+                const valueContainer = row.querySelector('.value-container');
+                const descriptionInput = row.querySelector('.form-description');
+
+                if (keyInput && keyInput.value.trim()) {
+                    let value = '';
+                    const key = keyInput.value.trim();
+                    const type = typeSelect.value;
+
+                    if (type === 'File') {
+                        // 获取文件信息
+                        const fileInput = valueContainer.querySelector('.file-input');
+                        const textInput = valueContainer.querySelector('.text-input');
+                        const fileInfo = valueContainer.querySelector('.file-info');
+
+                        if (fileInput && fileInput.files.length > 0) {
+                            value = fileInput.files[0].name;
+                        } else if (textInput) {
+                            value = textInput.value;
+                        } else if (fileInfo) {
+                            value = fileInfo.textContent.replace('已上传: ', '');
+                        }
+                    } else if (type === 'Number') {
+                        const numberInput = valueContainer.querySelector('.number-input');
+                        value = numberInput ? numberInput.value : '';
+                    } else {
+                        const textInput = valueContainer.querySelector('.text-input');
+                        value = textInput ? textInput.value : '';
+                    }
+
+                    params.push({
+                        key: key,
+                        type: type,
+                        value: value,
+                        description: descriptionInput ? descriptionInput.value.trim() : ''
+                    });
                 }
-                updateTextarea();
-                formDataTableContainer.style.display = 'block';
-                formDataTextContainer.style.display = 'none';
-                toggleFormDataModeBtn.textContent = 'Key-Value Edit';
             }
         });
 
-        document.getElementById('toggle-form-data-table').addEventListener('click', () => {
-            const container = document.getElementById('form-data-table-container');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        // 保存为JSON格式，包含完整的类型信息
+        textarea.value = JSON.stringify(params, null, 2);
+    }
+
+    function createValueInput(type, currentValue = '', isFileUploaded = false) {
+        const container = document.createElement('div');
+        container.className = 'value-container';
+
+        if (type === 'File') {
+            container.innerHTML = `
+                <div class="file-upload-wrapper">
+                    <div class="input-group">
+                        <input type="file" class="form-control file-input" style="display: none;">
+                        <input type="text" class="form-control text-input"
+                               value="${currentValue}"
+                               placeholder="选择文件或输入文件名"
+                               ${isFileUploaded ? 'readonly' : ''}>
+                        <button type="button" class="btn btn-outline-secondary file-browse-btn">
+                            <i class="bi bi-folder2-open"></i>
+                        </button>
+                    </div>
+                    ${isFileUploaded ? `<div class="file-info small text-muted mt-1">已上传: ${currentValue}</div>` : ''}
+                    <div class="file-upload-progress" style="display: none; margin-top: 5px;">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div class="upload-status small text-muted mt-1"></div>
+                    </div>
+                </div>
+            `;
+
+            const fileInput = container.querySelector('.file-input');
+            const textInput = container.querySelector('.text-input');
+            const browseBtn = container.querySelector('.file-browse-btn');
+            const progressDiv = container.querySelector('.file-upload-progress');
+            const progressBar = container.querySelector('.progress-bar');
+            const uploadStatus = container.querySelector('.upload-status');
+            const fileInfo = container.querySelector('.file-info');
+
+            browseBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', async function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    textInput.value = file.name;
+                    textInput.readOnly = false;
+
+                    progressDiv.style.display = 'block';
+                    progressBar.style.width = '0%';
+                    uploadStatus.textContent = '正在上传...';
+
+                    try {
+                        const result = await fileUploadManager.uploadFile(file, Date.now().toString());
+
+                        if (result.success) {
+                            progressBar.style.width = '100%';
+                            uploadStatus.textContent = '上传成功';
+                            textInput.value = result.fileName;
+                            textInput.readOnly = true;
+
+                            // 更新文件信息显示
+                            if (fileInfo) {
+                                fileInfo.textContent = `已上传: ${result.fileName}`;
+                            } else {
+                                const newFileInfo = document.createElement('div');
+                                newFileInfo.className = 'file-info small text-muted mt-1';
+                                newFileInfo.textContent = `已上传: ${result.fileName}`;
+                                container.appendChild(newFileInfo);
+                            }
+
+                            // 更新存储
+                            setTimeout(() => {
+                                updateTextarea();
+                            }, 500);
+                        } else {
+                            uploadStatus.textContent = `上传失败: ${result.error}`;
+                            progressBar.classList.add('bg-danger');
+                        }
+                    } catch (error) {
+                        uploadStatus.textContent = `上传失败: ${error.message}`;
+                        progressBar.classList.add('bg-danger');
+                    }
+                }
+            });
+
+            // 如果已有文件名且不是刚上传的，设为只读
+            if (currentValue && isFileUploaded) {
+                textInput.readOnly = true;
+            }
+        } else {
+            const inputType = type === 'Number' ? 'number' : 'text';
+            const inputClass = type === 'Number' ? 'number-input' : 'text-input';
+            const inputValue = type === 'Number' ? (currentValue || '') : currentValue;
+
+            container.innerHTML = `
+                <input type="${inputType}"
+                       class="form-control ${inputClass}"
+                       value="${inputValue}"
+                       placeholder="输入值">
+            `;
+
+            const input = container.querySelector('input');
+            input.addEventListener('input', updateTextarea);
+        }
+
+        return container;
+    }
+
+    function addParamRow(param = { key: '', value: '', type: 'Text', description: '' }) {
+        const row = document.createElement('tr');
+
+        // 检查是否为已上传的文件
+        const isFileUploaded = param.type === 'File' && param.value &&
+                              (param.value.includes('.') || param.value.startsWith('upload_'));
+
+        row.innerHTML = `
+            <td class="text-center align-middle">
+                <input type="checkbox" class="form-check-input form-data-checkbox" checked>
+            </td>
+            <td><input type="text" class="form-control form-key" value="${param.key}" placeholder="Key"></td>
+            <td>
+                <select class="form-select form-type">
+                    <option value="Text" ${param.type === 'Text' ? 'selected' : ''}>Text</option>
+                    <option value="File" ${param.type === 'File' ? 'selected' : ''}>File</option>
+                    <option value="Number" ${param.type === 'Number' ? 'selected' : ''}>Number</option>
+                </select>
+            </td>
+            <td class="value-cell"></td>
+            <td><input type="text" class="form-control form-description" value="${param.description}" placeholder="Description"></td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-link text-danger p-0 delete-param-btn">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        const keyInput = row.querySelector('.form-key');
+        const typeSelect = row.querySelector('.form-type');
+        const valueCell = row.querySelector('.value-cell');
+        const descriptionInput = row.querySelector('.form-description');
+        const checkbox = row.querySelector('.form-data-checkbox');
+        const deleteBtn = row.querySelector('.delete-param-btn');
+
+        // 创建初始值输入
+        const valueContainer = createValueInput(param.type, param.value, isFileUploaded);
+        valueCell.appendChild(valueContainer);
+
+        // 事件监听
+        keyInput.addEventListener('input', updateTextarea);
+        descriptionInput.addEventListener('input', updateTextarea);
+        checkbox.addEventListener('change', updateTextarea);
+
+        // 类型切换事件
+        typeSelect.addEventListener('change', function() {
+            // 获取当前值
+            let currentValue = '';
+            const currentValueContainer = valueCell.querySelector('.value-container');
+
+            if (currentValueContainer) {
+                if (this.value === 'File') {
+                    const textInput = currentValueContainer.querySelector('.text-input');
+                    const numberInput = currentValueContainer.querySelector('.number-input');
+
+                    if (textInput) {
+                        currentValue = textInput.value;
+                    } else if (numberInput) {
+                        currentValue = numberInput.value;
+                    }
+                } else if (this.value === 'Number') {
+                    const textInput = currentValueContainer.querySelector('.text-input');
+                    const fileInfo = currentValueContainer.querySelector('.file-info');
+
+                    if (textInput) {
+                        currentValue = textInput.value;
+                    } else if (fileInfo) {
+                        currentValue = fileInfo.textContent.replace('已上传: ', '');
+                    }
+                } else {
+                    const numberInput = currentValueContainer.querySelector('.number-input');
+                    const fileInfo = currentValueContainer.querySelector('.file-info');
+
+                    if (numberInput) {
+                        currentValue = numberInput.value;
+                    } else if (fileInfo) {
+                        currentValue = fileInfo.textContent.replace('已上传: ', '');
+                    }
+                }
+            }
+
+            valueCell.innerHTML = '';
+            const newValueContainer = createValueInput(this.value, currentValue);
+            valueCell.appendChild(newValueContainer);
+
+            updateTextarea();
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            row.remove();
+            updateTextarea();
+        });
+
+        paramsContainer.appendChild(row);
+        return row;
+    }
+
+    // 加载初始数据
+    const params = parseParams();
+    console.log('加载Form Data参数:', params);
+    params.forEach(param => {
+        addParamRow(param);
+    });
+
+    // 添加新参数按钮
+    addParamBtn.addEventListener('click', () => {
+        addParamRow();
+        updateTextarea();
+    });
+
+    // 全选/取消全选
+    selectAllCheckbox.addEventListener('change', () => {
+        paramsContainer.querySelectorAll('.form-data-checkbox').forEach(cb => {
+            cb.checked = selectAllCheckbox.checked;
+        });
+        updateTextarea();
+    });
+
+    // 批量编辑按钮（需要为form-data添加专门的按钮）
+    const formDataBulkEditBtn = document.getElementById('bulk-edit-form-data-btn');
+    if (formDataBulkEditBtn) {
+        formDataBulkEditBtn.addEventListener('click', () => {
+            BulkEditManager.show('form-data', '#form-data-params');
         });
     }
+
+    // 文本模式切换
+    const formDataTableContainer = document.getElementById('form-data-table-container');
+    const formDataTextContainer = document.getElementById('form-data-text-container');
+    const formDataTextArea = document.getElementById('form-data-text-area');
+    const toggleFormDataModeBtn = document.getElementById('toggle-form-data-mode-btn');
+
+    function updateFormDataTextArea() {
+        const params = [];
+        paramsContainer.querySelectorAll('tr').forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const keyInput = row.querySelector('.form-key');
+                const typeSelect = row.querySelector('.form-type');
+                const valueContainer = row.querySelector('.value-container');
+                const descriptionInput = row.querySelector('.form-description');
+
+                if (keyInput && keyInput.value.trim()) {
+                    let value = '';
+                    const key = keyInput.value.trim();
+                    const type = typeSelect.value;
+
+                    if (type === 'File') {
+                        const textInput = valueContainer.querySelector('.text-input');
+                        const fileInfo = valueContainer.querySelector('.file-info');
+
+                        if (textInput) {
+                            value = textInput.value;
+                        } else if (fileInfo) {
+                            value = fileInfo.textContent.replace('已上传: ', '');
+                        }
+                    } else if (type === 'Number') {
+                        const numberInput = valueContainer.querySelector('.number-input');
+                        value = numberInput ? numberInput.value : '';
+                    } else {
+                        const textInput = valueContainer.querySelector('.text-input');
+                        value = textInput ? textInput.value : '';
+                    }
+
+                    params.push({
+                        key: key,
+                        type: type,
+                        value: value,
+                        description: descriptionInput ? descriptionInput.value.trim() : ''
+                    });
+                }
+            }
+        });
+
+        formDataTextArea.value = JSON.stringify(params, null, 2);
+    }
+
+    function parseFormDataFromText() {
+        try {
+            const parsed = JSON.parse(formDataTextArea.value);
+            if (Array.isArray(parsed)) {
+                return parsed;
+            }
+        } catch (e) {
+            console.error('解析Form Data JSON失败:', e);
+        }
+        return [];
+    }
+
+    toggleFormDataModeBtn.addEventListener('click', () => {
+        const isTableVisible = formDataTableContainer.style.display !== 'none';
+        if (isTableVisible) {
+            updateFormDataTextArea();
+            formDataTableContainer.style.display = 'none';
+            formDataTextContainer.style.display = 'block';
+            toggleFormDataModeBtn.textContent = 'Table Edit';
+        } else {
+            paramsContainer.innerHTML = '';
+            const params = parseFormDataFromText();
+            if (params.length > 0) {
+                params.forEach(param => addParamRow(param));
+            } else {
+                addParamRow();
+            }
+            updateTextarea();
+            formDataTableContainer.style.display = 'block';
+            formDataTextContainer.style.display = 'none';
+            toggleFormDataModeBtn.textContent = 'Key-Value Edit';
+        }
+    });
+
+    document.getElementById('toggle-form-data-table').addEventListener('click', () => {
+        const container = document.getElementById('form-data-table-container');
+        container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    });
+}
 
     // 提取参数表格初始化
     function initExtractParamsTable() {
