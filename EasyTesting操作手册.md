@@ -23,7 +23,11 @@
    <img src="static/pic/使用提取参数.png" />
    <img src="static/pic/参数化.png" />
 
-#### 3. mock数据
+#### 3. 环境变量
+测试用例中，可以使用环境变量，将参数保存到环境变量中，方便后续请求使用。
+    <img src="static/pic/环境变量.png" />
+
+#### 4. mock数据
 
 测试用例中，可以使用mock数据，根据规则生成模拟数据。
 
