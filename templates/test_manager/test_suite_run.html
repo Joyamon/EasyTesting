@@ -71,12 +71,17 @@
                                 </thead>
                                 <tbody>
                                     {% for suite_case in test_suite_cases %}
-                                        <tr>
+                                        <tr class="{% if suite_case.will_skip %}table-secondary{% endif %}">
                                             <td>{{ suite_case.order }}</td>
                                             <td>
                                                 <a href="{% url 'test_case_detail' suite_case.test_case.pk %}"
                                                    class="text-decoration-none">
-                                                    {{ suite_case.test_case.name }}
+                                                    {% if suite_case.will_skip %}
+                                                        {{ suite_case.test_case.name }}
+                                                        <span class="badge bg-warning">跳过</span>
+                                                    {% else %}
+                                                        {{ suite_case.test_case.name }}
+                                                    {% endif  %}
                                                 </a>
                                             </td>
                                             <td>

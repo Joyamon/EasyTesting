@@ -711,6 +711,40 @@ def test_suite_run(request, pk):
                 case_id = key.replace('case_environment_', '')
                 case_environments[int(case_id)] = int(value)
 
+        # 获取测试套件中的所有测试用例，并判断是否有活跃用例
+        test_suite_cases = TestSuiteCase.objects.filter(test_suite=test_suite).select_related('test_case')
+
+        # 检查测试套件是否为空
+        if not test_suite_cases.exists():
+            messages.warning(request, '测试套件为空，请先添加测试用例')
+            return redirect('test_suite_detail', pk=test_suite.pk)
+
+        # 统计活跃和跳过的测试用例
+        active_cases = []
+        skipped_cases = []
+
+        for suite_case in test_suite_cases:
+            test_case = suite_case.test_case
+            if test_case.skip_test:
+                skipped_cases.append({
+                    'id': test_case.id,
+                    'name': test_case.name,
+                    'order': suite_case.order
+                })
+            else:
+                active_cases.append({
+                    'id': test_case.id,
+                    'order': suite_case.order
+                })
+
+        # 如果所有用例都被跳过，则提示用户
+        if len(active_cases) == 0:
+            messages.warning(
+                request,
+                '测试套件中的所有测试用例都已设置为跳过执行，没有可执行的测试用例'
+            )
+            return redirect('test_suite_detail', pk=test_suite.pk)
+
         # 创建测试运行记录
         test_run = TestRun.objects.create(
             name=request.POST.get('name', f"Suite run: {test_suite.name}"),
@@ -721,33 +755,65 @@ def test_suite_run(request, pk):
             start_time=timezone.now(),
             created_by=request.user
         )
-        # 判断测试套件是否为空
-        if not test_suite.testsuitecase_set.exists():
-            messages.warning(request, '测试套件为空,请先添加测试用例')
-            return redirect('test_suite_list')
-        # 异步执行测试套件
+
+        # 为跳过的用例创建测试运行用例记录（状态为skipped）
+        for skipped_case in skipped_cases:
+            TestResult.objects.create(
+                test_run=test_run,
+                test_case_id=skipped_case['id'],
+                environment=environment,
+                status='skipped',
+                skip_reason='用例标记为跳过执行'
+
+            )
+
+        # 准备异步执行的用例列表（只包含活跃用例）
+        active_case_ids = [case['id'] for case in active_cases]
+        # 异步执行测试套件（只执行活跃用例）
         execute_test_suite_async(
             test_suite=test_suite,
             environment=environment,
             case_environments=case_environments,
             test_run=test_run,
             user=request.user,
-            execute_test_suite_func=execute_test_suite
+            execute_test_suite_func=execute_test_suite,
+            active_case_ids=active_case_ids  # 新增参数，只执行这些用例
         )
 
-        messages.success(
-            request,
-            f'测试套件已开始执行。您可以在测试运行详情页中查看结果'
-        )
+
+        # 如果有跳过的用例，在消息中提示用户
+        if skipped_cases:
+            skipped_count = len(skipped_cases)
+            active_count = len(active_cases)
+            messages.info(
+                request,
+                f'测试套件开始执行。{active_count}个用例将执行，{skipped_count}个用例已跳过'
+            )
+        else:
+            messages.success(
+                request,
+                f'测试套件已开始执行。您可以在测试运行详情页中查看结果'
+            )
+
         return redirect('test_run_detail', pk=test_run.pk)
 
+    # GET 请求处理
     environments = Environment.objects.filter(project=test_suite.project)
-    test_suite_cases = TestSuiteCase.objects.filter(test_suite=test_suite).order_by('order')
+
+    # 获取测试套件用例，并标注哪些用例将被跳过
+    test_suite_cases = TestSuiteCase.objects.filter(
+        test_suite=test_suite
+    ).select_related('test_case').order_by('order')
+
+    # 为每个用例添加是否跳过的标记
+    for suite_case in test_suite_cases:
+        suite_case.will_skip = suite_case.test_case.skip_test
 
     return render(request, 'test_manager/test_suite_run.html', {
         'test_suite': test_suite,
         'environments': environments,
-        'test_suite_cases': test_suite_cases
+        'test_suite_cases': test_suite_cases,
+        'skipped_count': sum(1 for sc in test_suite_cases if sc.test_case.skip_test)
     })
 
 

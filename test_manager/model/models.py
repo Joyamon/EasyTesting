@@ -226,6 +226,7 @@ class TestResult(models.Model):
     extracted_params = models.JSONField(default=dict, blank=True, verbose_name="提取参数", db_comment="提取参数")
     validators = models.JSONField(default=list, blank=True, verbose_name="验证器", db_comment="验证器")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间", db_comment="创建时间")
+    skip_reason = models.TextField(blank=True, verbose_name="跳过原因", db_comment="跳过原因")
 
     def __str__(self):
         return f"{self.test_case.name} - {self.status}"

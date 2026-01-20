@@ -6,6 +6,8 @@ import re
 from urllib.parse import urljoin
 from jsonpath_ng import jsonpath, parse
 
+from test_manager.model.models import TestSuiteCase
+
 # 尝试导入 HTTPRunner，如果失败则记录错误但不中断执行
 try:
     import httprunner
@@ -530,7 +532,7 @@ def _execute_with_requests(test_case, environment, variables=None):
         }
 
 
-def execute_test_suite(test_suite, default_environment, case_environments=None):
+def execute_test_suite(test_suite, default_environment, case_environments=None,active_case_ids = None):
     """
     Execute a test suite (multiple test cases) using direct HTTP requests
 
@@ -544,52 +546,55 @@ def execute_test_suite(test_suite, default_environment, case_environments=None):
     extracted_variables = {}  # 存储提取的变量，用于后续测试用例
 
     # 获取套件中的所有测试用例，按顺序排列
-    test_suite_cases = test_suite.testsuitecase_set.all().order_by('order')
-
-    logger.info(
-        f"Executing test suite: {test_suite.name} (ID: {test_suite.id}) with {test_suite_cases.count()} test cases")
-
-    for test_suite_case in test_suite_cases:
-        test_case = test_suite_case.test_case
-
-        # 确定使用哪个环境
-        environment = default_environment
-        environment_id = default_environment.id
-
-        # 首先检查测试套件用例是否有指定环境
-        if hasattr(test_suite_case, 'environment') and test_suite_case.environment:
-            environment = test_suite_case.environment
-            environment_id = environment.id
-        # 然后检查运行时是否指定了环境
-        elif test_case.id in case_environments:
-            environment_id = case_environments[test_case.id]
-            from django.apps import apps
-            Environment = apps.get_model('test_manager', 'Environment')
-            try:
-                environment = Environment.objects.get(id=environment_id)
-            except Environment.DoesNotExist:
-                logger.error(f"Environment with ID {environment_id} does not exist, using default environment")
-                environment = default_environment
-                environment_id = default_environment.id
+    # test_suite_cases = test_suite.testsuitecase_set.all().order_by('order')
+    if active_case_ids:
+        test_suite_cases = TestSuiteCase.objects.filter(test_suite=test_suite).select_related('test_case')
+        test_suite_cases = test_suite_cases.filter(test_case__id__in=active_case_ids).order_by('order')
 
         logger.info(
-            f"Executing test case {test_case.name} (ID: {test_case.id}) from suite with environment: {environment.name} (ID: {environment.id})")
-        logger.info(f"Using variables: {extracted_variables}")
+            f"Executing test suite: {test_suite.name} (ID: {test_suite.id}) with {test_suite_cases.count()} test cases")
 
-        # 执行测试用例，传递之前提取的变量
-        result = execute_test_case(test_case, environment, extracted_variables)
-        result['test_case_id'] = test_case.id
-        result['environment_id'] = environment_id
+        for test_suite_case in test_suite_cases:
+            test_case = test_suite_case.test_case
 
-        # 存储提取的变量，用于后续测试用例
-        if 'extracted_params' in result and result['extracted_params']:
-            extracted_variables.update(result['extracted_params'])
-            logger.info(f"Updated variables after test case: {extracted_variables}")
+            # 确定使用哪个环境
+            environment = default_environment
+            environment_id = default_environment.id
 
-        results.append(result)
-        logger.info(f"Test case {test_case.name} execution result: {result['status']}")
+            # 首先检查测试套件用例是否有指定环境
+            if hasattr(test_suite_case, 'environment') and test_suite_case.environment:
+                environment = test_suite_case.environment
+                environment_id = environment.id
+            # 然后检查运行时是否指定了环境
+            elif test_case.id in case_environments:
+                environment_id = case_environments[test_case.id]
+                from django.apps import apps
+                Environment = apps.get_model('test_manager', 'Environment')
+                try:
+                    environment = Environment.objects.get(id=environment_id)
+                except Environment.DoesNotExist:
+                    logger.error(f"Environment with ID {environment_id} does not exist, using default environment")
+                    environment = default_environment
+                    environment_id = default_environment.id
 
-    logger.info(
-        f"Test suite execution completed. Total: {len(results)}, Passed: {sum(1 for r in results if r['status'] == 'passed')}")
+            logger.info(
+                f"Executing test case {test_case.name} (ID: {test_case.id}) from suite with environment: {environment.name} (ID: {environment.id})")
+            logger.info(f"Using variables: {extracted_variables}")
 
-    return results
+            # 执行测试用例，传递之前提取的变量
+            result = execute_test_case(test_case, environment, extracted_variables)
+            result['test_case_id'] = test_case.id
+            result['environment_id'] = environment_id
+
+            # 存储提取的变量，用于后续测试用例
+            if 'extracted_params' in result and result['extracted_params']:
+                extracted_variables.update(result['extracted_params'])
+                logger.info(f"Updated variables after test case: {extracted_variables}")
+
+            results.append(result)
+            logger.info(f"Test case {test_case.name} execution result: {result['status']}")
+
+        logger.info(
+            f"Test suite execution completed. Total: {len(results)}, Passed: {sum(1 for r in results if r['status'] == 'passed')}")
+
+        return results

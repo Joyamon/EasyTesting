@@ -4,10 +4,13 @@ import traceback
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
+from test_manager.model.models import TestSuiteCase
+
 logger = logging.getLogger(__name__)
 
 
-def execute_test_suite_async(test_suite, environment, case_environments, test_run, user, execute_test_suite_func):
+def execute_test_suite_async(test_suite, environment, case_environments, test_run, user,
+                             execute_test_suite_func, active_case_ids = None):
     """
     在后台线程中执行测试套件
 
@@ -19,16 +22,28 @@ def execute_test_suite_async(test_suite, environment, case_environments, test_ru
         user: 当前用户
         execute_test_suite_func: 执行测试套件的函数
     """
-    thread = threading.Thread(
-        target=_execute_test_suite_thread,
-        args=(test_suite, environment, case_environments, test_run, user, execute_test_suite_func),
-        daemon=True  # 设置线程为守护线程
-    )
-    thread.start()
-    return thread
+    if active_case_ids:
+        thread = threading.Thread(
+            target=_execute_test_suite_thread,
+            args=(test_suite, environment, case_environments, test_run, user,
+                  execute_test_suite_func, active_case_ids),
+            daemon=True  # 设置线程为守护线程
+        )
+        thread.start()
+        return thread
+    else:
+        thread = threading.Thread(
+            target=_execute_test_suite_thread,
+            args=(test_suite, environment, case_environments, test_run, user,
+                  execute_test_suite_func),
+            daemon=True  # 设置线程为守护线程
+        )
+        thread.start()
+        return thread
 
 
-def _execute_test_suite_thread(test_suite, environment, case_environments, test_run, user, execute_test_suite_func):
+def _execute_test_suite_thread(test_suite, environment, case_environments, test_run, user,
+                               execute_test_suite_func,active_case_ids=None):
     """
     执行测试套件的线程函数
     """
@@ -41,7 +56,7 @@ def _execute_test_suite_thread(test_suite, environment, case_environments, test_
         logger.info(f"开始异步执行测试套件: {test_suite.name} (ID: {test_suite.id})")
 
         # 执行测试套件
-        results = execute_test_suite_func(test_suite, environment, case_environments)
+        results = execute_test_suite_func(test_suite, environment, case_environments,active_case_ids)
 
         # 导入需要的模型
         from django.apps import apps
