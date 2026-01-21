@@ -451,6 +451,28 @@ def test_case_skip_update(request, pk):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
+def test_case_copy(request, pk):
+    test_case = get_object_or_404(TestCase, pk=pk)
+    new_test_case = TestCase.objects.create(
+        name=test_case.name,
+        description=test_case.description,
+        project=test_case.project,
+        group=test_case.group,
+        request_method=test_case.request_method,
+        request_url=test_case.request_url,
+        request_headers=test_case.request_headers,
+        request_body=test_case.request_body,
+        request_body_format=test_case.request_body_format,
+        expected_status_code=test_case.expected_status_code,
+        validation_rules=test_case.validation_rules,
+        extract_params=test_case.extract_params,
+        skip_test=test_case.skip_test,
+        created_by=request.user
+    )
+    messages.success(request, f'复制成功: {new_test_case.name}')
+    return redirect('test_case_list')
+
+
 def test_case_delete(request, pk):
     test_case = get_object_or_404(TestCase, pk=pk)
     test_case.delete()
@@ -779,7 +801,6 @@ def test_suite_run(request, pk):
             execute_test_suite_func=execute_test_suite,
             active_case_ids=active_case_ids  # 新增参数，只执行这些用例
         )
-
 
         # 如果有跳过的用例，在消息中提示用户
         if skipped_cases:
@@ -1251,7 +1272,8 @@ def test_report_detail(request, pk):
     elif report.report_format == 'json':
         # 如果是JSON格式，解析并格式化显示
         try:
-            context['report_content'] = json.dumps(json.loads(report.content), indent=2, ensure_ascii=False,default= str)
+            context['report_content'] = json.dumps(json.loads(report.content), indent=2, ensure_ascii=False,
+                                                   default=str)
         except:
             context['report_content'] = report.content
     else:
@@ -1356,7 +1378,7 @@ def generate_test_run_report(request, pk):
 
                     content['results'].append(result_data)
 
-                report.content = json.dumps(content, indent=2,ensure_ascii= False,default= str)
+                report.content = json.dumps(content, indent=2, ensure_ascii=False, default=str)
             else:
                 # 生成HTML格式的报告
                 html_content = f"""

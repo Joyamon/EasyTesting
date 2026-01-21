@@ -213,6 +213,10 @@
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    <a href="#" onclick="confirmCopy({{ test_case.pk }}, '{{ test_case.name }}')"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-files"></i>
+                                    </a>
                                     <a href="{% url 'test_case_edit' pk=test_case.pk %}"
                                        class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil"></i>
@@ -273,12 +277,38 @@
             </div>
         </div>
     </div>
+    <!-- 复制测试用例模态框 -->
+    <div class="modal fade" id="copyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">复制测试用例</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要复制测试用例 "<span id="copyCaseName"></span>" 吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="copyForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">确认复制</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
 
     <script>
         function confirmDelete(caseId, caseName) {
             document.getElementById('deleteCaseName').textContent = caseName;
             document.getElementById('deleteForm').action = `/test-cases/${caseId}/delete/`;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+        function confirmCopy(caseId, caseName) {
+            document.getElementById('copyCaseName').textContent = caseName;
+            document.getElementById('copyForm').action = `/test-cases/${caseId}/copy/`;
+            new bootstrap.Modal(document.getElementById('copyModal')).show();
         }
 
         // 添加跳过测试用例的切换功能

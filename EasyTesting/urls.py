@@ -51,6 +51,7 @@ urlpatterns = [
     path('test-cases/<int:pk>/delete/', views.test_case_delete, name='test_case_delete'),
     path('test-cases/export/', views.test_case_export, name='test_case_export'),
     path('test-cases/<int:pk>/skip_update/',views.test_case_skip_update, name='test_case_skip_update'),
+    path('test-cases/<int:pk>/copy/', views.test_case_copy, name='test_case_copy'),
 
     # 测试套件相关
     path('test-suites/', views.test_suite_list, name='test_suite_list'),
