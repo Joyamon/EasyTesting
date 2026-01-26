@@ -3,174 +3,207 @@
 {% block header %}链接数据库{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">数据库查询</h5>
-    </div>
-    <div class="card-body">
-        <!-- 数据库配置区域 -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">数据库连接配置</h6>
+    <!-- 引入CodeMirror相关资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">数据库查询</h5>
+        </div>
+        <div class="card-body">
+            <!-- 数据库配置区域 -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">数据库连接配置</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">数据库类型</label>
+                                        <select class="form-select" id="dbType">
+                                            <option value="mysql">MySQL</option>
+                                            <option value="postgresql">PostgreSQL</option>
+                                            <option value="sqlserver">SQL Server</option>
+                                            <option value="oracle">Oracle</option>
+                                            <option value="sqlite">SQLite</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">主机地址</label>
+                                        <input type="text" class="form-control" id="host" name="host"
+                                               placeholder="localhost" value="localhost">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">端口</label>
+                                        <input type="text" class="form-control" id="port" name="port" placeholder="3306"
+                                               value="3306">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">用户名</label>
+                                        <input type="text" class="form-control" id="username" name="username"
+                                               placeholder="root">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">密码</label>
+                                        <input type="password" class="form-control" id="password" name="password"
+                                               placeholder="密码">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">数据库名</label>
+                                        <input type="text" class="form-control" id="database" name="database"
+                                               placeholder="数据库名称">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">连接名称</label>
+                                        <input type="text" class="form-control" id="connectionName"
+                                               name="connectionName" placeholder="自定义连接名称">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label class="form-label">数据库类型</label>
-                                    <select class="form-select" id="dbType">
-                                        <option value="mysql">MySQL</option>
-                                        <option value="postgresql">PostgreSQL</option>
-                                        <option value="sqlserver">SQL Server</option>
-                                        <option value="oracle">Oracle</option>
-                                        <option value="sqlite">SQLite</option>
+                </div>
+            </div>
+
+            <!-- SQL编辑区域 -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">SQL编辑器</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <select class="form-select form-select-sm" id="editorTheme" style="width: auto;">
+                                        <option value="default">默认</option>
+                                        <option value="eclipse">明亮</option>
+                                        <option value="monokai">暗色</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label class="form-label">主机地址</label>
-                                    <input type="text" class="form-control" id="host" name="host" placeholder="localhost" value="localhost">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-secondary me-2" id="formatSql" title="格式化SQL">
+                                        <i class="bi bi-braces"></i> 格式化
+                                    </button>
+                                    <button class="btn btn-outline-secondary me-2" id="clearSql" title="清空编辑器">
+                                        <i class="bi bi-trash"></i> 清空
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="toggleComment" title="注释/取消注释">
+                                        <i class="bi bi-chat-left-text"></i> 注释
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label class="form-label">端口</label>
-                                    <input type="text" class="form-control" id="port" name="port" placeholder="3306" value="3306">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label class="form-label">用户名</label>
-                                    <input type="text" class="form-control" id="username" name="username" placeholder="root">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label class="form-label">密码</label>
-                                    <input type="password" class="form-control" id="password" name="password" placeholder="密码">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">数据库名</label>
-                                    <input type="text" class="form-control" id="database" name="database" placeholder="数据库名称">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">连接名称</label>
-                                    <input type="text" class="form-control" id="connectionName" name="connectionName" placeholder="自定义连接名称">
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- CodeMirror编辑器容器 -->
+                            <div id="sqlEditorContainer" style="height: 300px; border-radius: 0.375rem; overflow: hidden;"></div>
+                            <div class="p-3 border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-lightbulb me-1"></i>
+                                            提示: 使用 Ctrl+空格 自动补全 | Ctrl+/ 注释 | Ctrl+Enter 执行
+                                        </small>
+                                    </div>
+                                    <button class="btn btn-primary" id="executeQuery">
+                                        <i class="bi bi-play-circle"></i> 执行查询
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- SQL编辑区域 -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">SQL编辑器</h6>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary me-2" id="formatSql">
-                                <i class="bi bi-braces"></i> 格式化
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" id="clearSql">
-                                <i class="bi bi-trash"></i> 清空
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <textarea class="form-control font-monospace" id="sqlEditor" name="sqlEditor" rows="8"
-                                      placeholder="请输入SQL查询语句，例如：SELECT * FROM users WHERE id = 1">
-
-                            </textarea>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">支持 SELECT 查询语句</small>
-                            <button class="btn btn-primary" id="executeQuery">
-                                <i class="bi bi-play-circle"></i> 执行查询
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 数据展示区域 -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">查询结果</h6>
-                        <div class="d-flex align-items-center">
-                            <div class="btn-group btn-group-sm me-2" role="group">
-                                <input type="radio" class="btn-check" name="viewMode" id="viewJson" autocomplete="off" checked>
-                                <label class="btn btn-outline-primary" for="viewJson">
-                                    <i class="bi bi-braces"></i> JSON
-                                </label>
-                                <input type="radio" class="btn-check" name="viewMode" id="viewTable" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="viewTable">
-                                    <i class="bi bi-table"></i> 表格
-                                </label>
-                            </div>
-                            <span class="badge bg-secondary me-2" id="rowCount">0 行数据</span>
-                            <div class="spinner-border spinner-border-sm text-primary d-none" id="loadingSpinner" role="status">
-                                <span class="visually-hidden">加载中...</span>
+            <!-- 数据展示区域 -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">查询结果</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="btn-group btn-group-sm me-2" role="group">
+                                    <input type="radio" class="btn-check" name="viewMode" id="viewJson"
+                                           autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary" for="viewJson">
+                                        <i class="bi bi-braces"></i> JSON
+                                    </label>
+                                    <input type="radio" class="btn-check" name="viewMode" id="viewTable"
+                                           autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="viewTable">
+                                        <i class="bi bi-table"></i> 表格
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary me-2" id="rowCount">0 行数据</span>
+                                <div class="spinner-border spinner-border-sm text-primary d-none" id="loadingSpinner"
+                                     role="status">
+                                    <span class="visually-hidden">加载中...</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- JSON视图 -->
-                        <div id="jsonView" style="display: block;">
-                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <pre id="jsonResult" class="bg-light p-3 mb-0 rounded" style="min-height: 200px; font-size: 0.85rem; font-family: 'Courier New', monospace;">
+                        <div class="card-body">
+                            <!-- JSON视图 -->
+                            <div id="jsonView" style="display: block;">
+                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <pre id="jsonResult" class="bg-light p-3 mb-0 rounded"
+                                     style="min-height: 200px; font-size: 0.85rem; font-family: 'Courier New', monospace;">
 暂无数据，请先执行查询
                                 </pre>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- 表格视图 -->
-                        <div id="tableView" style="display: none;">
-                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-hover table-bordered mb-0" id="resultTable">
-                                    <thead class="table-light">
+                            <!-- 表格视图 -->
+                            <div id="tableView" style="display: none;">
+                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-hover table-bordered mb-0" id="resultTable">
+                                        <thead class="table-light">
                                         <tr id="tableHeader">
                                             <!-- 表头将动态生成 -->
                                         </tr>
-                                    </thead>
-                                    <tbody id="tableBody">
+                                        </thead>
+                                        <tbody id="tableBody">
                                         <!-- 数据将动态生成 -->
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- 查询信息 -->
-                        <div class="mt-3" id="queryInfo" style="display: none;">
-                            <div class="alert alert-info py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small>
-                                        <strong>查询耗时：</strong><span id="queryTime">0</span>ms |
-                                        <strong>返回行数：</strong><span id="returnedRows">0</span>
-                                    </small>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary me-2" id="copyJson">
-                                            <i class="bi bi-clipboard"></i> 复制JSON
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary me-2" id="exportJson">
-                                            <i class="bi bi-download"></i> 导出JSON
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" id="exportCsv">
-                                            <i class="bi bi-download"></i> 导出CSV
-                                        </button>
+                            <!-- 查询信息 -->
+                            <div class="mt-3" id="queryInfo" style="display: none;">
+                                <div class="alert alert-info py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small>
+                                            <strong>查询耗时：</strong><span id="queryTime">0</span>ms |
+                                            <strong>返回行数：</strong><span id="returnedRows">0</span>
+                                        </small>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary me-2" id="copyJson">
+                                                <i class="bi bi-clipboard"></i> 复制JSON
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary me-2" id="exportJson">
+                                                <i class="bi bi-download"></i> 导出JSON
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" id="exportCsv">
+                                                <i class="bi bi-download"></i> 导出CSV
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -180,423 +213,683 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- 样式 -->
-<style>
-    .font-monospace {
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-    }
-
-    #sqlEditor {
-        resize: vertical;
-        border: 1px solid #dee2e6;
-    }
-
-    #sqlEditor:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
-    .table th {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        z-index: 1;
-    }
-
-    .btn-primary {
-        padding: 0.375rem 1.5rem;
-    }
-
-    .connection-status {
-        font-size: 0.75rem;
-    }
-
-    #jsonResult {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .json-key {
-        color: #d63384;
-    }
-
-    .json-string {
-        color: #0d6efd;
-    }
-
-    .json-number {
-        color: #198754;
-    }
-
-    .json-boolean {
-        color: #fd7e14;
-    }
-
-    .json-null {
-        color: #6c757d;
-    }
-</style>
-
-<!-- JavaScript -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sqlEditor = document.getElementById('sqlEditor');
-        const executeBtn = document.getElementById('executeQuery');
-        const formatBtn = document.getElementById('formatSql');
-        const clearBtn = document.getElementById('clearSql');
-        const jsonResult = document.getElementById('jsonResult');
-        const jsonView = document.getElementById('jsonView');
-        const tableView = document.getElementById('tableView');
-        const resultTable = document.getElementById('resultTable');
-        const tableHeader = document.getElementById('tableHeader');
-        const tableBody = document.getElementById('tableBody');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const rowCount = document.getElementById('rowCount');
-        const queryInfo = document.getElementById('queryInfo');
-        const queryTime = document.getElementById('queryTime');
-        const returnedRows = document.getElementById('returnedRows');
-        const copyJsonBtn = document.getElementById('copyJson');
-        const exportJsonBtn = document.getElementById('exportJson');
-        const exportCsvBtn = document.getElementById('exportCsv');
-        const viewJson = document.getElementById('viewJson');
-        const viewTable = document.getElementById('viewTable');
-
-        let currentData = null;
-        let currentJsonString = '';
-
-        // 视图切换
-        viewJson.addEventListener('change', function() {
-            if (this.checked) {
-                jsonView.style.display = 'block';
-                tableView.style.display = 'none';
-            }
-        });
-
-        viewTable.addEventListener('change', function() {
-            if (this.checked) {
-                jsonView.style.display = 'none';
-                tableView.style.display = 'block';
-            }
-        });
-
-        // 保存配置到localStorage
-        function saveConfigToStorage() {
-            const config = {
-                dbType: document.getElementById('dbType').value,
-                host: document.getElementById('host').value,
-                port: document.getElementById('port').value,
-                username: document.getElementById('username').value,
-                database: document.getElementById('database').value,
-                connectionName: document.getElementById('connectionName').value
-            };
-            localStorage.setItem('dbConnectionConfig', JSON.stringify(config));
+    <!-- 样式 -->
+    <style>
+        .font-monospace {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
         }
 
-        // 从localStorage加载配置
-        function loadConfigFromStorage() {
-            const saved = localStorage.getItem('dbConnectionConfig');
-            if (saved) {
-                const config = JSON.parse(saved);
-                document.getElementById('dbType').value = config.dbType || 'mysql';
-                document.getElementById('host').value = config.host || 'localhost';
-                document.getElementById('port').value = config.port || '3306';
-                document.getElementById('username').value = config.username || '';
-                document.getElementById('database').value = config.database || '';
-                document.getElementById('connectionName').value = config.connectionName || '';
-            }
+        .table th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
         }
 
-        // 格式化SQL
-        formatBtn.addEventListener('click', function() {
-            const sql = sqlEditor.value.trim();
-            if (!sql) return;
-
-            // 简单的SQL格式化
-            let formatted = sql
-                .replace(/SELECT\s+/gi, 'SELECT\n  ')
-                .replace(/FROM\s+/gi, '\nFROM\n  ')
-                .replace(/WHERE\s+/gi, '\nWHERE\n  ')
-                .replace(/ORDER BY\s+/gi, '\nORDER BY\n  ')
-                .replace(/GROUP BY\s+/gi, '\nGROUP BY\n  ')
-                .replace(/HAVING\s+/gi, '\nHAVING\n  ')
-                .replace(/JOIN\s+/gi, '\nJOIN\n  ')
-                .replace(/AND\s+/gi, '\n  AND ')
-                .replace(/,\s*/g, ',\n  ');
-
-            sqlEditor.value = formatted;
-        });
-
-        // 清空SQL
-        clearBtn.addEventListener('click', function() {
-            sqlEditor.value = '';
-        });
-
-        // 格式化JSON并添加语法高亮
-        function formatJsonWithHighlight(json) {
-            try {
-                const obj = JSON.parse(json);
-                return JSON.stringify(obj, null, 2)
-                    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, function(match) {
-                        if (/:$/.test(match)) {
-                            return '<span class="json-key">' + match + '</span>';
-                        } else if (/^"/.test(match)) {
-                            if (/:$/.test(match.replace(/"/g, ''))) {
-                                return '<span class="json-key">' + match + '</span>';
-                            } else if (/^(true|false)$/.test(match.replace(/"/g, ''))) {
-                                return '<span class="json-boolean">' + match + '</span>';
-                            } else if (/^null$/.test(match.replace(/"/g, ''))) {
-                                return '<span class="json-null">' + match + '</span>';
-                            } else if (/^\d+$/.test(match.replace(/"/g, ''))) {
-                                return '<span class="json-number">' + match + '</span>';
-                            } else {
-                                return '<span class="json-string">' + match + '</span>';
-                            }
-                        }
-                        return match;
-                    })
-                    .replace(/(\d+)/g, '<span class="json-number">$1</span>')
-                    .replace(/(true|false)/g, '<span class="json-boolean">$1</span>')
-                    .replace(/(null)/g, '<span class="json-null">$1</span>');
-            } catch (e) {
-                return json;
-            }
+        .btn-primary {
+            padding: 0.375rem 1.5rem;
         }
 
-        // 执行查询
-        executeBtn.addEventListener('click', async function() {
-            const sql = sqlEditor.value.trim();
-            if (!sql) {
-                alert('请输入SQL查询语句');
-                return;
-            }
+        .connection-status {
+            font-size: 0.75rem;
+        }
 
-            // 获取数据库配置
-            const dbConfig = {
-                db_type: document.getElementById('dbType').value,
-                host: document.getElementById('host').value,
-                port: document.getElementById('port').value,
-                user: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                database: document.getElementById('database').value,
-                connection_name: document.getElementById('connectionName').value,
-                sql: sql
-            };
+        #jsonResult {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
 
-            // 显示加载状态
-            loadingSpinner.classList.remove('d-none');
-            executeBtn.disabled = true;
+        .json-key {
+            color: #d63384;
+        }
 
-            try {
-                const startTime = Date.now();
+        .json-string {
+            color: #0d6efd;
+        }
 
-                // 调用con-db接口
-                const response = await fetch('{% url 'con-db' %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+        .json-number {
+            color: #198754;
+        }
+
+        .json-boolean {
+            color: #fd7e14;
+        }
+
+        .json-null {
+            color: #6c757d;
+        }
+
+        /* CodeMirror 自定义样式 */
+        .CodeMirror {
+            height: 300px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid #dee2e6;
+        }
+
+        .CodeMirror-focused {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .cm-s-default .cm-keyword { color: #d73a49; font-weight: bold; }
+        .cm-s-default .cm-string { color: #032f62; }
+        .cm-s-default .cm-number { color: #005cc5; }
+        .cm-s-default .cm-comment { color: #6a737d; font-style: italic; }
+        .cm-s-default .cm-function { color: #6f42c1; }
+        .cm-s-default .cm-operator { color: #d73a49; }
+        .cm-s-default .cm-builtin { color: #e36209; }
+
+        /* 暗色主题 */
+        .cm-s-monokai .CodeMirror { background: #272822; color: #f8f8f2; }
+        .cm-s-monokai .cm-keyword { color: #f92672; }
+        .cm-s-monokai .cm-string { color: #a6e22e; }
+        .cm-s-monokai .cm-number { color: #ae81ff; }
+        .cm-s-monokai .cm-comment { color: #75715e; }
+        .cm-s-monokai .cm-function { color: #66d9ef; }
+
+        /* 明亮主题 */
+        .cm-s-eclipse .CodeMirror { background: #ffffff; }
+        .cm-s-eclipse .cm-keyword { color: #7f0055; font-weight: bold; }
+        .cm-s-eclipse .cm-string { color: #2a00ff; }
+        .cm-s-eclipse .cm-number { color: #164; }
+        .cm-s-eclipse .cm-comment { color: #3f7f5f; }
+
+        /* 提示框样式 */
+        .CodeMirror-hints {
+            z-index: 1050 !important;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background: white;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .CodeMirror-hint {
+            padding: 5px 10px;
+            color: #212529;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .CodeMirror-hint-active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+
+    <!-- 引入CodeMirror JS文件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/sql-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/comment/comment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/autorefresh.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let codeMirrorEditor = null;
+
+            // SQL关键字列表（用于自动补全）
+            const sqlKeywords = [
+                "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE",
+                "CREATE", "TABLE", "ALTER", "DROP", "INDEX", "VIEW", "JOIN", "INNER", "LEFT",
+                "RIGHT", "OUTER", "ON", "GROUP", "BY", "ORDER", "BY", "HAVING", "LIMIT", "OFFSET",
+                "DISTINCT", "COUNT", "SUM", "AVG", "MIN", "MAX", "AS", "AND", "OR", "NOT", "IN",
+                "BETWEEN", "LIKE", "IS", "NULL", "TRUE", "FALSE", "CASE", "WHEN", "THEN", "ELSE",
+                "END", "EXISTS", "UNION", "ALL", "ANY", "SOME", "UNIQUE", "PRIMARY", "KEY",
+                "FOREIGN", "REFERENCES", "CHECK", "DEFAULT", "AUTO_INCREMENT", "COMMENT"
+            ];
+
+            // SQL函数列表
+            const sqlFunctions = [
+                "ABS", "AVG", "COUNT", "MAX", "MIN", "SUM", "ROUND", "TRUNCATE", "CEILING", "FLOOR",
+                "UPPER", "LOWER", "LENGTH", "SUBSTRING", "CONCAT", "REPLACE", "TRIM", "LTRIM", "RTRIM",
+                "NOW", "CURDATE", "CURTIME", "DATE", "TIME", "YEAR", "MONTH", "DAY", "HOUR", "MINUTE",
+                "SECOND", "DATE_ADD", "DATE_SUB", "DATEDIFF", "DATE_FORMAT", "IFNULL", "COALESCE",
+                "CAST", "CONVERT", "CONNECTION_ID", "DATABASE", "USER", "VERSION"
+            ];
+
+            const executeBtn = document.getElementById('executeQuery');
+            const formatBtn = document.getElementById('formatSql');
+            const clearBtn = document.getElementById('clearSql');
+            const toggleCommentBtn = document.getElementById('toggleComment');
+            const jsonResult = document.getElementById('jsonResult');
+            const jsonView = document.getElementById('jsonView');
+            const tableView = document.getElementById('tableView');
+            const resultTable = document.getElementById('resultTable');
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const rowCount = document.getElementById('rowCount');
+            const queryInfo = document.getElementById('queryInfo');
+            const queryTime = document.getElementById('queryTime');
+            const returnedRows = document.getElementById('returnedRows');
+            const copyJsonBtn = document.getElementById('copyJson');
+            const exportJsonBtn = document.getElementById('exportJson');
+            const exportCsvBtn = document.getElementById('exportCsv');
+            const viewJson = document.getElementById('viewJson');
+            const viewTable = document.getElementById('viewTable');
+            const editorTheme = document.getElementById('editorTheme');
+
+            let currentData = null;
+            let currentJsonString = '';
+
+            // 初始化CodeMirror编辑器
+            function initCodeMirror() {
+                codeMirrorEditor = CodeMirror(document.getElementById('sqlEditorContainer'), {
+                    mode: 'text/x-sql',
+                    theme: 'default',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    matchBrackets: true,
+                    autoCloseBrackets: true,
+                    extraKeys: {
+                        "Ctrl-Space": "autocomplete",
+                        "Ctrl-/": "toggleComment",
+                        "Ctrl-Enter": function() { executeQuery(); },
+                        "Shift-Tab": "indentLess",
+                        "Tab": "indentMore"
                     },
-                    body: JSON.stringify(dbConfig)
+                    hintOptions: {
+                        tables: {},
+                        completeSingle: false
+                    },
+                    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                    foldGutter: true,
+                    autofocus: true,
+                    styleActiveLine: true
                 });
 
-                const endTime = Date.now();
-                const elapsedTime = endTime - startTime;
+                // 设置默认内容
+                codeMirrorEditor.setValue(`-- SQL查询示例
+SELECT * FROM users WHERE id = 1;
+-- 多表连接查询示例
+-- SELECT u.id, u.username, o.order_id, o.total_amount
+-- FROM users u
+-- JOIN orders o ON u.id = o.user_id
+-- WHERE u.status = 'active'
+-- ORDER BY o.created_at DESC
+-- LIMIT 10;`);
 
-                const result = await response.json();
-                console.log(result);
+                // 自定义SQL提示
+                codeMirrorEditor.on("inputRead", function(cm, change) {
+                    if (change.text[0].length > 0 && change.text[0] !== " " &&
+                        change.text[0] !== "\n" && change.text[0] !== "\t") {
+                        CodeMirror.commands.autocomplete(cm, null, {
+                            completeSingle: false,
+                            closeCharacters: /[\s()\[\]{};:>,]/,
+                            hint: function(cm) {
+                                const cur = cm.getCursor();
+                                const token = cm.getTokenAt(cur);
+                                const start = token.start;
+                                const end = cur.ch;
+                                const line = cm.getLine(cur.line);
+                                const word = line.slice(start, end).toUpperCase();
 
-                // 更新查询信息
-                queryTime.textContent = elapsedTime;
-                queryInfo.style.display = 'block';
+                                let list = [];
 
-                if (result.success) {
-                    currentData = result.data;
-                    displayResult(result.data);
-                    saveConfigToStorage(); // 保存成功的配置
-                } else {
-                    displayError(result.message || '查询失败');
-                }
-            } catch (error) {
-                displayError('网络错误: ' + error.message);
-            } finally {
-                // 隐藏加载状态
-                loadingSpinner.classList.add('d-none');
-                executeBtn.disabled = false;
-            }
-        });
+                                // 添加SQL关键字
+                                sqlKeywords.forEach(keyword => {
+                                    if (keyword.startsWith(word)) {
+                                        list.push({
+                                            text: keyword,
+                                            displayText: keyword,
+                                            className: 'keyword-hint'
+                                        });
+                                    }
+                                });
 
-        // 显示查询结果
-        function displayResult(data) {
-            if (!data || data.length === 0) {
-                jsonResult.innerHTML = '<span class="text-muted">查询成功，但未返回任何数据</span>';
-                tableBody.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-4">查询成功，但未返回任何数据</td></tr>';
-                rowCount.textContent = '0 行数据';
-                returnedRows.textContent = '0';
-                return;
-            }
+                                // 添加SQL函数
+                                sqlFunctions.forEach(func => {
+                                    if (func.startsWith(word)) {
+                                        list.push({
+                                            text: func + '()',
+                                            displayText: func + '()',
+                                            className: 'function-hint'
+                                        });
+                                    }
+                                });
 
-            // 生成JSON显示
-            try {
-                const jsonString = JSON.stringify(data, null, 2);
-                currentJsonString = jsonString;
-                jsonResult.innerHTML = formatJsonWithHighlight(jsonString);
-            } catch (e) {
-                jsonResult.textContent = '数据格式错误: ' + e.message;
-            }
+                                // 添加常用表名和列名提示（基于当前数据库类型）
+                                const dbType = document.getElementById('dbType').value;
+                                const commonTables = ['users', 'orders', 'products', 'customers'];
+                                const commonColumns = ['id', 'name', 'created_at', 'updated_at', 'status'];
 
-            // 生成表格显示
-            displayTable(data);
+                                if (word.length > 0) {
+                                    commonTables.forEach(table => {
+                                        if (table.toUpperCase().startsWith(word)) {
+                                            list.push({
+                                                text: table,
+                                                displayText: table,
+                                                className: 'table-hint'
+                                            });
+                                        }
+                                    });
 
-            rowCount.textContent = `${data.length} 行数据`;
-            returnedRows.textContent = data.length;
-        }
+                                    commonColumns.forEach(column => {
+                                        if (column.toUpperCase().startsWith(word)) {
+                                            list.push({
+                                                text: column,
+                                                displayText: column,
+                                                className: 'column-hint'
+                                            });
+                                        }
+                                    });
+                                }
 
-        // 显示表格
-        function displayTable(data) {
-            if (!data || data.length === 0) return;
-
-            // 生成表头
-            const headers = Object.keys(data[0]);
-            let headerHtml = '';
-            headers.forEach(header => {
-                headerHtml += `<th>${header}</th>`;
-            });
-            tableHeader.innerHTML = headerHtml;
-
-            // 生成表格内容
-            let bodyHtml = '';
-            data.forEach(row => {
-                bodyHtml += '<tr>';
-                headers.forEach(header => {
-                    let value = row[header];
-                    if (value === null || value === undefined) {
-                        value = '<span class="text-muted fst-italic">NULL</span>';
-                    } else if (typeof value === 'object') {
-                        value = JSON.stringify(value);
+                                return {
+                                    list: list.length ? list : [],
+                                    from: CodeMirror.Pos(cur.line, start),
+                                    to: CodeMirror.Pos(cur.line, end)
+                                };
+                            }
+                        });
                     }
-                    bodyHtml += `<td>${value}</td>`;
                 });
-                bodyHtml += '</tr>';
+            }
+
+            // 执行查询函数
+            async function executeQuery() {
+                const sql = codeMirrorEditor.getValue().trim();
+                if (!sql) {
+                    alert('请输入SQL查询语句');
+                    return;
+                }
+
+                // 获取数据库配置
+                const dbConfig = {
+                    db_type: document.getElementById('dbType').value,
+                    host: document.getElementById('host').value,
+                    port: document.getElementById('port').value,
+                    user: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                    database: document.getElementById('database').value,
+                    connection_name: document.getElementById('connectionName').value,
+                    sql: sql
+                };
+
+                // 显示加载状态
+                loadingSpinner.classList.remove('d-none');
+                executeBtn.disabled = true;
+
+                try {
+                    const startTime = Date.now();
+
+                    // 调用con-db接口
+                    const response = await fetch('{% url 'con-db' %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(dbConfig)
+                    });
+
+                    const endTime = Date.now();
+                    const elapsedTime = endTime - startTime;
+
+                    const result = await response.json();
+
+                    // 更新查询信息
+                    queryTime.textContent = elapsedTime;
+                    queryInfo.style.display = 'block';
+
+                    if (result.success) {
+                        currentData = result.data;
+                        displayResult(result.data);
+                        saveConfigToStorage(); // 保存成功的配置
+                    } else {
+                        displayError(result.message || '查询失败');
+                    }
+                } catch (error) {
+                    displayError('网络错误: ' + error.message);
+                } finally {
+                    // 隐藏加载状态
+                    loadingSpinner.classList.add('d-none');
+                    executeBtn.disabled = false;
+                }
+            }
+
+            // 视图切换
+            viewJson.addEventListener('change', function () {
+                if (this.checked) {
+                    jsonView.style.display = 'block';
+                    tableView.style.display = 'none';
+                }
             });
 
-            tableBody.innerHTML = bodyHtml;
-        }
+            viewTable.addEventListener('change', function () {
+                if (this.checked) {
+                    jsonView.style.display = 'none';
+                    tableView.style.display = 'block';
+                }
+            });
 
-        // 显示错误
-        function displayError(message) {
-            jsonResult.innerHTML = `<span class="text-danger">
+            // 保存配置到localStorage
+            function saveConfigToStorage() {
+                const config = {
+                    dbType: document.getElementById('dbType').value,
+                    host: document.getElementById('host').value,
+                    port: document.getElementById('port').value,
+                    username: document.getElementById('username').value,
+                    database: document.getElementById('database').value,
+                    connectionName: document.getElementById('connectionName').value,
+                    sql: codeMirrorEditor.getValue()
+                };
+                localStorage.setItem('dbConnectionConfig', JSON.stringify(config));
+            }
+
+            // 从localStorage加载配置
+            function loadConfigFromStorage() {
+                const saved = localStorage.getItem('dbConnectionConfig');
+                if (saved) {
+                    const config = JSON.parse(saved);
+                    document.getElementById('dbType').value = config.dbType || 'mysql';
+                    document.getElementById('host').value = config.host || 'localhost';
+                    document.getElementById('port').value = config.port || '3306';
+                    document.getElementById('username').value = config.username || '';
+                    document.getElementById('database').value = config.database || '';
+                    document.getElementById('connectionName').value = config.connectionName || '';
+                    if (config.sql && codeMirrorEditor) {
+                        codeMirrorEditor.setValue(config.sql);
+                    }
+                }
+            }
+
+            // 格式化SQL
+            function formatSQL() {
+                const sql = codeMirrorEditor.getValue();
+                if (!sql.trim()) return;
+
+                // 简单的SQL格式化
+                let formatted = sql
+                    .replace(/\bSELECT\b/gi, '\nSELECT')
+                    .replace(/\bFROM\b/gi, '\nFROM')
+                    .replace(/\bWHERE\b/gi, '\nWHERE')
+                    .replace(/\bORDER BY\b/gi, '\nORDER BY')
+                    .replace(/\bGROUP BY\b/gi, '\nGROUP BY')
+                    .replace(/\bHAVING\b/gi, '\nHAVING')
+                    .replace(/\bJOIN\b/gi, '\nJOIN')
+                    .replace(/\bINNER\b/gi, '\nINNER')
+                    .replace(/\bLEFT\b/gi, '\nLEFT')
+                    .replace(/\bRIGHT\b/gi, '\nRIGHT')
+                    .replace(/\bAND\b/gi, '\n  AND')
+                    .replace(/\bOR\b/gi, '\n  OR')
+                    .replace(/,\s*/g, ',\n  ')
+                    .replace(/\)\s*\)/g, ')\n)');
+
+                // 缩进处理
+                let lines = formatted.split('\n');
+                let indentLevel = 0;
+                let resultLines = [];
+
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    // 减少缩进
+                    if (line.match(/^(END|ELSE|END IF|END CASE|END LOOP)\b/i)) {
+                        indentLevel = Math.max(0, indentLevel - 1);
+                    }
+
+                    // 添加缩进
+                    resultLines.push('  '.repeat(indentLevel) + line);
+
+                    // 增加缩进
+                    if (line.match(/^(BEGIN|IF|ELSE|CASE|WHEN|LOOP|FOR)\b/i)) {
+                        indentLevel++;
+                    }
+                });
+
+                codeMirrorEditor.setValue(resultLines.join('\n'));
+            }
+
+            // 清空SQL
+            function clearSQL() {
+                if (confirm('确定要清空SQL编辑器内容吗？')) {
+                    codeMirrorEditor.setValue('');
+                }
+            }
+
+            // 切换注释
+            function toggleComment() {
+                codeMirrorEditor.toggleComment();
+            }
+
+            // 切换编辑器主题
+            function changeEditorTheme(theme) {
+                let cmTheme = 'default';
+                if (theme === 'monokai') {
+                    cmTheme = 'monokai';
+                } else if (theme === 'eclipse') {
+                    cmTheme = 'eclipse';
+                }
+                codeMirrorEditor.setOption('theme', cmTheme);
+            }
+
+            // 格式化JSON并添加语法高亮
+            function formatJsonWithHighlight(json) {
+                try {
+                    const obj = JSON.parse(json);
+                    return JSON.stringify(obj, null, 2)
+                        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, function (match) {
+                            if (/:$/.test(match)) {
+                                return '<span class="json-key">' + match + '</span>';
+                            } else if (/^"/.test(match)) {
+                                if (/:$/.test(match.replace(/"/g, ''))) {
+                                    return '<span class="json-key">' + match + '</span>';
+                                } else if (/^(true|false)$/.test(match.replace(/"/g, ''))) {
+                                    return '<span class="json-boolean">' + match + '</span>';
+                                } else if (/^null$/.test(match.replace(/"/g, ''))) {
+                                    return '<span class="json-null">' + match + '</span>';
+                                } else if (/^\d+$/.test(match.replace(/"/g, ''))) {
+                                    return '<span class="json-number">' + match + '</span>';
+                                } else {
+                                    return '<span class="json-string">' + match + '</span>';
+                                }
+                            }
+                            return match;
+                        })
+                        .replace(/(\d+)/g, '<span class="json-number">$1</span>')
+                        .replace(/(true|false)/g, '<span class="json-boolean">$1</span>')
+                        .replace(/(null)/g, '<span class="json-null">$1</span>');
+                } catch (e) {
+                    return json;
+                }
+            }
+
+            // 显示查询结果
+            function displayResult(data) {
+                if (!data || data.length === 0) {
+                    jsonResult.innerHTML = '<span class="text-muted">查询成功，但未返回任何数据</span>';
+                    tableBody.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-4">查询成功，但未返回任何数据</td></tr>';
+                    rowCount.textContent = '0 行数据';
+                    returnedRows.textContent = '0';
+                    return;
+                }
+
+                // 生成JSON显示
+                try {
+                    const jsonString = JSON.stringify(data, null, 2);
+                    currentJsonString = jsonString;
+                    jsonResult.innerHTML = formatJsonWithHighlight(jsonString);
+                } catch (e) {
+                    jsonResult.textContent = '数据格式错误: ' + e.message;
+                }
+
+                // 生成表格显示
+                displayTable(data);
+
+                rowCount.textContent = `${data.length} 行数据`;
+                returnedRows.textContent = data.length;
+            }
+
+            // 显示表格
+            function displayTable(data) {
+                if (!data || data.length === 0) return;
+
+                // 生成表头
+                const headers = Object.keys(data[0]);
+                let headerHtml = '';
+                headers.forEach(header => {
+                    headerHtml += `<th>${header}</th>`;
+                });
+                tableHeader.innerHTML = headerHtml;
+
+                // 生成表格内容
+                let bodyHtml = '';
+                data.forEach(row => {
+                    bodyHtml += '<tr>';
+                    headers.forEach(header => {
+                        let value = row[header];
+                        if (value === null || value === undefined) {
+                            value = '<span class="text-muted fst-italic">NULL</span>';
+                        } else if (typeof value === 'object') {
+                            value = JSON.stringify(value);
+                        }
+                        bodyHtml += `<td>${value}</td>`;
+                    });
+                    bodyHtml += '</tr>';
+                });
+
+                tableBody.innerHTML = bodyHtml;
+            }
+
+            // 显示错误
+            function displayError(message) {
+                jsonResult.innerHTML = `<span class="text-danger">
                 <i class="bi bi-exclamation-triangle"></i> ${message}
             </span>`;
-            tableBody.innerHTML = `<tr><td colspan="100%" class="text-center text-danger py-4">
+                tableBody.innerHTML = `<tr><td colspan="100%" class="text-center text-danger py-4">
                 <i class="bi bi-exclamation-triangle"></i> ${message}
             </td></tr>`;
-            rowCount.textContent = '0 行数据';
-            returnedRows.textContent = '0';
-            queryInfo.style.display = 'block';
-        }
-
-        // 复制JSON
-        copyJsonBtn.addEventListener('click', function() {
-            if (!currentJsonString) {
-                alert('没有可复制的数据');
-                return;
+                rowCount.textContent = '0 行数据';
+                returnedRows.textContent = '0';
+                queryInfo.style.display = 'block';
             }
 
-            navigator.clipboard.writeText(currentJsonString)
-                .then(() => {
-                    // 显示成功提示
-                    const originalText = copyJsonBtn.innerHTML;
-                    copyJsonBtn.innerHTML = '<i class="bi bi-check-circle"></i> 已复制';
-                    copyJsonBtn.classList.remove('btn-outline-primary');
-                    copyJsonBtn.classList.add('btn-success');
+            // 复制JSON
+            copyJsonBtn.addEventListener('click', function () {
+                if (!currentJsonString) {
+                    alert('没有可复制的数据');
+                    return;
+                }
 
-                    setTimeout(() => {
-                        copyJsonBtn.innerHTML = originalText;
-                        copyJsonBtn.classList.remove('btn-success');
-                        copyJsonBtn.classList.add('btn-outline-primary');
-                    }, 2000);
-                })
-                .catch(err => {
-                    alert('复制失败: ' + err);
-                });
+                navigator.clipboard.writeText(currentJsonString)
+                    .then(() => {
+                        // 显示成功提示
+                        const originalText = copyJsonBtn.innerHTML;
+                        copyJsonBtn.innerHTML = '<i class="bi bi-check-circle"></i> 已复制';
+                        copyJsonBtn.classList.remove('btn-outline-primary');
+                        copyJsonBtn.classList.add('btn-success');
+
+                        setTimeout(() => {
+                            copyJsonBtn.innerHTML = originalText;
+                            copyJsonBtn.classList.remove('btn-success');
+                            copyJsonBtn.classList.add('btn-outline-primary');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        alert('复制失败: ' + err);
+                    });
+            });
+
+            // 导出JSON
+            exportJsonBtn.addEventListener('click', function () {
+                if (!currentJsonString) {
+                    alert('没有可导出的数据');
+                    return;
+                }
+
+                const blob = new Blob([currentJsonString], {type: 'application/json;charset=utf-8;'});
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+
+                link.setAttribute('href', url);
+                link.setAttribute('download', `query_result_${new Date().getTime()}.json`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // 导出CSV
+            exportCsvBtn.addEventListener('click', function () {
+                if (!currentData || currentData.length === 0) {
+                    alert('没有可导出的数据');
+                    return;
+                }
+
+                const headers = Object.keys(currentData[0]);
+                const rows = currentData.map(row =>
+                    headers.map(header => {
+                        let value = row[header];
+                        if (value === null || value === undefined) {
+                            value = '';
+                        } else if (typeof value === 'object') {
+                            value = JSON.stringify(value);
+                        }
+                        // 处理CSV特殊字符
+                        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                            value = '"' + value.replace(/"/g, '""') + '"';
+                        }
+                        return value;
+                    }).join(',')
+                );
+
+                const csvContent = [headers.join(','), ...rows].join('\n');
+                const blob = new Blob(['\ufeff' + csvContent], {type: 'text/csv;charset=utf-8;'});
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+
+                link.setAttribute('href', url);
+                link.setAttribute('download', `query_result_${new Date().getTime()}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // 绑定事件监听器
+            formatBtn.addEventListener('click', formatSQL);
+            clearBtn.addEventListener('click', clearSQL);
+            toggleCommentBtn.addEventListener('click', toggleComment);
+            executeBtn.addEventListener('click', executeQuery);
+
+            editorTheme.addEventListener('change', function() {
+                changeEditorTheme(this.value);
+                localStorage.setItem('editorTheme', this.value);
+            });
+
+            // 初始化
+            initCodeMirror();
+
+            // 页面加载时恢复配置
+            loadConfigFromStorage();
+
+            // 恢复编辑器主题
+            const savedTheme = localStorage.getItem('editorTheme') || 'default';
+            editorTheme.value = savedTheme;
+            changeEditorTheme(savedTheme);
+
+            // 监听配置变化自动保存
+            const configInputs = document.querySelectorAll('#dbType, #host, #port, #username, #database, #connectionName');
+            configInputs.forEach(input => {
+                input.addEventListener('change', saveConfigToStorage);
+            });
+
+            // 监听编辑器内容变化自动保存
+            codeMirrorEditor.on('change', function() {
+                saveConfigToStorage();
+            });
         });
-
-        // 导出JSON
-        exportJsonBtn.addEventListener('click', function() {
-            if (!currentJsonString) {
-                alert('没有可导出的数据');
-                return;
-            }
-
-            const blob = new Blob([currentJsonString], { type: 'application/json;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-
-            link.setAttribute('href', url);
-            link.setAttribute('download', `query_result_${new Date().getTime()}.json`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        // 导出CSV
-        exportCsvBtn.addEventListener('click', function() {
-            if (!currentData || currentData.length === 0) {
-                alert('没有可导出的数据');
-                return;
-            }
-
-            const headers = Object.keys(currentData[0]);
-            const rows = currentData.map(row =>
-                headers.map(header => {
-                    let value = row[header];
-                    if (value === null || value === undefined) {
-                        value = '';
-                    } else if (typeof value === 'object') {
-                        value = JSON.stringify(value);
-                    }
-                    // 处理CSV特殊字符
-                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-                        value = '"' + value.replace(/"/g, '""') + '"';
-                    }
-                    return value;
-                }).join(',')
-            );
-
-            const csvContent = [headers.join(','), ...rows].join('\n');
-            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-
-            link.setAttribute('href', url);
-            link.setAttribute('download', `query_result_${new Date().getTime()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        // 页面加载时恢复配置
-        loadConfigFromStorage();
-
-        // 监听配置变化自动保存
-        const configInputs = document.querySelectorAll('#dbType, #host, #port, #username, #database, #connectionName');
-        configInputs.forEach(input => {
-            input.addEventListener('change', saveConfigToStorage);
-        });
-
-        // 监听Enter键执行查询 (Ctrl/Cmd + Enter)
-        sqlEditor.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                executeBtn.click();
-            }
-        });
-    });
-</script>
+    </script>
 {% endblock %}
