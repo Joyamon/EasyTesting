@@ -1,4 +1,5 @@
 from celery import shared_task, current_app
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -10,7 +11,7 @@ import random
 from datetime import timedelta
 import sys
 import os
-from test_manager.model.models import TestRun, TestResult
+from test_manager.model.models import TestRun, TestResult, TestCase
 from test_manager.model.schedule import ScheduledTask, TaskExecutionLog
 
 # 确保任务可以被正确导入
@@ -98,8 +99,7 @@ def execute_scheduled_test_suite(self, scheduled_task_id):
             result = execute_test_suite_simple(
                 test_suite=scheduled_task.test_suite,
                 environment=scheduled_task.environment,
-                test_run=test_run,
-                user=scheduled_task.created_by
+                test_run=test_run
             )
 
             logger.info(f"测试套件执行完成: {result}")

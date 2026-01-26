@@ -162,6 +162,7 @@ urlpatterns = [
     path('debug/sync-task/<int:task_id>/', debug_views.sync_single_task_api, name='sync_single_task_api'),
 
     path('tools-list/', tools_views.tools, name='tools-list'),
+    path('con-db/', tools_views.con_mysql, name='con-db'),
     # 用于ui自动化测试的页面,无需登录
     path('ui-test/', test_views.ui_test_page, name='ui-test'),
 

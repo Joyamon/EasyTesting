@@ -444,15 +444,15 @@
                             <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 {% if 'mock-data' in request.path %}collapsed{% else %}collapsed{% endif %}"
 
                                     data-bs-target="#tools"
-                                    aria-expanded="{% if 'mock-data' in request.path or '/tools-list/' in request.path %}true{% else %}false{% endif %}"
+                                    aria-expanded="{% if 'mock-data' in request.path or '/tools-list/' in request.path or '/con-db/' in request.path %}true{% else %}false{% endif %}"
                                     aria-controls="tools">
                                 <i class="bi bi-sliders me-lg-2" style="color: cornflowerblue"></i>工具
                             </button>
-                            <div class="collapse {% if 'mock-data' in request.path or '/tools-list/' in request.path %}show{% endif %}"
+                            <div class="collapse {% if 'mock-data' in request.path or '/tools-list/' in request.path or '/con-db/' in request.path %}show{% endif %}"
                                      id="tools">
                                     <ul class="nav flex-column mb-2">
                                         <li class="nav-item">
-                                            <a class="nav-link {% if '/mock-data/' in request.path %}active{% endif %}"
+                                            <a class="nav-link {% if '/mock-data-list/' in request.path %}active{% endif %}"
                                            href="{% url 'mock-data-list' %}">
                                             <i class="bi bi-clipboard-data-fill" style="color: cornflowerblue"></i>
                                             mock数据
@@ -464,6 +464,14 @@
                                                 <i class="bi bi-tools" style="color: cornflowerblue"></i> 辅助工具
                                             </a>
                                         </li>
+                                        <!-- 数据库 -->
+                                        <li class="nav-item">
+                                            <a class="nav-link {% if '/con-db/' in request.path %}active{% endif %}"
+                                               href="{% url 'con-db' %}">
+                                                <i class="bi bi-tag" style="color: cornflowerblue"></i> 数据库
+                                            </a>
+                                        </li>
+
 
                                     </ul>
                                 </div>
