@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}链接数据库 - EasyTesting{% endblock %}
-{% block header %}链接数据库{% endblock %}
+{% block title %}连接数据库 - EasyTesting{% endblock %}
+{% block header %}连接数据库{% endblock %}
 
 {% block content %}
     <!-- 引入CodeMirror相关资源 -->
@@ -27,12 +27,12 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">数据库类型</label>
-                                        <select class="form-select" id="dbType">
+                                        <label for="dbType"></label><select class="form-select" id="dbType">
                                             <option value="mysql">MySQL</option>
-                                            <option value="postgresql">PostgreSQL</option>
-                                            <option value="sqlserver">SQL Server</option>
-                                            <option value="oracle">Oracle</option>
-                                            <option value="sqlite">SQLite</option>
+{#                                            <option value="postgresql">PostgreSQL</option>#}
+{#                                            <option value="sqlserver">SQL Server</option>#}
+{#                                            <option value="oracle">Oracle</option>#}
+{#                                            <option value="sqlite">SQLite</option>#}
                                         </select>
                                     </div>
                                 </div>
