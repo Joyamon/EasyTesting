@@ -89,57 +89,66 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <label class="form-label fw-medium mb-0">请求参数</label>
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-secondary active" id="toggle-params-table-view-btn" title="Switch to table view">
-                                    <i class="bi bi-table"></i> Table
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-params-text-view-btn" title="Switch to text view">
-                                    <i class="bi bi-file-text"></i> Text Mode
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-edit-params-btn" title="Bulk Edit">
+                                    <i class="bi bi-pencil-square"></i> 批量编辑
                                 </button>
                             </div>
                         </div>
 
-                        <div id="params-text-container" style="display: none;">
-                            <div class="card">
-                                <div class="card-body">
-                                    <textarea class="form-control font-monospace" id="params-text-area" rows="8" placeholder="每行一个参数，格式为: key:value"></textarea>
-                                    <div class="form-text mt-2">文本模式 - 每行一个参数，格式为: key:value</div>
+                        <ul class="nav nav-tabs" id="paramsTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="params-table-tab" data-bs-toggle="tab" data-bs-target="#params-table" type="button" role="tab" aria-controls="params-table" aria-selected="true">
+                                    <i class="bi bi-table"></i> 表格模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="params-text-tab" data-bs-toggle="tab" data-bs-target="#params-text" type="button" role="tab" aria-controls="params-text" aria-selected="false">
+                                    <i class="bi bi-file-text"></i> 文本模式
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="paramsTabContent">
+                            <div class="tab-pane fade show active" id="params-table" role="tabpanel" aria-labelledby="params-table-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered params-table mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="form-check-input" id="select-all-url-params" checked>
+                                                        </th>
+                                                        <th style="width: 30%;">Key</th>
+                                                        <th>Value</th>
+                                                        <th style="width: 30%;">Description</th>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="url-params-container">
+                                                    <!-- 参数行将通过JavaScript动态添加 -->
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="5">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-url-param-btn">
+                                                                <i class="bi bi-plus-lg"></i> Add Parameter
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div id="params-table-container">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered params-table mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <input type="checkbox" class="form-check-input" id="select-all-url-params" checked>
-                                                    </th>
-                                                    <th style="width: 30%;">Key</th>
-                                                    <th>Value</th>
-                                                    <th style="width: 30%;">Description</th>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-link p-0" id="bulk-edit-params-btn" title="Bulk Edit">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </button>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="url-params-container">
-                                                <!-- 参数行将通过JavaScript动态添加 -->
-                                            </tbody>
-                                            <tfoot>
-                                                <tr>
-                                                    <td colspan="5">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-url-param-btn">
-                                                            <i class="bi bi-plus-lg"></i> Add Parameter
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                            <div class="tab-pane fade" id="params-text" role="tabpanel" aria-labelledby="params-text-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <textarea class="form-control font-monospace" id="params-text-area" rows="8" placeholder="每行一个参数，格式为: key:value"></textarea>
+                                        <div class="form-text mt-2">文本模式 - 每行一个参数，格式为: key:value</div>
                                     </div>
                                 </div>
                             </div>
@@ -152,53 +161,65 @@
                             <label class="form-label fw-medium mb-0">请求头</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-headers-btn">
-                                    Bulk Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-headers-mode-btn" title="Switch between table and text mode">
-                                    Key-Value Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-headers-table">
-                                    <i class="bi bi-chevron-down" id="toggle-headers-icon"></i>
+                                    批量编辑
                                 </button>
                             </div>
                         </div>
 
-                        <div id="headers-text-container" style="display: none;">
-                            <textarea class="form-control font-monospace" id="headers-text-area" rows="6" placeholder="每行一个请求头，格式为: Key: Value"></textarea>
-                            <div class="form-text mt-2">文本模式 - 每行一个请求头，格式为: Key: Value</div>
-                        </div>
+                        <ul class="nav nav-tabs" id="headersTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="headers-table-tab" data-bs-toggle="tab" data-bs-target="#headers-table" type="button" role="tab" aria-controls="headers-table" aria-selected="true">
+                                    <i class="bi bi-table"></i> 表格模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="headers-text-tab" data-bs-toggle="tab" data-bs-target="#headers-text" type="button" role="tab" aria-controls="headers-text" aria-selected="false">
+                                    <i class="bi bi-file-text"></i> 文本模式
+                                </button>
+                            </li>
+                        </ul>
 
-                        <div id="headers-table-container">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered headers-table mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <input type="checkbox" class="form-check-input" id="select-all-headers" checked>
-                                                    </th>
-                                                    <th style="width: 30%;">Key</th>
-                                                    <th>Value</th>
-                                                    <th style="width: 30%;">Description</th>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="headers-container">
-                                                <!-- 头部行将通过JavaScript动态添加 -->
-                                            </tbody>
-                                            <tfoot>
-                                                <tr>
-                                                    <td colspan="5">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-header-btn">
-                                                            <i class="bi bi-plus-lg"></i> Add Header
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                        <div class="tab-content" id="headersTabContent">
+                            <div class="tab-pane fade show active" id="headers-table" role="tabpanel" aria-labelledby="headers-table-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered headers-table mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="form-check-input" id="select-all-headers" checked>
+                                                        </th>
+                                                        <th style="width: 30%;">Key</th>
+                                                        <th>Value</th>
+                                                        <th style="width: 30%;">Description</th>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="headers-container">
+                                                    <!-- 头部行将通过JavaScript动态添加 -->
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="5">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-header-btn">
+                                                                <i class="bi bi-plus-lg"></i> Add Header
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="headers-text" role="tabpanel" aria-labelledby="headers-text-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <textarea class="form-control font-monospace" id="headers-text-area" rows="6" placeholder="每行一个请求头，格式为: Key: Value"></textarea>
+                                        <div class="form-text mt-2">文本模式 - 每行一个请求头，格式为: Key: Value</div>
                                     </div>
                                 </div>
                             </div>
@@ -243,53 +264,68 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-medium mb-0">请求体 (Form Data)</label>
                             <div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-form-data-mode-btn" title="Switch between table and text mode">
-                                    Key-Value Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-form-data-table">
-                                    <i class="bi bi-chevron-down" id="toggle-form-data-icon"></i>
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-form-data-btn">
+                                    批量编辑
                                 </button>
                             </div>
                         </div>
                         {{ form.request_body_form_data.errors }}
 
-                        <div id="form-data-text-container" style="display: none;">
-                            <textarea class="form-control font-monospace" id="form-data-text-area" rows="8" placeholder="每行一个参数，格式为: key=value"></textarea>
-                            <div class="form-text mt-2">文本模式 - 每行一个参数，格式为: key=value</div>
-                        </div>
+                        <ul class="nav nav-tabs" id="formDataTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="form-data-table-tab" data-bs-toggle="tab" data-bs-target="#form-data-table" type="button" role="tab" aria-controls="form-data-table" aria-selected="true">
+                                    <i class="bi bi-table"></i> 表格模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="form-data-text-tab" data-bs-toggle="tab" data-bs-target="#form-data-text" type="button" role="tab" aria-controls="form-data-text" aria-selected="false">
+                                    <i class="bi bi-file-text"></i> 文本模式
+                                </button>
+                            </li>
+                        </ul>
 
-                        <div id="form-data-table-container">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered form-data-table mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <input type="checkbox" class="form-check-input" id="select-all-form-data" checked>
-                                                    </th>
-                                                    <th style="width: 25%;">Key</th>
-                                                    <th style="width: 15%;">Type</th>
-                                                    <th>Value</th>
-                                                    <th style="width: 20%;">Description</th>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="form-data-params">
-                                                <!-- 参数行将通过JavaScript动态添加 -->
-                                            </tbody>
-                                            <tfoot>
-                                                <tr>
-                                                    <td colspan="6">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-form-data-btn">
-                                                            <i class="bi bi-plus-lg"></i> Add Parameter
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                        <div class="tab-content" id="formDataTabContent">
+                            <div class="tab-pane fade show active" id="form-data-table" role="tabpanel" aria-labelledby="form-data-table-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered form-data-table mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="form-check-input" id="select-all-form-data" checked>
+                                                        </th>
+                                                        <th style="width: 25%;">Key</th>
+                                                        <th style="width: 15%;">Type</th>
+                                                        <th>Value</th>
+                                                        <th style="width: 20%;">Description</th>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="form-data-params">
+                                                    <!-- 参数行将通过JavaScript动态添加 -->
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="6">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-form-data-btn">
+                                                                <i class="bi bi-plus-lg"></i> Add Parameter
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="form-data-text" role="tabpanel" aria-labelledby="form-data-text-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <textarea class="form-control font-monospace" id="form-data-text-area" rows="8" placeholder="每行一个参数，格式为: key=value"></textarea>
+                                        <div class="form-text mt-2">文本模式 - 每行一个参数，格式为: key=value</div>
                                     </div>
                                 </div>
                             </div>
@@ -306,53 +342,65 @@
                             <label class="form-label fw-medium mb-0">提取参数</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-extract-btn">
-                                    Bulk Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-extract-mode-btn" title="Switch between table and text mode">
-                                    Key-Value Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-extract-table">
-                                    <i class="bi bi-chevron-down" id="toggle-extract-icon"></i>
+                                    批量编辑
                                 </button>
                             </div>
                         </div>
 
-                        <div id="extract-text-container" style="display: none;">
-                            <textarea class="form-control font-monospace" id="extract-text-area" rows="6" placeholder="JSON格式，每行一个提取参数"></textarea>
-                            <div class="form-text mt-2">文本模式 - JSON格式: [{"name": "param_name", "path": "$.data.field"}]</div>
-                        </div>
+                        <ul class="nav nav-tabs" id="extractTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="extract-table-tab" data-bs-toggle="tab" data-bs-target="#extract-table" type="button" role="tab" aria-controls="extract-table" aria-selected="true">
+                                    <i class="bi bi-table"></i> 表格模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="extract-text-tab" data-bs-toggle="tab" data-bs-target="#extract-text" type="button" role="tab" aria-controls="extract-text" aria-selected="false">
+                                    <i class="bi bi-file-text"></i> 文本模式
+                                </button>
+                            </li>
+                        </ul>
 
-                        <div id="extract-table-container">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered extract-table mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <input type="checkbox" class="form-check-input" id="select-all-extract" checked>
-                                                    </th>
-                                                    <th style="width: 25%;">Name</th>
-                                                    <th style="width: 35%;">Path</th>
-                                                    <th>Description</th>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="extract-container">
-                                                <!-- 提取参数行将通过JavaScript动态添加 -->
-                                            </tbody>
-                                            <tfoot>
-                                                <tr>
-                                                    <td colspan="5">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-extract-btn">
-                                                            <i class="bi bi-plus-lg"></i> Add Extract Parameter
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                        <div class="tab-content" id="extractTabContent">
+                            <div class="tab-pane fade show active" id="extract-table" role="tabpanel" aria-labelledby="extract-table-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered extract-table mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="form-check-input" id="select-all-extract" checked>
+                                                        </th>
+                                                        <th style="width: 25%;">Name</th>
+                                                        <th style="width: 35%;">Path</th>
+                                                        <th>Description</th>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="extract-container">
+                                                    <!-- 提取参数行将通过JavaScript动态添加 -->
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="5">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-extract-btn">
+                                                                <i class="bi bi-plus-lg"></i> Add Extract Parameter
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="extract-text" role="tabpanel" aria-labelledby="extract-text-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <textarea class="form-control font-monospace" id="extract-text-area" rows="6" placeholder="JSON格式，每行一个提取参数"></textarea>
+                                        <div class="form-text mt-2">文本模式 - JSON格式: [{"name": "param_name", "path": "$.data.field"}]</div>
                                     </div>
                                 </div>
                             </div>
@@ -370,55 +418,67 @@
                             <label class="form-label fw-medium mb-0">断言</label>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="bulk-edit-validation-btn">
-                                    Bulk Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="toggle-validation-mode-btn" title="Switch between table and text mode">
-                                    Key-Value Edit
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-validation-table">
-                                    <i class="bi bi-chevron-down" id="toggle-validation-icon"></i>
+                                    批量编辑
                                 </button>
                             </div>
                         </div>
 
-                        <div id="validation-text-container" style="display: none;">
-                            <textarea class="form-control font-monospace" id="validation-text-area" rows="6" placeholder="JSON格式，每行一个断言规则"></textarea>
-                            <div class="form-text mt-2">文本模式 - JSON格式: [{"eq": ["$.data.id", 1]}]</div>
-                        </div>
+                        <ul class="nav nav-tabs" id="validationTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="validation-table-tab" data-bs-toggle="tab" data-bs-target="#validation-table" type="button" role="tab" aria-controls="validation-table" aria-selected="true">
+                                    <i class="bi bi-table"></i> 表格模式
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="validation-text-tab" data-bs-toggle="tab" data-bs-target="#validation-text" type="button" role="tab" aria-controls="validation-text" aria-selected="false">
+                                    <i class="bi bi-file-text"></i> 文本模式
+                                </button>
+                            </li>
+                        </ul>
 
-                        <div id="validation-table-container">
-                            <div class="card">
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered validation-table mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <input type="checkbox" class="form-check-input" id="select-all-validation" checked>
-                                                    </th>
-                                                    <th style="width: 20%;">Validator</th>
-                                                    <th style="width: 25%;">Path/Expected</th>
-                                                    <th style="width: 15%;">Type</th>
-                                                    <th style="width: 20%;">Value</th>
-                                                    <th>Description</th>
-                                                    <th style="width: 40px;" class="text-center">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="validation-container">
-                                                <!-- 验证规则行将通过JavaScript动态添加 -->
-                                            </tbody>
-                                            <tfoot>
-                                                <tr>
-                                                    <td colspan="7">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-validation-btn">
-                                                            <i class="bi bi-plus-lg"></i> Add Validation Rule
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                        <div class="tab-content" id="validationTabContent">
+                            <div class="tab-pane fade show active" id="validation-table" role="tabpanel" aria-labelledby="validation-table-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered validation-table mb-0">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="form-check-input" id="select-all-validation" checked>
+                                                        </th>
+                                                        <th style="width: 20%;">Validator</th>
+                                                        <th style="width: 25%;">Path/Expected</th>
+                                                        <th style="width: 15%;">Type</th>
+                                                        <th style="width: 20%;">Value</th>
+                                                        <th>Description</th>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="validation-container">
+                                                    <!-- 验证规则行将通过JavaScript动态添加 -->
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="7">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="add-validation-btn">
+                                                                <i class="bi bi-plus-lg"></i> Add Validation Rule
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="validation-text" role="tabpanel" aria-labelledby="validation-text-tab">
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <textarea class="form-control font-monospace" id="validation-text-area" rows="6" placeholder="JSON格式，每行一个断言规则"></textarea>
+                                        <div class="form-text mt-2">文本模式 - JSON格式: [{"eq": ["$.data.id", 1]}]</div>
                                     </div>
                                 </div>
                             </div>
@@ -757,10 +817,6 @@
         const addParamBtn = document.getElementById('add-url-param-btn');
         const selectAllCheckbox = document.getElementById('select-all-url-params');
         const bulkEditBtn = document.getElementById('bulk-edit-params-btn');
-        const toggleParamsTableViewBtn = document.getElementById('toggle-params-table-view-btn');
-        const toggleParamsTextViewBtn = document.getElementById('toggle-params-text-view-btn');
-        const paramsTextContainer = document.getElementById('params-text-container');
-        const paramsTableContainer = document.getElementById('params-table-container');
         const paramsTextArea = document.getElementById('params-text-area');
 
         let isUpdatingUrl = false;
@@ -886,39 +942,22 @@
             paramsTextArea.value = lines.join('\n');
         }
 
-        function toggleParamsMode(showTextMode) {
-            if (showTextMode === undefined) {
-                showTextMode = paramsTableContainer.style.display !== 'none';
-            }
+        // 监听标签切换事件
+        const paramsTableTab = document.getElementById('params-table-tab');
+        const paramsTextTab = document.getElementById('params-text-tab');
 
-            if (showTextMode) {
-                paramsTextContainer.style.display = 'block';
-                paramsTableContainer.style.display = 'none';
-                paramsTextArea.value = '';
-                const params = [];
-                paramsContainer.querySelectorAll('tr').forEach(row => {
-                    const keyInput = row.querySelector('.param-key');
-                    const valueInput = row.querySelector('.param-value');
-                    if (keyInput && valueInput && keyInput.value.trim() && valueInput.value.trim()) {
-                        params.push(`${keyInput.value.trim()}:${valueInput.value.trim()}`);
-                    }
-                });
-                paramsTextArea.value = params.join('\n');
+        // 切换到文本模式时更新文本区域
+        paramsTextTab.addEventListener('shown.bs.tab', function () {
+            updateParamsTextArea();
+        });
 
-                toggleParamsTextViewBtn.classList.add('active');
-                toggleParamsTableViewBtn.classList.remove('active');
-            } else {
-                paramsTextContainer.style.display = 'none';
-                paramsTableContainer.style.display = 'block';
-                paramsContainer.innerHTML = '';
-                const params = parseParamsFromTextArea();
-                params.forEach(param => addParamRow(param));
-                updateUrlInput();
-
-                toggleParamsTextViewBtn.classList.remove('active');
-                toggleParamsTableViewBtn.classList.add('active');
-            }
-        }
+        // 切换到表格模式时更新表格
+        paramsTableTab.addEventListener('shown.bs.tab', function () {
+            paramsContainer.innerHTML = '';
+            const params = parseParamsFromTextArea();
+            params.forEach(param => addParamRow(param));
+            updateUrlInput();
+        });
 
         updateParamsTable();
         urlInput.addEventListener('input', () => {
@@ -937,20 +976,6 @@
         bulkEditBtn.addEventListener('click', () => {
             BulkEditManager.show('url-params', '#url-params-container');
         });
-
-        toggleParamsTableViewBtn.addEventListener('click', () => {
-            if (paramsTableContainer.style.display === 'none') {
-                toggleParamsMode(false);
-            }
-        });
-
-        toggleParamsTextViewBtn.addEventListener('click', () => {
-            if (paramsTextContainer.style.display === 'none') {
-                toggleParamsMode(true);
-            }
-        });
-
-        paramsTextArea.addEventListener('input', updateParamsTextArea);
     }
 
     // 请求头表格初始化
@@ -960,6 +985,7 @@
         const addHeaderBtn = document.getElementById('add-header-btn');
         const selectAllCheckbox = document.getElementById('select-all-headers');
         const bulkEditBtn = document.getElementById('bulk-edit-headers-btn');
+        const headersTextArea = document.getElementById('headers-text-area');
 
         function parseHeaders() {
             const headers = [];
@@ -1044,11 +1070,6 @@
             BulkEditManager.show('headers', '#headers-container');
         });
 
-        const headersTableContainer = document.getElementById('headers-table-container');
-        const headersTextContainer = document.getElementById('headers-text-container');
-        const headersTextArea = document.getElementById('headers-text-area');
-        const toggleHeadersModeBtn = document.getElementById('toggle-headers-mode-btn');
-
         function updateHeadersTextArea() {
             const headers = {};
             headersContainer.querySelectorAll('tr').forEach(row => {
@@ -1080,31 +1101,25 @@
             return headers;
         }
 
-        toggleHeadersModeBtn.addEventListener('click', () => {
-            const isTableVisible = headersTableContainer.style.display !== 'none';
-            if (isTableVisible) {
-                updateHeadersTextArea();
-                headersTableContainer.style.display = 'none';
-                headersTextContainer.style.display = 'block';
-                toggleHeadersModeBtn.textContent = 'Table Edit';
-            } else {
-                headersContainer.innerHTML = '';
-                const headers = parseHeadersFromText();
-                if (headers.length > 0) {
-                    headers.forEach(header => addHeaderRow(header));
-                } else {
-                    addHeaderRow();
-                }
-                updateHeadersTextarea();
-                headersTableContainer.style.display = 'block';
-                headersTextContainer.style.display = 'none';
-                toggleHeadersModeBtn.textContent = 'Key-Value Edit';
-            }
+        // 监听标签切换事件
+        const headersTableTab = document.getElementById('headers-table-tab');
+        const headersTextTab = document.getElementById('headers-text-tab');
+
+        // 切换到文本模式时更新文本区域
+        headersTextTab.addEventListener('shown.bs.tab', function () {
+            updateHeadersTextArea();
         });
 
-        document.getElementById('toggle-headers-table').addEventListener('click', () => {
-            const container = document.getElementById('headers-table-container');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        // 切换到表格模式时更新表格
+        headersTableTab.addEventListener('shown.bs.tab', function () {
+            headersContainer.innerHTML = '';
+            const headers = parseHeadersFromText();
+            if (headers.length > 0) {
+                headers.forEach(header => addHeaderRow(header));
+            } else {
+                addHeaderRow();
+            }
+            updateHeadersTextarea();
         });
     }
 
@@ -1114,6 +1129,7 @@
         const paramsContainer = document.getElementById('form-data-params');
         const addParamBtn = document.getElementById('add-form-data-btn');
         const selectAllCheckbox = document.getElementById('select-all-form-data');
+        const formDataTextArea = document.getElementById('form-data-text-area');
 
         // 智能类型推断和存储
         class TypeManager {
@@ -1528,12 +1544,6 @@
             });
         });
 
-        // 文本模式切换
-        const formDataTableContainer = document.getElementById('form-data-table-container');
-        const formDataTextContainer = document.getElementById('form-data-text-container');
-        const formDataTextArea = document.getElementById('form-data-text-area');
-        const toggleFormDataModeBtn = document.getElementById('toggle-form-data-mode-btn');
-
         function updateFormDataTextArea() {
             const lines = [];
             paramsContainer.querySelectorAll('tr').forEach(row => {
@@ -1610,31 +1620,30 @@
             return params;
         }
 
-        toggleFormDataModeBtn.addEventListener('click', () => {
-            const isTableVisible = formDataTableContainer.style.display !== 'none';
-            if (isTableVisible) {
-                updateFormDataTextArea();
-                formDataTableContainer.style.display = 'none';
-                formDataTextContainer.style.display = 'block';
-                toggleFormDataModeBtn.textContent = 'Table Edit';
-            } else {
-                paramsContainer.innerHTML = '';
-                const params = parseFormDataFromText();
-                if (params.length > 0) {
-                    params.forEach(param => addParamRow(param));
-                } else {
-                    addParamRow();
-                }
-                updateTextarea();
-                formDataTableContainer.style.display = 'block';
-                formDataTextContainer.style.display = 'none';
-                toggleFormDataModeBtn.textContent = 'Key-Value Edit';
-            }
+        // 监听标签切换事件
+        const formDataTableTab = document.getElementById('form-data-table-tab');
+        const formDataTextTab = document.getElementById('form-data-text-tab');
+
+        // 切换到文本模式时更新文本区域
+        formDataTextTab.addEventListener('shown.bs.tab', function () {
+            updateFormDataTextArea();
         });
 
-        document.getElementById('toggle-form-data-table').addEventListener('click', () => {
-            const container = document.getElementById('form-data-table-container');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        // 切换到表格模式时更新表格
+        formDataTableTab.addEventListener('shown.bs.tab', function () {
+            paramsContainer.innerHTML = '';
+            const params = parseFormDataFromText();
+            if (params.length > 0) {
+                params.forEach(param => addParamRow(param));
+            } else {
+                addParamRow();
+            }
+            updateTextarea();
+        });
+
+        // 添加批量编辑按钮事件监听
+        document.getElementById('bulk-edit-form-data-btn')?.addEventListener('click', () => {
+            BulkEditManager.show('form-data', '#form-data-params');
         });
     }
 
@@ -1645,6 +1654,7 @@
         const addBtn = document.getElementById('add-extract-btn');
         const selectAllCheckbox = document.getElementById('select-all-extract');
         const bulkEditBtn = document.getElementById('bulk-edit-extract-btn');
+        const extractTextArea = document.getElementById('extract-text-area');
 
         function parseExtractParams() {
             const params = [];
@@ -1734,11 +1744,6 @@
             BulkEditManager.show('extract', '#extract-container');
         });
 
-        const extractTableContainer = document.getElementById('extract-table-container');
-        const extractTextContainer = document.getElementById('extract-text-container');
-        const extractTextArea = document.getElementById('extract-text-area');
-        const toggleExtractModeBtn = document.getElementById('toggle-extract-mode-btn');
-
         function updateExtractTextArea() {
             const params = [];
             container.querySelectorAll('tr').forEach(row => {
@@ -1767,31 +1772,25 @@
             }
         }
 
-        toggleExtractModeBtn.addEventListener('click', () => {
-            const isTableVisible = extractTableContainer.style.display !== 'none';
-            if (isTableVisible) {
-                updateExtractTextArea();
-                extractTableContainer.style.display = 'none';
-                extractTextContainer.style.display = 'block';
-                toggleExtractModeBtn.textContent = 'Table Edit';
-            } else {
-                container.innerHTML = '';
-                const params = parseExtractFromText();
-                if (params.length > 0) {
-                    params.forEach(param => addRow(param));
-                } else {
-                    addRow();
-                }
-                updateTextarea();
-                extractTableContainer.style.display = 'block';
-                extractTextContainer.style.display = 'none';
-                toggleExtractModeBtn.textContent = 'Key-Value Edit';
-            }
+        // 监听标签切换事件
+        const extractTableTab = document.getElementById('extract-table-tab');
+        const extractTextTab = document.getElementById('extract-text-tab');
+
+        // 切换到文本模式时更新文本区域
+        extractTextTab.addEventListener('shown.bs.tab', function () {
+            updateExtractTextArea();
         });
 
-        document.getElementById('toggle-extract-table').addEventListener('click', () => {
-            const containerDiv = document.getElementById('extract-table-container');
-            containerDiv.style.display = containerDiv.style.display === 'none' ? 'block' : 'none';
+        // 切换到表格模式时更新表格
+        extractTableTab.addEventListener('shown.bs.tab', function () {
+            container.innerHTML = '';
+            const params = parseExtractFromText();
+            if (params.length > 0) {
+                params.forEach(param => addRow(param));
+            } else {
+                addRow();
+            }
+            updateTextarea();
         });
     }
 
@@ -1802,6 +1801,7 @@
         const addBtn = document.getElementById('add-validation-btn');
         const selectAllCheckbox = document.getElementById('select-all-validation');
         const bulkEditBtn = document.getElementById('bulk-edit-validation-btn');
+        const validationTextArea = document.getElementById('validation-text-area');
 
         function parseValidationRules() {
             const rules = [];
@@ -1939,11 +1939,6 @@
             BulkEditManager.show('validation', '#validation-container');
         });
 
-        const validationTableContainer = document.getElementById('validation-table-container');
-        const validationTextContainer = document.getElementById('validation-text-container');
-        const validationTextArea = document.getElementById('validation-text-area');
-        const toggleValidationModeBtn = document.getElementById('toggle-validation-mode-btn');
-
         function updateValidationTextArea() {
             const rules = [];
             container.querySelectorAll('tr').forEach(row => {
@@ -1997,41 +1992,35 @@
             }
         }
 
-        toggleValidationModeBtn.addEventListener('click', () => {
-            const isTableVisible = validationTableContainer.style.display !== 'none';
-            if (isTableVisible) {
-                updateValidationTextArea();
-                validationTableContainer.style.display = 'none';
-                validationTextContainer.style.display = 'block';
-                toggleValidationModeBtn.textContent = 'Table Edit';
-            } else {
-                container.innerHTML = '';
-                const rulesData = parseValidationFromText();
-                if (rulesData.length > 0) {
-                    rulesData.forEach(ruleData => {
-                        const validator = Object.keys(ruleData)[0];
-                        const value = ruleData[validator];
-                        addRow({
-                            validator,
-                            path: Array.isArray(value) ? value[0] : '',
-                            type: ruleData.type || 'String',
-                            value: Array.isArray(value) ? value[1] : value,
-                            description: ruleData.description || ''
-                        });
-                    });
-                } else {
-                    addRow();
-                }
-                updateTextarea();
-                validationTableContainer.style.display = 'block';
-                validationTextContainer.style.display = 'none';
-                toggleValidationModeBtn.textContent = 'Key-Value Edit';
-            }
+        // 监听标签切换事件
+        const validationTableTab = document.getElementById('validation-table-tab');
+        const validationTextTab = document.getElementById('validation-text-tab');
+
+        // 切换到文本模式时更新文本区域
+        validationTextTab.addEventListener('shown.bs.tab', function () {
+            updateValidationTextArea();
         });
 
-        document.getElementById('toggle-validation-table').addEventListener('click', () => {
-            const containerDiv = document.getElementById('validation-table-container');
-            containerDiv.style.display = containerDiv.style.display === 'none' ? 'block' : 'none';
+        // 切换到表格模式时更新表格
+        validationTableTab.addEventListener('shown.bs.tab', function () {
+            container.innerHTML = '';
+            const rulesData = parseValidationFromText();
+            if (rulesData.length > 0) {
+                rulesData.forEach(ruleData => {
+                    const validator = Object.keys(ruleData)[0];
+                    const value = ruleData[validator];
+                    addRow({
+                        validator,
+                        path: Array.isArray(value) ? value[0] : '',
+                        type: ruleData.type || 'String',
+                        value: Array.isArray(value) ? value[1] : value,
+                        description: ruleData.description || ''
+                    });
+                });
+            } else {
+                addRow();
+            }
+            updateTextarea();
         });
     }
 
@@ -2106,39 +2095,60 @@
         font-size: 0.85rem;
     }
 
-    /* Added improved text mode styling to match table mode */
-    #params-text-container .card,
-    #headers-text-container .card,
-    #body-text-container .card,
-    #extract-text-container .card,
-    #validation-text-container .card {
-        border: 1px solid #dee2e6;
-        margin-bottom: 0;
+    /* 标签样式优化 */
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
     }
 
+    .nav-tabs .nav-link {
+        border: 1px solid transparent;
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+        padding: 0.5rem 1rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color: #e9ecef #e9ecef #dee2e6;
+        color: #495057;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #495057;
+        background-color: #fff;
+        border-color: #dee2e6 #dee2e6 #fff;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link i {
+        margin-right: 0.25rem;
+    }
+
+    /* 文本区域样式 */
     #params-text-area,
     #headers-text-area,
-    #body-text-area,
+    #form-data-text-area,
     #extract-text-area,
     #validation-text-area {
         min-height: 200px;
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         font-size: 0.875rem;
         line-height: 1.5;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
     }
 
-    .btn-group .btn.active {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        color: white;
+    /* 标签内容样式 */
+    .tab-content {
+        padding-top: 0;
     }
 
-    .btn-group .btn {
-        border-right: none;
-    }
-
-    .btn-group .btn:last-child {
-        border-right: 1px solid #dee2e6;
+    .tab-pane .card {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-top: none;
     }
 
     /* Form Data文件上传样式 */
@@ -2187,6 +2197,18 @@
     .upload-status {
         font-size: 0.75rem;
         margin-top: 2px;
+    }
+
+    /* 批量编辑按钮样式 */
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #dee2e6;
+    }
+
+    .btn-outline-secondary:hover {
+        color: #495057;
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
     }
 </style>
 {% endblock %}
