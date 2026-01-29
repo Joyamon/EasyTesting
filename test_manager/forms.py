@@ -95,10 +95,11 @@ class TestCaseForm(forms.ModelForm):
         model = TestCase
         fields =  [
             'name', 'project', 'group', 'description', 'request_method',
-            'request_url', 'expected_status_code', 'request_body_format'
+            'request_url', 'expected_status_code', 'request_body_format','times'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
+            'times': forms.NumberInput(attrs={'min': 1, 'max': 20}),
         }
 
     def __init__(self, *args, **kwargs):

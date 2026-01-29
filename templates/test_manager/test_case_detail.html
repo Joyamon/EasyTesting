@@ -92,6 +92,11 @@
                 </div>
 
                 <div class="mb-4">
+                <!-- 请求次数 --->
+
+                    <h5 class="text-muted mb-2">请求次数</h5>
+                    <code class="badge bg-info ">{{ test_case.times }}</code>
+
                     <h5 class="text-muted mb-2">请求头</h5>
                     {% if test_case.request_headers %}
                         <code class="bg-light p-3 rounded">{{ test_case.request_headers|pprint }}</code>

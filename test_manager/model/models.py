@@ -96,6 +96,7 @@ class TestCase(models.Model):
                                    verbose_name="创建人", db_comment="创建人")
     # 新增字段，用于存储跳过测试
     skip_test = models.BooleanField(default=False, verbose_name="跳过测试", db_comment="跳过测试")
+    times = models.IntegerField(default=1, verbose_name="执行次数", db_comment="执行次数")
 
     def __str__(self):
         return self.name

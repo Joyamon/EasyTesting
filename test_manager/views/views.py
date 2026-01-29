@@ -524,15 +524,15 @@ def test_case_run(request, pk):
             start_time=timezone.now(),
             created_by=request.user
         )
-
-        # 异步执行测试用例
-        execute_test_case_async(
-            test_case=test_case,
-            environment=environment,
-            test_run=test_run,
-            user=request.user,
-            execute_test_case_func=execute_test_case
-        )
+        for i in range(test_case.times):
+            # 异步执行测试用例
+            execute_test_case_async(
+                test_case=test_case,
+                environment=environment,
+                test_run=test_run,
+                user=request.user,
+                execute_test_case_func=execute_test_case
+            )
 
         messages.success(
             request,
