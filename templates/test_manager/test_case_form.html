@@ -60,7 +60,7 @@
                     </div>
 
                     <div class="row mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="{{ form.request_method.id_for_label }}" class="form-label fw-medium">请求方式</label>
                             {{ form.request_method.errors }}
                             <select class="form-select" id="{{ form.request_method.id_for_label }}" name="{{ form.request_method.html_name }}" required>
@@ -70,25 +70,23 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label for="{{ form.request_url.id_for_label }}" class="form-label fw-medium">请求 URL</label>
                             {{ form.request_url.errors }}
                             <input type="text" class="form-control" id="{{ form.request_url.id_for_label }}" name="{{ form.request_url.html_name }}" value="{{ form.request_url.value|default:'' }}" required placeholder="/api/endpoint">
                             <div class="form-text">url路径</div>
                         </div>
 
-                        <div class="col-md-3">
-                            <label for="{{ form.expected_status_code.id_for_label }}" class="form-label fw-medium">预期状态码</label>
+                        <div class="col-md-2">
+                            <label for="{{ form.expected_status_code.id_for_label }}" class="form-label fw-medium bg-success">预期状态码</label>
                             {{ form.expected_status_code.errors }}
                             <input type="number" class="form-control" id="{{ form.expected_status_code.id_for_label }}" name="{{ form.expected_status_code.html_name }}" value="{{ form.expected_status_code.value|default:'200' }}" required>
                         </div>
                         <div class="col-md-2">
                             <!-- 执行次数-->
-                            <label for="{{ form.times.id_for_label }}" class="form-label fw-medium">执行次数</label>
+                            <label for="{{ form.times.id_for_label }}" class="form-label fw-medium bg-warning">执行次数</label>
                             {{ form.run_times.errors }}
                             <input type="number" class="form-control" id="{{ form.times.id_for_label }}" name="{{ form.times.html_name }}" value="{{ form.times.value|default:'1' }}" required>
-                            <div class="form-text">执行次数</div>
-                            </input>
                         </div>
                     </div>
 
