@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}测试人员 - EasyTesting{% endblock %}
+{% block header %}测试人员管理{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-body">
+            <!-- 测试人员表格 -->
+            <div class="table-responsive">
+                <table class="table  table-hover" id="testersTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>注册日期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if testers %}
+                        {% for tester in testers %}
+                            <tr>
+                                <td>{{ tester.id }}</td>
+                                <td>{{ tester.username }}</td>
+                                <td>{{ tester.email }}</td>
+                                <td>{{ tester.date_joined|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if tester.is_active %}
+                                        <span class="label label-success">启用</span>
+                                    {% else %}
+                                        <span class="label label-warning">禁用</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'delete_tester' pk=tester.pk %}"
+                                           class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">暂无测试人员数据</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% include 'pagination.html' with page_obj=testers %}
+        </div>
+    </div>
+{% endblock %}
+
+

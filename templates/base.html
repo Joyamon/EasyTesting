@@ -478,18 +478,23 @@
                         </li>
                         <!-- 测试管理菜单组 -->
                         <li class="mb-1">
-                            <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 {% if '/dashboard/' in request.path or  '/task-monitor/' in request.path or '/projects/' in request.path or '/environments/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}collapsed{% else %}collapsed{% endif %}"
+                            <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 {% if '/test-users/' in request.path or '/dashboard/' in request.path or  '/task-monitor/' in request.path or '/projects/' in request.path or '/environments/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}collapsed{% else %}collapsed{% endif %}"
 
                                     data-bs-target="#test-management-collapse"
-                                    aria-expanded="{% if  '/projects/' in request.path or '/environments/' in request.path or  '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}true{% else %}false{% endif %}"
+                                    aria-expanded="{% if '/test-users/' in request.path or '/projects/' in request.path or '/environments/' in request.path or  '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}true{% else %}false{% endif %}"
                                     aria-controls="test-management-collapse">
                                 <i class="bi bi-calendar-range-fill me-lg-2" style="color: cornflowerblue"></i>测试管理
                             </button>
-                            <div class="collapse {% if  '/projects/' in request.path or '/environments/' in request.path  or '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}show{% endif %}"
+                            <div class="collapse {% if '/test-users/' in request.path or '/projects/' in request.path or '/environments/' in request.path  or '/task-monitor/' in request.path or '/test-cases/' in request.path or '/test-suites/' in request.path or '/test-runs/' in request.path or '/reports/' in request.path or 'test-case-groups' in request.path or 'test-suite-groups' in request.path or 'scheduled-tasks' in request.path  %}show{% endif %}"
                                  id="test-management-collapse">
                                 <ul class="nav flex-column mb-2">
 
-
+                                <li class="nav-item">
+                                    <a class="nav-link {% if '/test-users/' in request.path %}active{% endif %}"
+                                       href="{% url 'test_users_list' %}">
+                                        <i class="bi bi-person" style="color: cornflowerblue"></i> 测试人员
+                                    </a>
+                                </li>
                                     <li class="nav-item">
                                         <a class="nav-link {% if '/projects/' in request.path %}active{% endif %}"
                                            href="{% url 'project_list' %}">

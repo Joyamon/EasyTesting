@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from test_manager.views import views, debug_views, tools_views, test_views, visitor_views, scheduled_views, \
-    mockdata_views, email_views, domain_views, file_views
+    mockdata_views, email_views, domain_views, file_views, tester_views
 from test_manager.views import auth_views as custom_auth_views
 
 urlpatterns = [
@@ -176,6 +176,11 @@ urlpatterns = [
 
     # 文件上传
     path('file-upload/', file_views.upload_file, name='file_upload'),
+
+    # 测试人员
+    path('test-users/', tester_views.tester_list, name='test_users_list'),
+    path('test-users/<int:pk>/delete/', tester_views.delete_tester, name='delete_tester'),
+
 
 
 ]
