@@ -13,7 +13,7 @@ class TestManagerConfig(AppConfig):
 
         # 加载邮件配置
         try:
-            from test_manager.models import EmailConfig
+            from test_manager.model.email import EmailConfig
             EmailConfig.apply_active_config()
         except:
             pass

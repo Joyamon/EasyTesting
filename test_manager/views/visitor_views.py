@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -20,26 +21,28 @@ def visitor_log_list(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
 
-    # 构建查询
-    visitor_logs = VisitorLog.objects.all()
+    # 1. 先构建基础查询
+    base_query = VisitorLog.objects.all()
+    filtered_query = base_query
 
+    # 应用筛选条件
     if ip_filter:
-        visitor_logs = visitor_logs.filter(ip_address__icontains=ip_filter)
+        filtered_query = filtered_query.filter(ip_address__icontains=ip_filter)
 
     if user_filter:
-        visitor_logs = visitor_logs.filter(
+        filtered_query = filtered_query.filter(
             Q(user__username__icontains=user_filter) |
             Q(user__email__icontains=user_filter)
         )
 
     if path_filter:
-        visitor_logs = visitor_logs.filter(path__icontains=path_filter)
+        filtered_query = filtered_query.filter(path__icontains=path_filter)
 
     if date_from:
         try:
             from_date = timezone.datetime.strptime(date_from, '%Y-%m-%d')
             from_date = timezone.make_aware(from_date)
-            visitor_logs = visitor_logs.filter(created_at__gte=from_date)
+            filtered_query = filtered_query.filter(created_at__gte=from_date)
         except ValueError:
             pass
 
@@ -47,17 +50,53 @@ def visitor_log_list(request):
         try:
             to_date = timezone.datetime.strptime(date_to, '%Y-%m-%d')
             to_date = timezone.make_aware(to_date) + timedelta(days=1)
-            visitor_logs = visitor_logs.filter(created_at__lt=to_date)
+            filtered_query = filtered_query.filter(created_at__lt=to_date)
         except ValueError:
             pass
 
-    # 获取统计数据
-    total_visits = visitor_logs.count()
-    unique_ips = visitor_logs.values('ip_address').distinct().count()
-    authenticated_visits = visitor_logs.filter(user__isnull=False).count()
+    # 2. 使用子查询优化统计，避免重复计算
+    # 获取分页数据（只查询需要的字段）
+    visitor_logs_page = paginate_queryset(
+        request,
+        filtered_query.select_related('user').only(
+            'id', 'ip_address', 'user__username',
+            'path', 'method', 'referer', 'created_at'
+        ),
+        20  # 适当增加每页数量减少查询次数
+    )
 
-    # 分页
-    visitor_logs_page = paginate_queryset(request, visitor_logs, 10)
+    # 3. 异步或延迟加载统计数据
+    # 只在需要时计算统计数据
+    total_visits = None
+    unique_ips = None
+    authenticated_visits = None
+
+    # 只有在小数据量或明确需要时才计算统计
+    if not ip_filter and not user_filter and not path_filter and not date_from and not date_to:
+        # 使用缓存获取统计数据
+        cache_key = f'visitor_stats_{date_from}_{date_to}'
+        stats = cache.get(cache_key)
+
+        if not stats:
+            # 批量计算统计
+            stats = calculate_visitor_stats(date_from, date_to)
+            cache.set(cache_key, stats, 300)  # 缓存5分钟
+
+        total_visits = stats['total_visits']
+        unique_ips = stats['unique_ips']
+        authenticated_visits = stats['authenticated_visits']
+    else:
+        # 对于筛选后的数据，只计算必要的统计
+        total_visits = filtered_query.count()
+
+        # 使用近似统计，避免distinct count在大数据集上的性能问题
+        if filtered_query.count() < 10000:
+            unique_ips = filtered_query.values('ip_address').distinct().count()
+            authenticated_visits = filtered_query.filter(user__isnull=False).count()
+        else:
+            # 大数据集使用近似统计或跳过
+            unique_ips = "N/A (数据集过大)"
+            authenticated_visits = "N/A (数据集过大)"
 
     context = {
         'visitor_logs': visitor_logs_page,
@@ -72,6 +111,39 @@ def visitor_log_list(request):
     }
 
     return render(request, 'test_manager/visitor_log_list.html', context)
+
+
+def calculate_visitor_stats(date_from=None, date_to=None):
+    """计算访客统计数据 - 可缓存"""
+    from django.db.models import Count
+    from django.utils import timezone
+
+    base_query = VisitorLog.objects.all()
+
+    if date_from:
+        try:
+            from_date = timezone.datetime.strptime(date_from, '%Y-%m-%d')
+            from_date = timezone.make_aware(from_date)
+            base_query = base_query.filter(created_at__gte=from_date)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            to_date = timezone.datetime.strptime(date_to, '%Y-%m-%d')
+            to_date = timezone.make_aware(to_date) + timedelta(days=1)
+            base_query = base_query.filter(created_at__lt=to_date)
+        except ValueError:
+            pass
+
+    # 使用数据库的聚合函数一次性获取统计
+    stats = base_query.aggregate(
+        total_visits=Count('id'),
+        unique_ips=Count('ip_address', distinct=True),
+        authenticated_visits=Count('id', filter=Q(user__isnull=False))
+    )
+
+    return stats
 
 
 @login_required

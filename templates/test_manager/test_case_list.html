@@ -140,6 +140,7 @@
                         <th>请求方式</th>
                         <th>URL</th>
                         <th>预期状态码</th>
+                        <th>执行次数</th>
                         <th class="text-end">操作</th>
                     </tr>
                     </thead>
@@ -206,6 +207,9 @@
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark">{{ test_case.expected_status_code }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-danger">{{ test_case.times }}</span>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">

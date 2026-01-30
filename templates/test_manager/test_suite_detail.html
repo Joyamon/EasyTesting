@@ -6,6 +6,9 @@
 
 {% block header_buttons %}
     <div class="btn-group">
+        <a href="{% url 'test_suite_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-90deg-left"></i> 返回列表
+        </a>
         <a href="{% url 'test_suite_edit' pk=test_suite.pk %}" class="btn btn-outline-secondary">
             <i class="bi bi-pencil"></i> 编辑
         </a>
