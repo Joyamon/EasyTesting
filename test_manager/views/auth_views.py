@@ -31,6 +31,7 @@ def register_view(request):
             # 激活账户
             user.is_active = True
             user.is_staff = True
+            user.save()
             # 自动登录新注册的用户
             login(request, user)
             messages.success(request, f"账户创建成功！欢迎 {user.username}！")

@@ -38,7 +38,7 @@ def delete_tester(request, pk):
             # 普通用户不能删除管理员
             if not tester.is_superuser and request.user.is_superuser:
                 tester.delete()
-                messages.warning(request, '删除成功')
+                messages.success(request, '删除成功')
             else:
                 messages.warning(request, '普通用户没有删除权限')
             return redirect('test_users_list')
