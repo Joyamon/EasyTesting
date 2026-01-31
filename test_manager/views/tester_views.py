@@ -30,8 +30,17 @@ def delete_tester(request, pk):
     try:
         tester = get_object_or_404(User, pk=pk)
         if request.method == 'POST':
-            tester.delete()
-            messages.success(request, '测试人员删除成功')
+            if tester == request.user:
+                messages.warning(request, '不能删除自己')
+                return redirect('test_users_list')
+            if tester == request.user and tester.is_superuser:
+                messages.warning(request, '不能删除管理员')
+            # 普通用户不能删除管理员
+            if not tester.is_superuser and request.user.is_superuser:
+                tester.delete()
+                messages.warning(request, '删除成功')
+            else:
+                messages.warning(request, '普通用户没有删除权限')
             return redirect('test_users_list')
         return render(request, 'test_manager/tester/tester_confirm_delete.html', {'tester': tester})
     except User.DoesNotExist:
