@@ -180,6 +180,7 @@ urlpatterns = [
     # 测试人员
     path('test-users/', tester_views.tester_list, name='test_users_list'),
     path('test-users/<int:pk>/delete/', tester_views.delete_tester, name='delete_tester'),
+    path('test-users/<int:pk>/change-status/', tester_views.tester_change_status, name='tester_change_status'),
 
 
 

@@ -7,7 +7,7 @@
         <div class="card-body">
             <!-- 测试人员表格 -->
             <div class="table-responsive">
-                <table class="table  table-hover" id="testersTable">
+                <table class="table table-hover" id="testersTable">
                     <thead>
                     <tr>
                         <th>ID</th>
@@ -15,6 +15,7 @@
                         <th>邮箱</th>
                         <th>注册日期</th>
                         <th>状态</th>
+                        <th>管理员</th>
                         <th>操作</th>
                     </tr>
                     </thead>
@@ -27,17 +28,35 @@
                                 <td>{{ tester.email }}</td>
                                 <td>{{ tester.date_joined|date:"Y-m-d H:i" }}</td>
                                 <td>
-                                    {% if tester.is_active %}
-                                        <span class="label label-success">启用</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input status-toggle"
+                                               type="checkbox"
+                                               id="status-switch-{{ tester.pk }}"
+                                               data-tester-id="{{ tester.pk }}"
+                                               data-status-url="{% url 'tester_change_status' pk=tester.pk %}"
+                                               {% if tester.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="status-switch-{{ tester.pk }}">
+                                            {% if tester.is_active %}
+                                                <span class="text-success">已启用</span>
+                                            {% else %}
+                                                <span class="text-danger">已禁用</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if tester.is_superuser %}
+                                        <span class="badge bg-primary">管理员</span>
                                     {% else %}
-                                        <span class="label label-warning">禁用</span>
+                                        <span class="badge bg-secondary">普通用户</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     <div class="btn-group">
                                         <a href="{% url 'delete_tester' pk=tester.pk %}"
-                                           class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('确定要删除测试人员 {{ tester.username }} 吗？')">
+                                            <i class="bi bi-trash"></i> 删除
                                         </a>
                                     </div>
                                 </td>
@@ -54,6 +73,116 @@
         {% include 'pagination.html' with page_obj=testers %}
         </div>
     </div>
+
+
+    <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 监听所有状态切换开关
+        document.querySelectorAll('.status-toggle').forEach(switchElement => {
+            switchElement.addEventListener('change', function() {
+                const testerId = this.dataset.testerId;
+                const url = this.dataset.statusUrl;
+                const newStatus = this.checked; // true=启用, false=禁用
+                {#const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;#}
+
+                // 禁用开关防止重复点击
+                this.disabled = true;
+
+                // 发送AJAX请求
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        {#'X-CSRFToken': csrfToken,#}
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        is_active: newStatus
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 更新标签文本
+                        const label = this.nextElementSibling;
+                        if (newStatus) {
+                            label.innerHTML = '<span class="text-success">已启用</span>';
+                            showToast('测试账号已启用', 'success');
+                        } else {
+                            label.innerHTML = '<span class="text-danger">已禁用</span>';
+                            showToast('测试账号已禁用', 'success');
+                        }
+                    } else {
+                        // 操作失败，恢复开关状态
+                        this.checked = !newStatus;
+                        showToast(data.message || '操作失败，请重试', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 操作失败，恢复开关状态
+                    this.checked = !newStatus;
+                    showToast('网络错误，请重试', 'error');
+                })
+                .finally(() => {
+                    // 重新启用开关
+                    this.disabled = false;
+                });
+            });
+        });
+    });
+
+    // 显示Toast消息
+    function showToast(message, type = 'success') {
+        // 移除现有的toast
+        const existingToasts = document.querySelectorAll('.custom-toast');
+        existingToasts.forEach(toast => toast.remove());
+
+        // 创建toast容器
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+
+        // 创建toast元素
+        const toast = document.createElement('div');
+        toast.className = `toast custom-toast align-items-center text-bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="toast-body d-flex align-items-center">
+                    <i class="bi ${icon} me-2 fs-5"></i>
+                    <span class="me-3">${message}</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // 使用Bootstrap Toast
+        const bsToast = new bootstrap.Toast(toast, {
+            delay: 3000,
+            autohide: true
+        });
+        bsToast.show();
+
+        // 自动移除
+        toast.addEventListener('hidden.bs.toast', function() {
+            toast.remove();
+        });
+    }
+    </script>
 {% endblock %}
-
-

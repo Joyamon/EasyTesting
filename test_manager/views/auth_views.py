@@ -28,6 +28,9 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # 激活账户
+            user.is_active = True
+            user.is_staff = True
             # 自动登录新注册的用户
             login(request, user)
             messages.success(request, f"账户创建成功！欢迎 {user.username}！")
