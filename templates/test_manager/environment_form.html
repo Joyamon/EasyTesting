@@ -2,6 +2,58 @@
 
 {% block title %}{{ title }} - EasyTesting{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.css">
+<style>
+    .CodeMirror {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        height: 200px;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        font-size: 14px;
+    }
+
+    .CodeMirror-foldgutter, .CodeMirror-foldgutter-open, .CodeMirror-foldgutter-folded {
+        width: 15px;
+    }
+
+    .json-editor-container {
+        position: relative;
+    }
+
+    .json-format-btn {
+        position: absolute;
+        top: 45px;
+        right: 15px;
+        z-index: 10;
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    .json-error {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+
+    .json-validation {
+        margin-top: 5px;
+        font-size: 13px;
+    }
+
+    .json-valid {
+        color: #198754;
+    }
+
+    .json-invalid {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
 {% block header %}{{ title }}{% endblock %}
 
 {% block content %}
@@ -9,7 +61,7 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-body p-4">
-                <form method="post">
+                <form method="post" id="environmentForm">
                     {% csrf_token %}
 
                     <div class="mb-4">
@@ -38,10 +90,29 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.variables_json.id_for_label }}" class="form-label fw-medium">环境变量 (JSON)</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="{{ form.variables_json.id_for_label }}" class="form-label fw-medium mb-0">环境变量 (JSON)</label>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="formatJsonBtn">
+                                    <i class="bi bi-code-slash"></i> 格式化
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="foldAllBtn">
+                                    <i class="bi bi-arrows-collapse"></i> 折叠
+                                </button>
+                            </div>
+                        </div>
                         {{ form.variables_json.errors }}
-                        <textarea class="form-control font-monospace" id="{{ form.variables_json.id_for_label }}" name="{{ form.variables_json.html_name }}" rows="6" placeholder='{"key1": "value1", "key2": "value2"}'>{{ form.variables_json.value|default:"" }}</textarea>
-                        <div class="form-text">{{ form.variables_json.help_text }}</div>
+
+                        <div class="json-editor-container">
+                            <textarea class="form-control d-none" id="{{ form.variables_json.id_for_label }}" name="{{ form.variables_json.html_name }}" placeholder='{"key1": "value1", "key2": "value2"}'>{{ form.variables_json.value|default:"{}" }}</textarea>
+                            <div id="jsonEditor"></div>
+                            <div id="jsonValidation" class="json-validation"></div>
+                        </div>
+
+                        <div class="form-text mt-2">
+                            {{ form.variables_json.help_text }}
+                            <span class="text-muted">支持JSON格式，可使用折叠功能查看复杂结构。</span>
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
@@ -57,4 +128,163 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/indent-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/json-lint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/autorefresh.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsonlint@1.6.3/web/jsonlint.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化CodeMirror编辑器
+    const textarea = document.getElementById('{{ form.variables_json.id_for_label }}');
+    const editor = CodeMirror(document.getElementById('jsonEditor'), {
+        mode: 'application/json',
+        theme: 'dracula',
+        lineNumbers: true,
+        lineWrapping: true,
+        foldGutter: true,
+        gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        autoRefresh: true,
+        value: textarea.value || '{}',
+        lint: {
+            getAnnotations: CodeMirror.lint.json,
+            async: true,
+            delay: 500
+        }
+    });
+
+    // 同步编辑器内容到隐藏的textarea
+    editor.on('change', function(cm) {
+        textarea.value = cm.getValue();
+        validateJSON();
+    });
+
+    // 格式化JSON
+    document.getElementById('formatJsonBtn').addEventListener('click', function() {
+        try {
+            const jsonValue = editor.getValue();
+            if (jsonValue.trim()) {
+                const formatted = JSON.stringify(JSON.parse(jsonValue), null, 2);
+                editor.setValue(formatted);
+                showValidationMessage('JSON格式正确', true);
+            }
+        } catch (e) {
+            showValidationMessage('JSON格式错误: ' + e.message, false);
+        }
+    });
+
+    // 折叠/展开所有
+    let isFolded = false;
+    document.getElementById('foldAllBtn').addEventListener('click', function() {
+        const cm = editor;
+        if (isFolded) {
+            // 展开所有
+            cm.execCommand('unfoldAll');
+            this.innerHTML = '<i class="bi bi-arrows-collapse"></i> 折叠';
+            this.classList.remove('btn-success');
+            this.classList.add('btn-outline-secondary');
+        } else {
+            // 折叠所有
+            cm.execCommand('foldAll');
+            this.innerHTML = '<i class="bi bi-arrows-expand"></i> 展开';
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-success');
+        }
+        isFolded = !isFolded;
+    });
+
+    // JSON验证函数
+    function validateJSON() {
+        const value = editor.getValue();
+        const validationEl = document.getElementById('jsonValidation');
+
+        if (!value.trim()) {
+            validationEl.innerHTML = '';
+            return true;
+        }
+
+        try {
+            JSON.parse(value);
+            showValidationMessage('✓ JSON格式正确', true);
+            return true;
+        } catch (e) {
+            showValidationMessage('✗ JSON格式错误: ' + e.message, false);
+            return false;
+        }
+    }
+
+    function showValidationMessage(message, isValid) {
+        const validationEl = document.getElementById('jsonValidation');
+        validationEl.innerHTML = message;
+        validationEl.className = 'json-validation ' + (isValid ? 'json-valid' : 'json-invalid');
+    }
+
+    // 表单提交前验证
+    document.getElementById('environmentForm').addEventListener('submit', function(e) {
+        const jsonValue = editor.getValue().trim();
+
+        // 如果是空值，设置为空对象
+        if (!jsonValue) {
+            textarea.value = '{}';
+            return true;
+        }
+
+        // 验证JSON格式
+        if (!validateJSON()) {
+            e.preventDefault();
+            alert('请修正JSON格式错误后再提交。');
+            return false;
+        }
+
+        // 尝试格式化后再提交
+        try {
+            if (jsonValue) {
+                const parsed = JSON.parse(jsonValue);
+                textarea.value = JSON.stringify(parsed, null, 2);
+            }
+        } catch (err) {
+            // 验证已经失败，这里不需要处理
+        }
+    });
+
+    // 初始验证
+    validateJSON();
+
+    // 提供示例JSON
+    editor.setOption('extraKeys', {
+        'Ctrl-Space': function(cm) {
+            if (cm.getValue().trim() === '{}') {
+                const exampleJson = {
+                    "api_key": "your_api_key_here",
+                    "base_url": "https://api.example.com",
+                    "timeout": 30,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    "auth": {
+                        "username": "test_user",
+                        "password": "test_pass"
+                    }
+                };
+                cm.setValue(JSON.stringify(exampleJson, null, 2));
+                showValidationMessage('✓ JSON格式正确', true);
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
