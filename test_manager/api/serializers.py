@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from test_manager.model.models import Project, Environment, TestCase, TestSuiteCase, TestSuite, TestRun, TestResult
+from test_manager.model.models import Project, Environment, TestCase, TestSuiteCase, TestSuite, TestRun, TestResult, Notification
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -84,3 +84,10 @@ class TestResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
         fields = '__all__'
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at', 'read_at']

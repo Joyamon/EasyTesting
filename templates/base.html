@@ -356,6 +356,103 @@
             transform: scale(1.08);
         }
 
+        /* 通知中心样式 */
+        #notification-list {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        #notification-list .dropdown-header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .notification-items-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background-color: #f0f3ff;
+        }
+
+        .notification-item.unread:hover {
+            background-color: #e7ebff;
+        }
+
+        .notification-item.read {
+            background-color: #fff;
+        }
+
+        .notification-item.read:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item a {
+            padding: 1rem;
+            text-decoration: none;
+            display: block;
+        }
+
+        .notification-item a:hover {
+            text-decoration: none;
+        }
+
+        .notification-item h6 {
+            color: #333;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notification-item .text-muted {
+            color: #6c757d !important;
+        }
+
+        .notification-item .delete-btn {
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .notification-item .delete-btn:hover {
+            opacity: 1;
+        }
+
+        .notification-item .badge {
+            font-size: 0.65rem;
+            padding: 0.35em 0.6em;
+        }
+
+        #notification-count {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+
+        /* 通知下拉按钮样式 */
+        #notificationDropdown {
+            position: relative;
+            padding: 0.5rem 0.75rem !important;
+        }
+
+        #notificationDropdown:focus {
+            box-shadow: none;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -371,6 +468,32 @@
     </button>
     <div class="w-100"></div>
     <div class="navbar-nav">
+        {% if user.is_authenticated %}
+        <!-- 通知中心 -->
+        <div class="nav-item text-nowrap me-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        id="notificationDropdown" style="border: none; background: none; color: white;">
+                    <i class="bi bi-bell-fill" style="color: #e7b419; font-size: 1.2rem;"></i>
+                    <span class="badge bg-danger" id="notification-count" style="position: absolute; top: 10px; right: 15px; display: none;">0</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" id="notification-list" style="min-width: 350px; max-height: 500px; overflow-y: auto;">
+                    <li><h6 class="dropdown-header">通知中心</h6></li>
+                    <li id="notification-empty"><a class="dropdown-item" href="javascript:void(0);">暂无通知</a></li>
+                    <li id="notification-items"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <div class="d-grid gap-2 p-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="mark-all-read" style="display: none;">标记全部为已读</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="delete-all-read" style="display: none;">删除已读通知</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
         <div class="nav-item text-nowrap user-dropdown">
             {% if user.is_authenticated %}
                 <div class="dropdown">
@@ -840,9 +963,249 @@
         .catch(error => {
             console.error('请求失败:', error);
         });
-
-
 </script>
+
+<!-- 通知中心脚本 -->
+<script>
+    // 通知中心管理
+    class NotificationManager {
+        constructor() {
+            this.apiBaseUrl = '/api/notifications';
+            this.updateInterval = 10000; // 10秒更新一次
+            this.init();
+        }
+
+        init() {
+            this.setupEventListeners();
+            this.loadNotifications();
+            // 定期检查新通知
+            setInterval(() => this.loadNotifications(), this.updateInterval);
+        }
+
+        setupEventListeners() {
+            const markAllReadBtn = document.getElementById('mark-all-read');
+            const deleteAllReadBtn = document.getElementById('delete-all-read');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+
+            if (markAllReadBtn) {
+                markAllReadBtn.addEventListener('click', () => this.markAllAsRead());
+            }
+            if (deleteAllReadBtn) {
+                deleteAllReadBtn.addEventListener('click', () => this.deleteAllRead());
+            }
+            if (notificationDropdown) {
+                notificationDropdown.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
+        }
+
+        async loadNotifications() {
+            try {
+                // 获取未读通知数
+                const countResponse = await fetch(`${this.apiBaseUrl}/unread_count/`);
+                const countData = await countResponse.json();
+                this.updateUnreadCount(countData.unread_count);
+
+                // 获取未读通知列表
+                const listResponse = await fetch(`${this.apiBaseUrl}/unread_notifications/?page_size=10`);
+                const listData = await listResponse.json();
+                this.renderNotifications(listData.results || listData);
+            } catch (error) {
+                console.error('[v0] 加载通知失败:', error);
+            }
+        }
+
+        updateUnreadCount(count) {
+            const countElement = document.getElementById('notification-count');
+            const emptyElement = document.getElementById('notification-empty');
+            const markAllBtn = document.getElementById('mark-all-read');
+            const deleteAllBtn = document.getElementById('delete-all-read');
+
+            if (count > 0) {
+                countElement.textContent = count;
+                countElement.style.display = 'block';
+                if (emptyElement) emptyElement.style.display = 'none';
+                if (markAllBtn) markAllBtn.style.display = 'block';
+            } else {
+                countElement.style.display = 'none';
+                if (emptyElement) emptyElement.style.display = 'block';
+                if (markAllBtn) markAllBtn.style.display = 'none';
+            }
+            if (deleteAllBtn) {
+                deleteAllBtn.style.display = count > 0 ? 'block' : 'none';
+            }
+        }
+
+        renderNotifications(notifications) {
+            const itemsContainer = document.getElementById('notification-items');
+            if (!itemsContainer) return;
+
+            if (!Array.isArray(notifications) || notifications.length === 0) {
+                return;
+            }
+
+            itemsContainer.innerHTML = `
+                <div class="notification-items-scroll">
+                    ${notifications.map(notification => `
+                        <li class="notification-item ${notification.is_read ? 'read' : 'unread'}" data-id="${notification.id}">
+                            <a class="dropdown-item" href="javascript:void(0);">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">${this.escapeHtml(notification.title)}</h6>
+                                        <p class="mb-1 small text-muted">${this.escapeHtml(notification.message.substring(0, 50))}${notification.message.length > 50 ? '...' : ''}</p>
+                                        <small class="text-muted">${this.formatTime(notification.created_at)}</small>
+                                    </div>
+                                    <div class="ms-2">
+                                        ${!notification.is_read ? '<span class="badge bg-primary">未读</span>' : ''}
+                                        <button type="button" class="btn btn-sm btn-link text-danger delete-btn" data-id="${notification.id}" style="padding: 0; margin-top: 5px;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    `).join('')}
+                </div>
+            `;
+
+            // 绑定删除按钮事件
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const notificationId = btn.getAttribute('data-id');
+                    this.deleteNotification(notificationId);
+                });
+            });
+
+            // 绑定通知项点击事件（标记为已读）
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('.delete-btn')) {
+                        const notificationId = item.getAttribute('data-id');
+                        this.markAsRead(notificationId);
+                    }
+                });
+            });
+        }
+
+        async markAsRead(notificationId) {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/${notificationId}/mark_as_read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    this.loadNotifications();
+                }
+            } catch (error) {
+                console.error('[v0] 标记通知失败:', error);
+            }
+        }
+
+        async markAllAsRead() {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/mark_all_as_read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    this.loadNotifications();
+                }
+            } catch (error) {
+                console.error('[v0] 标记全部失败:', error);
+            }
+        }
+
+        async deleteNotification(notificationId) {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/${notificationId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': this.getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    this.loadNotifications();
+                }
+            } catch (error) {
+                console.error('[v0] 删除通知失败:', error);
+            }
+        }
+
+        async deleteAllRead() {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/delete_all_read/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': this.getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    this.loadNotifications();
+                }
+            } catch (error) {
+                console.error('[v0] 删除已读通知失败:', error);
+            }
+        }
+
+        getCsrfToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return '刚刚';
+            if (diffMins < 60) return `${diffMins}分钟前`;
+            if (diffHours < 24) return `${diffHours}小时前`;
+            if (diffDays < 7) return `${diffDays}天前`;
+            
+            return date.toLocaleDateString('zh-CN');
+        }
+    }
+
+    // 初始化通知管理器
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('notificationDropdown')) {
+            new NotificationManager();
+        }
+    });
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

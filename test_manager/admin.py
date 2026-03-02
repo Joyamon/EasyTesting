@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 
 from test_manager.model.email import EmailConfig
 from test_manager.model.models import Project, Environment, TestCase, TestSuite, TestCaseGroup, TestSuiteGroup, TestRun, \
-    TestResult, TestReport
+    TestResult, TestReport, Notification
 from test_manager.model.visitor import VisitorLog
 
 
@@ -102,6 +102,15 @@ class VisitorLogAdmin(admin.ModelAdmin):
     os.short_description = '操作系统'
 
 
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'title', 'notification_type', 'is_read', 'created_at')
+    search_fields = ('user__username', 'title', 'message')
+    list_filter = ('notification_type', 'is_read', 'created_at')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'read_at')
+    list_per_page = 20
+
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Environment, EnvironmentAdmin)
 admin.site.register(TestCase, TestCaseAdmin)
@@ -113,6 +122,7 @@ admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(TestReport, TestReportAdmin)
 admin.site.register(EmailConfig, EmailConfigAdmin)
 admin.site.register(VisitorLog, VisitorLogAdmin)
+admin.site.register(Notification, NotificationAdmin)
 
 admin.site.site_header = 'EastTesting测试管理后台'
 admin.site.site_title = 'EastTesting测试管理后台'

@@ -8,9 +8,9 @@ from django.utils import timezone
 from .serializers import (
     ProjectSerializer, EnvironmentSerializer, TestCaseSerializer,
     TestSuiteSerializer, TestSuiteCaseSerializer, TestRunSerializer,
-    TestResultSerializer
+    TestResultSerializer, NotificationSerializer
 )
-from ..model.models import Project, Environment, TestCase, TestRun, TestResult, TestSuite, TestSuiteCase
+from ..model.models import Project, Environment, TestCase, TestRun, TestResult, TestSuite, TestSuiteCase, Notification
 from ..utils.httprunner_executor import execute_test_case, execute_test_suite
 
 
@@ -190,7 +190,7 @@ class TestSuiteViewSet(viewsets.ModelViewSet):
         default_environment_id = request.data.get('environment_id')
 
         if not default_environment_id:
-            return Response({"error": "默认环境ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "默认环��ID是必填项"}, status=status.HTTP_400_BAD_REQUEST)
         default_environment = get_object_or_404(Environment, id=default_environment_id)
 
         # 获取每个测试用例的环境设置
@@ -279,3 +279,63 @@ class TestResultViewSet(viewsets.ReadOnlyModelViewSet):
         if test_run_id:
             return TestResult.objects.filter(test_run_id=test_run_id).order_by('-created_at')
         return TestResult.objects.all().order_by('-created_at')
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """通知 ViewSet"""
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        """获取当前用户的通知"""
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """获取未读通知数"""
+        unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({'unread_count': unread_count})
+
+    @action(detail=False, methods=['get'])
+    def unread_notifications(self, request):
+        """获取未读通知列表"""
+        notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')
+        page = self.paginate_queryset(notifications)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(notifications, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, pk=None):
+        """标记通知为已读"""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.read_at = timezone.now()
+        notification.save()
+        serializer = self.get_serializer(notification)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def mark_all_as_read(self, request):
+        """标记所有通知为已读"""
+        Notification.objects.filter(user=request.user, is_read=False).update(
+            is_read=True,
+            read_at=timezone.now()
+        )
+        return Response({'status': '所有通知已标记为已读'})
+
+    @action(detail=True, methods=['delete'])
+    def delete_notification(self, request, pk=None):
+        """删除通知"""
+        notification = self.get_object()
+        notification.delete()
+        return Response({'status': '通知已删除'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['delete'])
+    def delete_all_read(self, request):
+        """删除所有已读通知"""
+        Notification.objects.filter(user=request.user, is_read=True).delete()
+        return Response({'status': '已删除所有已读通知'}, status=status.HTTP_204_NO_CONTENT)

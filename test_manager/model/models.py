@@ -324,3 +324,37 @@ class TestReport(models.Model):
             except (ValueError, TypeError):
                 return {}
         return {}
+
+
+class Notification(models.Model):
+    """通知模型"""
+    NOTIFICATION_TYPE_CHOICES = [
+        ('test_run', '测试运行'),
+        ('test_suite_run', '测试套件运行'),
+        ('task', '定时任务'),
+        ('system', '系统通知'),
+        ('other', '其他'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name="用户", 
+                             db_comment="通知所属用户")
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES, default='system',
+                                        verbose_name="通知类型", db_comment="通知类型")
+    title = models.CharField(max_length=255, verbose_name="通知标题", db_comment="通知标题")
+    message = models.TextField(verbose_name="通知内容", db_comment="通知内容")
+    is_read = models.BooleanField(default=False, verbose_name="是否已读", db_comment="是否已读")
+    related_url = models.URLField(blank=True, null=True, verbose_name="相关链接", db_comment="相关链接")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间", db_comment="创建时间")
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name="已读时间", db_comment="已读时间")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "通知"
+        verbose_name_plural = "通知"
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', 'is_read']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"
