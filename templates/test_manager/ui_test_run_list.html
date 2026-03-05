@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}UI测试运行历史 - EasyTesting{% endblock %}
+
+{% block header %}UI测试运行历史{% endblock %}
+
+{% block header_buttons %}
+    <div class="btn-group">
+        <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-list-ul"></i> 测试用例
+        </a>
+        <a href="{% url 'ui_test_case_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 创建新用例
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <!-- 搜索和筛选 -->
+        <div class="mb-4">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">-- 所有状态 --</option>
+                        <option value="passed" {% if request.GET.status == 'passed' %}selected{% endif %}>通过</option>
+                        <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>失败</option>
+                        <option value="error" {% if request.GET.status == 'error' %}selected{% endif %}>错误</option>
+                        <option value="running" {% if request.GET.status == 'running' %}selected{% endif %}>运行中</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" name="test_case" class="form-control" placeholder="搜索测试用例..." 
+                               value="{{ request.GET.test_case }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">总执行次数</h5>
+                        <div class="h4 mb-0 text-primary">{{ total_runs }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted text-success">成功</h5>
+                        <div class="h4 mb-0 text-success">{{ passed_count }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted text-danger">失败</h5>
+                        <div class="h4 mb-0 text-danger">{{ failed_count }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted text-warning">成功率</h5>
+                        <div class="h4 mb-0 text-warning">{{ success_rate }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试运行表格 -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>测试用例</th>
+                        <th>状态</th>
+                        <th>执行结果</th>
+                        <th>耗时</th>
+                        <th>执行人</th>
+                        <th>执行时间</th>
+                        <th class="text-end">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test_run in test_runs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui_test_case_detail' pk=test_run.test_case.pk %}" class="fw-medium text-decoration-none text-dark">
+                                {{ test_run.test_case.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if test_run.status == 'passed' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> 通过
+                            </span>
+                            {% elif test_run.status == 'failed' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle"></i> 失败
+                            </span>
+                            {% elif test_run.status == 'error' %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-exclamation-circle"></i> 错误
+                            </span>
+                            {% elif test_run.status == 'running' %}
+                            <span class="badge bg-info">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> 运行中
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test_run.result %}
+                            <small>
+                                <span class="badge bg-success">{{ test_run.result.steps_passed }}/{{ test_run.result.steps_executed }}</span>
+                                通过
+                            </small>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test_run.result %}
+                            <small>{{ test_run.result.duration|floatformat:2 }}s</small>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ test_run.created_by.username }}</small>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ test_run.created_at|date:"Y-m-d H:i" }}</small>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'ui_test_run_detail' run_id=test_run.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> 查看
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5>暂无测试运行记录</h5>
+                            <p class="text-muted">运行UI测试后会显示在这里</p>
+                            <a href="{% url 'ui_test_case_list' %}" class="btn btn-primary mt-2">
+                                <i class="bi bi-list-ul"></i> 查看测试用例
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        {% include 'pagination.html' with page_obj=page_obj %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}UI自动化测试用例 - EasyTesting{% endblock %}
+
+{% block header %}UI自动化测试{% endblock %}
+
+{% block header_buttons %}
+    <div class="btn-group">
+        <a href="{% url 'ui_test_case_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 创建UI测试用例
+        </a>
+        <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-play-circle"></i> 测试运行记录
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <!-- 搜索框 -->
+        <div class="mb-4">
+            <form method="get" class="d-flex gap-2">
+                {% if current_project %}
+                    <input type="hidden" name="project" value="{{ current_project.id }}">
+                {% endif %}
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="搜索UI测试用例..."
+                           value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                {% if current_project %}
+                    <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> 清除筛选
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- 项目筛选 -->
+        {% if current_project %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>当前项目:</strong> {{ current_project.name }}
+                </div>
+                <a href="{% url 'ui_test_case_list' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-x-lg"></i> 清除
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- UI 测试用例表格 -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>名称</th>
+                        <th>项目</th>
+                        <th>浏览器</th>
+                        <th>URL</th>
+                        <th>测试步骤</th>
+                        <th>最后执行</th>
+                        <th>执行次数</th>
+                        <th class="text-end">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test_case in test_cases %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}" class="fw-medium text-decoration-none text-dark">
+                                {{ test_case.name }}
+                            </a>
+                            {% if test_case.description %}
+                            <br><small class="text-muted">{{ test_case.description|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test_case.project %}
+                            <span class="badge bg-light text-dark">{{ test_case.project.name }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if test_case.browser_type == 'chromium' %}bg-primary
+                                {% elif test_case.browser_type == 'firefox' %}bg-warning
+                                {% elif test_case.browser_type == 'webkit' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ test_case.get_browser_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if test_case.url %}
+                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 250px;" title="{{ test_case.url }}">
+                                {{ test_case.url|truncatechars:40 }}
+                            </code>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ test_case.steps.count }} 步骤</span>
+                        </td>
+                        <td>
+                            {% if test_case.last_run_at %}
+                            <small class="text-muted">{{ test_case.last_run_at|date:"Y-m-d H:i" }}</small>
+                            {% else %}
+                            <span class="text-muted text-sm">未执行</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ test_case.run_count }}</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}" class="btn btn-outline-primary" title="查看">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'ui_test_case_edit' pk=test_case.pk %}" class="btn btn-outline-secondary" title="编辑">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-success" title="运行" onclick="confirmRunTest({{ test_case.pk }}, '{{ test_case.name }}')">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" title="删除" onclick="confirmDeleteTestCase({{ test_case.pk }}, '{{ test_case.name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5>暂无UI测试用例</h5>
+                            <p class="text-muted">创建第一个UI自动化测试用例开始吧</p>
+                            <a href="{% url 'ui_test_case_create' %}" class="btn btn-primary mt-2">
+                                <i class="bi bi-plus-lg"></i> 创建UI测试用例
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        {% include 'pagination.html' with page_obj=page_obj %}
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除UI测试用例 "<span id="deleteTestCaseName"></span>" 吗？</p>
+                <p class="text-danger small">此操作不可撤销</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 运行测试确认模态框 -->
+<div class="modal fade" id="runModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">运行UI测试</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要运行UI测试用例 "<span id="runTestCaseName"></span>" 吗？</p>
+                <div id="runProgress" style="display: none;">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">执行中...</span>
+                    </div>
+                    <span>正在执行测试，请耐心等待...</span>
+                </div>
+            </div>
+            <div class="modal-footer" id="runModalFooter">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="runConfirmBtn">确认运行</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDeleteTestCase(testCaseId, testCaseName) {
+        document.getElementById('deleteTestCaseName').textContent = testCaseName;
+        document.getElementById('deleteForm').action = `/ui-test-cases/${testCaseId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    function confirmRunTest(testCaseId, testCaseName) {
+        document.getElementById('runTestCaseName').textContent = testCaseName;
+        document.getElementById('runConfirmBtn').dataset.testCaseId = testCaseId;
+        new bootstrap.Modal(document.getElementById('runModal')).show();
+    }
+
+    document.getElementById('runConfirmBtn').addEventListener('click', function() {
+        const testCaseId = this.dataset.testCaseId;
+        const modal = bootstrap.Modal.getInstance(document.getElementById('runModal'));
+        
+        // 显示进度条，隐藏按钮
+        document.getElementById('runProgress').style.display = 'block';
+        document.getElementById('runModalFooter').style.display = 'none';
+
+        fetch(`/ui-test-cases/${testCaseId}/run/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                modal.hide();
+                // 显示成功提示
+                showToast('测试运行成功！', 'success');
+                // 跳转到运行详情页面
+                setTimeout(() => {
+                    window.location.href = `/ui-test-runs/${data.test_run_id}/`;
+                }, 1000);
+            } else {
+                showToast('测试运行失败: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('网络错误: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            document.getElementById('runProgress').style.display = 'none';
+            document.getElementById('runModalFooter').style.display = 'flex';
+        });
+    });
+
+    // Toast 通知函数
+    function showToast(message, type = 'success') {
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+</script>
+{% endblock %}
