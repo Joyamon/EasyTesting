@@ -437,68 +437,24 @@
             padding: 0.35em 0.6em;
         }
 
-        /* 通知按钮样式 */
-        .btn-notification {
-            position: relative;
-            border: none;
-            background: none;
-            color: #fff;
-            padding: 0;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .btn-notification i {
-            font-size: 1.4rem;
-            color: #6c757d;
-            transition: all 0.3s ease;
-        }
-
-        .btn-notification:hover i {
-            color: #495057;
-            transform: scale(1.1);
-        }
-
-        .btn-notification:focus {
-            box-shadow: none;
-            outline: none;
-        }
-
-        /* 通知徽章样式 */
-        .badge-notification {
+        #notification-count {
             position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 22px;
-            height: 22px;
-            padding: 0 5px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            top: 8px;
+            right: 12px;
+            font-size: 0.7rem;
+            padding: 2px 5px;
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-            line-height: 1;
-            animation: badgePulse 2s infinite;
         }
 
-        .badge-notification.hide {
-            display: none !important;
-            animation: none;
+        /* 通知下拉按钮样式 */
+        #notificationDropdown {
+            position: relative;
+            padding: 0.5rem 0.75rem !important;
         }
 
-        @keyframes badgePulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
+        #notificationDropdown:focus {
+            box-shadow: none;
+            background-color: rgba(255, 255, 255, 0.1);
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -518,12 +474,12 @@
         {% if user.is_authenticated %}
         <!-- 通知中心 -->
 
-        <div class="dropdown me-3">
-            <button class="btn btn-notification" type="button" data-bs-toggle="dropdown"
-                id="notificationDropdown">
-                <i class="bi bi-chat-dots-fill"></i>
-                <span class="badge badge-notification bg-danger" id="notification-count">0</span>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                id="notificationDropdown" style="border: none; background: none; color: white;">
+                <i class="bi bi-bell-fill" style="color: #e7b419; font-size: 1.2rem;"></i>
             </button>
+            <div class="badge bg-danger" id="notification-count">0</div>
 
 
 
@@ -1080,25 +1036,26 @@
                 }
             }
 
-        updateUnreadCount(count) {
-            const countElement = document.getElementById('notification-count');
-            const emptyElement = document.getElementById('notification-empty');
-            const markAllBtn = document.getElementById('mark-all-read');
-            const deleteAllBtn = document.getElementById('delete-all-read');
+            updateUnreadCount(count) {
+                const countElement = document.getElementById('notification-count');
+                const emptyElement = document.getElementById('notification-empty');
+                const markAllBtn = document.getElementById('mark-all-read');
+                const deleteAllBtn = document.getElementById('delete-all-read');
 
-            if (count > 0) {
-                countElement.textContent = count > 99 ? '99+' : count;
-                countElement.classList.remove('hide');
-                if (emptyElement) emptyElement.style.display = 'none';
-                if (markAllBtn) markAllBtn.style.display = 'block';
-                if (deleteAllBtn) deleteAllBtn.style.display = 'block';
-            } else {
-                countElement.classList.add('hide');
-                if (emptyElement) emptyElement.style.display = 'block';
-                if (markAllBtn) markAllBtn.style.display = 'none';
-                if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+                if (count > 0) {
+                    countElement.textContent = count;
+                    countElement.style.display = 'block';
+                    if (emptyElement) emptyElement.style.display = 'none';
+                    if (markAllBtn) markAllBtn.style.display = 'block';
+                } else {
+                    countElement.style.display = 'none';
+                    if (emptyElement) emptyElement.style.display = 'block';
+                    if (markAllBtn) markAllBtn.style.display = 'none';
+                }
+                if (deleteAllBtn) {
+                    deleteAllBtn.style.display = count > 0 ? 'block' : 'none';
+                }
             }
-        }
 
             renderNotifications(notifications) {
                 const itemsContainer = document.getElementById('notification-items');

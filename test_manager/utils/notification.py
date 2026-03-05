@@ -7,6 +7,13 @@
 from django.contrib.auth.models import User
 from test_manager.model.models import Notification
 
+# 尝试导入 UI 测试模型，如果不存在则跳过
+try:
+    from test_manager.model.ui_models import UITestResult
+    HAS_UI_MODELS = True
+except ImportError:
+    HAS_UI_MODELS = False
+
 
 def create_notification(user, title, message, notification_type='system', related_url=None):
     """
@@ -207,3 +214,101 @@ def delete_old_read_notifications(user, days=30):
     ).delete()
     
     return deleted_count
+
+
+# ============ UI 测试通知函数 ============
+
+def create_ui_test_notification(user, test_case, status, error_message=''):
+    """
+    创建 UI 测试通知
+
+    Args:
+        user: 用户对象或用户ID
+        test_case: TestCase 对象
+        status: 执行状态 ('passed', 'failed', 'error')
+        error_message: 错误信息 (可选)
+
+    Returns:
+        创建的 Notification 对象
+    """
+    if isinstance(user, int):
+        user = User.objects.get(id=user)
+    
+    status_text = {
+        'passed': '通过',
+        'failed': '失败',
+        'error': '错误'
+    }
+    
+    status_display = status_text.get(status, status)
+    
+    title = f"UI 测试: {test_case.name}"
+    
+    if status == 'passed':
+        message = f"UI 自动化测试 '{test_case.name}' 执行成功"
+    elif status == 'failed':
+        message = f"UI 自动化测试 '{test_case.name}' 执行失败"
+        if error_message:
+            message += f": {error_message[:100]}"
+    else:  # error
+        message = f"UI 自动化测试 '{test_case.name}' 执行出错"
+        if error_message:
+            message += f": {error_message[:100]}"
+    
+    notification = Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type='test_run',
+        related_url=f'/test/case/{test_case.id}/'
+    )
+    
+    return notification
+
+
+def create_ui_test_run_notification(user, test_run, ui_result):
+    """
+    创建 UI 测试运行结果通知
+
+    Args:
+        user: 用户对象或用户ID
+        test_run: TestRun 对象
+        ui_result: UITestResult 对象
+
+    Returns:
+        创建的 Notification 对象
+    """
+    if isinstance(user, int):
+        user = User.objects.get(id=user)
+    
+    status_text = {
+        'passed': '通过',
+        'failed': '失败',
+        'error': '错误'
+    }
+    
+    status_display = status_text.get(ui_result.status, ui_result.status)
+    
+    title = f"UI 测试运行: {test_run.name}"
+    
+    message = (
+        f"UI 测试运行 '{test_run.name}' 已完成\n"
+        f"状态: {status_display}\n"
+        f"执行步骤: {ui_result.steps_executed}\n"
+        f"通过: {ui_result.steps_passed}\n"
+        f"失败: {ui_result.steps_failed}\n"
+        f"耗时: {ui_result.duration:.2f}s"
+    )
+    
+    if ui_result.error_message:
+        message += f"\n错误: {ui_result.error_message[:100]}"
+    
+    notification = Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type='test_run',
+        related_url=f'/test/run/{test_run.id}/'
+    )
+    
+    return notification
