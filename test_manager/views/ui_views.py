@@ -6,19 +6,18 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db import models
+
 from test_manager.model.ui_models import UITestStep, UITestResult
 from test_manager.model.models import Project, TestCase, TestRun, Environment
-from test_manager.utils.notification import create_ui_test_notification, create_ui_test_run_notification
+from test_manager.automation.executors.ui_executor import UITestExecutor
+from test_manager.utils.notification import create_ui_test_run_notification
+
 import json
 import asyncio
+import time
 import logging
 
 logger = logging.getLogger(__name__)
-
-try:
-    from test_manager.automation.executors.ui_executor import UIExecutor
-except ImportError:
-    UIExecutor = None
 
 
 
@@ -211,28 +210,24 @@ def ui_test_step_delete(request, step_id):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
-from test_manager.automation.executors.ui_executors import UITestExecutor
-
 @login_required
 def ui_test_run(request, test_case_id):
     """执行 UI 测试用例
     
     支持 POST 请求执行测试，返回 JSON 结果。
     支持 GET 请求返回 HTML 执行页面。
+    
+    基于 UITestExecutor 的异步执行框架，支持：
+    - 多浏览器执行（Chromium, Firefox, WebKit）
+    - 自定义超时和延迟
+    - 自动截图和性能监控
+    - 详细的步骤级别日志
     """
     test_case = get_object_or_404(TestCase, pk=test_case_id)
 
     if request.method == 'POST':
         try:
-            # 检查 UITestExecutor 是否可用
-            if not UIExecutor:
-                logger.error("UITestExecutor not available")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'UI 自动化框架未配置'
-                }, status=400)
-            
-            # 获取测试配置参数
+            # 解析请求参数
             data = json.loads(request.body) if request.body else {}
             headless = data.get('headless', True)
             slow_mo = data.get('slow_mo', 0)
@@ -253,49 +248,64 @@ def ui_test_run(request, test_case_id):
                 status='running'
             )
             
-            logger.info(f"Starting UI test run {test_run.id} for test case {test_case.id}")
+            logger.info(
+                f"Starting UI test run {test_run.id} for test case '{test_case.name}' "
+                f"(headless={headless}, slow_mo={slow_mo}ms)"
+            )
             
+            # 初始化执行器
+            executor = UITestExecutor(
+                test_case=test_case,
+                environment=environment,
+                headless=headless,
+                slow_mo=slow_mo
+            )
+            
+            # 执行 UI 测试（同步包装异步执行）
             try:
-                # 执行 UI 测试（同步包装异步执行）
-                executor = UIExecutor(
-                    test_case=test_case,
-                    environment=environment,
-                    headless=headless,
-                    slow_mo=slow_mo
-                )
-                
-                # 运行异步执行方法
                 result = asyncio.run(executor.execute())
-                
+                logger.info(f"Test execution completed: {result['status']}")
             except Exception as e:
                 logger.exception(f"Test execution failed: {e}")
+                # 如果执行失败，构造错误结果
                 result = {
                     'status': 'error',
                     'error_message': str(e),
-                    'duration': 0,
-                    'steps_executed': 0,
-                    'steps_passed': 0,
-                    'steps_failed': 0,
-                    'screenshots': [],
-                    'step_details': []
+                    'duration': time.time() - (executor.start_time or time.time()),
+                    'steps_executed': len(executor.step_results),
+                    'steps_passed': sum(1 for r in executor.step_results if r.get('status') == 'passed'),
+                    'steps_failed': sum(1 for r in executor.step_results if r.get('status') == 'failed'),
+                    'screenshots': executor.screenshots,
+                    'step_details': executor.step_results,
+                    'page_metrics': executor.page_metrics,
                 }
             
-            # 保存详细的测试结果
+            # 从执行器结果映射到 UITestResult
             test_result = UITestResult.objects.create(
                 test_run=test_run,
-                status=result.get('status', 'error'),
-                steps_executed=result.get('steps_executed', 0),
-                steps_passed=result.get('steps_passed', 0),
-                steps_failed=result.get('steps_failed', 0),
-                duration=result.get('duration', 0),
+                test_case=test_case,
+                environment=environment,
+                status=result['status'],
+                duration=result['duration'],
+                steps_executed=result['steps_executed'],
+                steps_passed=result['steps_passed'],
+                steps_failed=result['steps_failed'],
                 error_message=result.get('error_message', ''),
-                screenshots=json.dumps(result.get('screenshots', [])),
-                step_details=json.dumps(result.get('step_details', [])),
-                page_metrics=json.dumps(result.get('page_metrics', {}))
+                screenshots=result['screenshots'],
+                step_details=result['step_details'],
+                browser_type=getattr(test_case, 'browser_type', 'chromium'),
             )
             
+            # 提取和保存性能指标
+            page_metrics = result.get('page_metrics', {})
+            if page_metrics:
+                test_result.page_load_time = page_metrics.get('page_load_time')
+                test_result.first_contentful_paint = page_metrics.get('first_contentful_paint')
+                test_result.largest_contentful_paint = page_metrics.get('largest_contentful_paint')
+                test_result.save()
+            
             # 更新测试运行状态
-            test_run.status = result.get('status', 'error')
+            test_run.status = result['status']
             test_run.save()
             
             # 发送通知
@@ -311,25 +321,30 @@ def ui_test_run(request, test_case_id):
             
             # 计算成功率
             success_rate = 0
-            if result.get('steps_executed', 0) > 0:
+            if result['steps_executed'] > 0:
                 success_rate = round(
-                    (result.get('steps_passed', 0) / result.get('steps_executed', 0)) * 100, 
+                    (result['steps_passed'] / result['steps_executed']) * 100, 
                     2
                 )
             
-            logger.info(f"Test run {test_run.id} completed with status {result.get('status')}")
+            logger.info(
+                f"Test run {test_run.id} completed: "
+                f"{result['steps_passed']}/{result['steps_executed']} steps passed "
+                f"({success_rate}%), duration: {result['duration']:.2f}s"
+            )
             
             return JsonResponse({
                 'success': True,
                 'test_run_id': test_run.id,
                 'result': {
-                    'status': result.get('status', 'error'),
-                    'steps_executed': result.get('steps_executed', 0),
-                    'steps_passed': result.get('steps_passed', 0),
-                    'steps_failed': result.get('steps_failed', 0),
-                    'duration': round(result.get('duration', 0), 2),
+                    'status': result['status'],
+                    'steps_executed': result['steps_executed'],
+                    'steps_passed': result['steps_passed'],
+                    'steps_failed': result['steps_failed'],
+                    'duration': round(result['duration'], 2),
                     'success_rate': success_rate,
                     'error_message': result.get('error_message', ''),
+                    'screenshots': result['screenshots'],
                 }
             })
             
@@ -339,6 +354,12 @@ def ui_test_run(request, test_case_id):
                 'success': False, 
                 'error': '无效的请求格式'
             }, status=400)
+        except TestCase.DoesNotExist:
+            logger.error(f"Test case {test_case_id} not found")
+            return JsonResponse({
+                'success': False, 
+                'error': '测试用例不存在'
+            }, status=404)
         except Exception as e:
             logger.exception(f"Unexpected error in ui_test_run: {e}")
             return JsonResponse({
@@ -347,7 +368,13 @@ def ui_test_run(request, test_case_id):
             }, status=500)
 
     # GET 请求：返回测试执行页面
-    context = {'test_case': test_case}
+    # 获取测试用例的可用环境
+    environments = Environment.objects.filter(project=test_case.project)
+    
+    context = {
+        'test_case': test_case,
+        'environments': environments,
+    }
     return render(request, 'test_manager/ui_test_run.html', context)
 
 
