@@ -233,6 +233,11 @@ def ui_test_run(request, test_case_id):
             slow_mo = data.get('slow_mo', 0)
             environment_id = data.get('environment_id')
             
+            logger.info(
+                f"UI test request: test_case_id={test_case_id}, headless={headless}, "
+                f"slow_mo={slow_mo}ms, environment_id={environment_id}"
+            )
+            
             # 获取环境配置（如果指定）
             environment = None
             if environment_id:
@@ -249,8 +254,7 @@ def ui_test_run(request, test_case_id):
             )
             
             logger.info(
-                f"Starting UI test run {test_run.id} for test case '{test_case.name}' "
-                f"(headless={headless}, slow_mo={slow_mo}ms)"
+                f"Created test run {test_run.id} for test case '{test_case.name}'"
             )
             
             # 初始化执行器
@@ -261,51 +265,74 @@ def ui_test_run(request, test_case_id):
                 slow_mo=slow_mo
             )
             
+            logger.info(f"UITestExecutor initialized with test_case={test_case}, type={type(test_case)}")
+            
             # 执行 UI 测试（同步包装异步执行）
+            result = None
             try:
+                logger.info("Starting async test execution...")
                 result = asyncio.run(executor.execute())
-                logger.info(f"Test execution completed: {result['status']}")
+                logger.info(f"Test execution completed: {result.get('status')}")
             except Exception as e:
-                logger.exception(f"Test execution failed: {e}")
+                logger.exception(f"Test execution error: {e}")
                 # 如果执行失败，构造错误结果
+                duration = time.time() - (executor.start_time or time.time())
                 result = {
                     'status': 'error',
                     'error_message': str(e),
-                    'duration': time.time() - (executor.start_time or time.time()),
-                    'steps_executed': len(executor.step_results),
-                    'steps_passed': sum(1 for r in executor.step_results if r.get('status') == 'passed'),
-                    'steps_failed': sum(1 for r in executor.step_results if r.get('status') == 'failed'),
-                    'screenshots': executor.screenshots,
-                    'step_details': executor.step_results,
-                    'page_metrics': executor.page_metrics,
+                    'duration': duration,
+                    'steps_executed': len(executor.step_results) if hasattr(executor, 'step_results') else 0,
+                    'steps_passed': sum(1 for r in (executor.step_results or []) if r.get('status') == 'passed'),
+                    'steps_failed': sum(1 for r in (executor.step_results or []) if r.get('status') == 'failed'),
+                    'screenshots': executor.screenshots if hasattr(executor, 'screenshots') else [],
+                    'step_details': executor.step_results if hasattr(executor, 'step_results') else [],
+                    'page_metrics': executor.page_metrics if hasattr(executor, 'page_metrics') else {},
+                }
+            
+            # 验证结果结构
+            if not result:
+                result = {
+                    'status': 'error',
+                    'error_message': 'Unknown error',
+                    'duration': 0,
+                    'steps_executed': 0,
+                    'steps_passed': 0,
+                    'steps_failed': 0,
+                    'screenshots': [],
+                    'step_details': [],
+                    'page_metrics': {},
                 }
             
             # 从执行器结果映射到 UITestResult
+            logger.info(f"Creating UITestResult with status={result.get('status')}")
             test_result = UITestResult.objects.create(
                 test_run=test_run,
                 test_case=test_case,
                 environment=environment,
-                status=result['status'],
-                duration=result['duration'],
-                steps_executed=result['steps_executed'],
-                steps_passed=result['steps_passed'],
-                steps_failed=result['steps_failed'],
+                status=result.get('status', 'error'),
+                duration=result.get('duration', 0),
+                steps_executed=result.get('steps_executed', 0),
+                steps_passed=result.get('steps_passed', 0),
+                steps_failed=result.get('steps_failed', 0),
                 error_message=result.get('error_message', ''),
-                screenshots=result['screenshots'],
-                step_details=result['step_details'],
+                screenshots=result.get('screenshots', []),
+                step_details=result.get('step_details', []),
                 browser_type=getattr(test_case, 'browser_type', 'chromium'),
             )
             
             # 提取和保存性能指标
             page_metrics = result.get('page_metrics', {})
             if page_metrics:
-                test_result.page_load_time = page_metrics.get('page_load_time')
-                test_result.first_contentful_paint = page_metrics.get('first_contentful_paint')
-                test_result.largest_contentful_paint = page_metrics.get('largest_contentful_paint')
+                if 'page_load_time' in page_metrics:
+                    test_result.page_load_time = page_metrics['page_load_time']
+                if 'first_contentful_paint' in page_metrics:
+                    test_result.first_contentful_paint = page_metrics['first_contentful_paint']
+                if 'largest_contentful_paint' in page_metrics:
+                    test_result.largest_contentful_paint = page_metrics['largest_contentful_paint']
                 test_result.save()
             
             # 更新测试运行状态
-            test_run.status = result['status']
+            test_run.status = result.get('status', 'error')
             test_run.save()
             
             # 发送通知
@@ -321,30 +348,31 @@ def ui_test_run(request, test_case_id):
             
             # 计算成功率
             success_rate = 0
-            if result['steps_executed'] > 0:
+            steps_executed = result.get('steps_executed', 0)
+            if steps_executed > 0:
                 success_rate = round(
-                    (result['steps_passed'] / result['steps_executed']) * 100, 
+                    (result.get('steps_passed', 0) / steps_executed) * 100, 
                     2
                 )
             
             logger.info(
                 f"Test run {test_run.id} completed: "
-                f"{result['steps_passed']}/{result['steps_executed']} steps passed "
-                f"({success_rate}%), duration: {result['duration']:.2f}s"
+                f"{result.get('steps_passed', 0)}/{steps_executed} steps passed "
+                f"({success_rate}%), duration: {result.get('duration', 0):.2f}s"
             )
             
             return JsonResponse({
                 'success': True,
                 'test_run_id': test_run.id,
                 'result': {
-                    'status': result['status'],
-                    'steps_executed': result['steps_executed'],
-                    'steps_passed': result['steps_passed'],
-                    'steps_failed': result['steps_failed'],
-                    'duration': round(result['duration'], 2),
+                    'status': result.get('status', 'error'),
+                    'steps_executed': result.get('steps_executed', 0),
+                    'steps_passed': result.get('steps_passed', 0),
+                    'steps_failed': result.get('steps_failed', 0),
+                    'duration': round(result.get('duration', 0), 2),
                     'success_rate': success_rate,
                     'error_message': result.get('error_message', ''),
-                    'screenshots': result['screenshots'],
+                    'screenshots': result.get('screenshots', []),
                 }
             })
             
@@ -371,9 +399,13 @@ def ui_test_run(request, test_case_id):
     # 获取测试用例的可用环境
     environments = Environment.objects.filter(project=test_case.project)
     
+    # 获取 UI 步骤
+    ui_steps = test_case.ui_steps.all().order_by('step_number')
+    
     context = {
         'test_case': test_case,
         'environments': environments,
+        'ui_steps': ui_steps,
     }
     return render(request, 'test_manager/ui_test_run.html', context)
 
