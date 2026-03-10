@@ -3,6 +3,36 @@
 
 {% block title %}测试运行详情 - EasyTesting{% endblock %}
 
+{% block extra_css %}
+<style>
+    .screenshot-item {
+        position: relative;
+        border-radius: 0.375rem;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .screenshot-item:hover .screenshot-thumb {
+        transform: scale(1.05);
+    }
+
+    .screenshot-item:hover > div {
+        opacity: 1 !important;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 0.375rem;
+    }
+
+    .screenshot-thumb {
+        cursor: pointer;
+        transition: transform 0.3s ease, filter 0.2s ease;
+    }
+
+    .screenshot-item:hover .screenshot-thumb {
+        filter: brightness(0.8);
+    }
+</style>
+{% endblock %}
+
 {% block header %}测试运行详情{% endblock %}
 
 {% block header_buttons %}
@@ -109,13 +139,44 @@
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">截图</div>
                     <div class="col-sm-9">
-                        {% if test_run.screenshots %}
-                        <div class="row">
-                            <div class="col-md-4">
-                                <a href="{{ test_run.screenshots.image.url }}" data-lightbox="screenshots"></a>
+                        {% if screenshots %}
+                            {% if screenshot_count > 0 %}
+                            <div class="row g-2">
+                                {% for screenshot in screenshots %}
+                                    {% if screenshot %}
+                                    <div class="col-6 col-md-4 col-lg-3 mb-2">
+                                        <div class="screenshot-item position-relative cursor-pointer" onclick="showScreenshot({{ forloop.counter0 }})" style="cursor: pointer;" title="点击查看大图">
+                                            <img src="/media/{{ screenshot }}" 
+                                                 alt="测试截图" 
+                                                 class="img-thumbnail rounded screenshot-thumb" 
+                                                 style="max-width: 100%; max-height: 150px; object-fit: cover; width: 100%; transition: transform 0.2s;"
+                                                 onerror="this.src='/static/images/placeholder-image.png';">
+                                            <small class="position-absolute bottom-0 start-0 p-1 text-bg-dark rounded-bottom small">
+                                                #{{ forloop.counter }}
+                                            </small>
+                                            <div class="position-absolute top-50 start-50 translate-middle" style="opacity: 0; transition: opacity 0.2s;">
+                                                <i class="bi bi-zoom-in text-white fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
+                                    </div>
+                                    {% endif %}
+                                {% empty %}
+                                <small class="text-muted">暂无截图</small>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-image"></i> 共 {{ screenshot_count }} 张截图
+                            </small>
+                            {% else %}
+                            <small class="text-muted"><i class="bi bi-image"></i> 暂无截图</small>
                             {% endif %}
-                        </div>
+                        {% else %}
+                            <small class="text-muted"><i class="bi bi-image"></i> 暂无截图</small>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -271,8 +332,93 @@
     </div>
 </div>
 
+<!-- 截图查看模态框 -->
+<div class="modal fade" id="screenshotModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-image"></i> 查看截图
+                    <span id="screenshotCounter" class="badge bg-primary ms-2">1/1</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="screenshotImage" src="" alt="测试截图" style="max-width: 100%; max-height: 600px; object-fit: contain;">
+                <p id="screenshotPath" class="text-muted small mt-3 text-break"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="prevScreenshot" style="display: none;">
+                    <i class="bi bi-arrow-left"></i> 上一张
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="nextScreenshot" style="display: none;">
+                    下一张 <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
+    // 截图管理
+    let screenshotList = [
+        {% for screenshot in screenshots %}'{{ screenshot }}',{% endfor %}
+    ];
+    let currentScreenshotIndex = 0;
+
+    // 初始化截图点击事件
+    function initScreenshotHandlers() {
+        const screenshotItems = document.querySelectorAll('.screenshot-item a');
+        screenshotItems.forEach((item, index) => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+                currentScreenshotIndex = index;
+                showScreenshot(index);
+            });
+        });
+    }
+
+    // 显示截图
+    function showScreenshot(index) {
+        if (index < 0 || index >= screenshotList.length) return;
+
+        const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+        const screenshot = screenshotList[index];
+        const imgElement = document.getElementById('screenshotImage');
+        const pathElement = document.getElementById('screenshotPath');
+        const counter = document.getElementById('screenshotCounter');
+        const prevBtn = document.getElementById('prevScreenshot');
+        const nextBtn = document.getElementById('nextScreenshot');
+
+        imgElement.src = '/media/' + screenshot;
+        imgElement.onerror = function () {
+            this.src = '/static/images/placeholder-image.png';
+        };
+        pathElement.textContent = '路径: ' + screenshot;
+        counter.textContent = (index + 1) + '/' + screenshotList.length;
+
+        // 显示/隐藏前后按钮
+        prevBtn.style.display = index > 0 ? 'block' : 'none';
+        nextBtn.style.display = index < screenshotList.length - 1 ? 'block' : 'none';
+
+        // 按钮事件
+        prevBtn.onclick = function () {
+            showScreenshot(index - 1);
+        };
+        nextBtn.onclick = function () {
+            showScreenshot(index + 1);
+        };
+
+        modal.show();
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function () {
+        initScreenshotHandlers();
+    });
+
     function rerunTest(testCaseId) {
         new bootstrap.Modal(document.getElementById('rerunModal')).show();
 

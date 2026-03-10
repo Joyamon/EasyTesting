@@ -412,12 +412,44 @@ def ui_test_run(request, pk):
 
 @login_required
 def ui_test_run_detail(request, run_id):
-    """UI 测试运行详情"""
+    """UI 测试运行详情
+    
+    处理截图数据，确保可以正确显示在模板中。
+    截图可能是绝对路径或相对路径，需要分别处理。
+    """
     test_run = get_object_or_404(UITestResult, pk=run_id)
     steps = TestCase.objects.filter(id=test_run.test_case_id).first().ui_steps.all().order_by('step_number')
+    
+    # 处理截图数据
+    screenshots = []
+    if test_run.screenshots:
+        if isinstance(test_run.screenshots, list):
+            screenshots = test_run.screenshots
+        elif isinstance(test_run.screenshots, str):
+            # 如果是字符串，尝试解析为 JSON
+            try:
+                screenshots = json.loads(test_run.screenshots)
+                if not isinstance(screenshots, list):
+                    screenshots = [screenshots]
+            except (json.JSONDecodeError, TypeError):
+                screenshots = [test_run.screenshots] if test_run.screenshots else []
+    
+    # 处理截图路径，确保模板能正确访问
+    processed_screenshots = []
+    for screenshot in screenshots:
+        if screenshot:
+            # 移除开头的 /media/ 或 media/，统一处理
+            if isinstance(screenshot, str):
+                screenshot = screenshot.lstrip('/')
+                if screenshot.startswith('media/'):
+                    screenshot = screenshot[6:]  # 移除 'media/' 前缀
+                processed_screenshots.append(screenshot)
+    
     context = {
         'test_run': test_run,
         'steps': steps,
+        'screenshots': processed_screenshots,
+        'screenshot_count': len(processed_screenshots),
     }
     return render(request, 'test_manager/ui_test/ui_test_run_detail.html', context)
 
