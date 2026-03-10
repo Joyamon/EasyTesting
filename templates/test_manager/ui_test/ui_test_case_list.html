@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}UI自动化测试用例 - EasyTesting{% endblock %}
+{% block title %}UI测试用例 - EasyTesting{% endblock %}
 
-{% block header %}UI自动化测试{% endblock %}
+{% block header %}UI测试用例{% endblock %}
 
 {% block header_buttons %}
-    <div class="btn-group">
-        <a href="{% url 'ui_test_case_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> 创建UI测试用例
-        </a>
-        <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-primary">
-            <i class="bi bi-play-circle"></i> 测试运行记录
-        </a>
-    </div>
+<div class="btn-group">
+    <a href="{% url 'ui_test_case_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> 创建UI测试用例
+    </a>
+    <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-primary">
+        <i class="bi bi-play-circle"></i> 测试运行记录
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -22,19 +22,19 @@
         <div class="mb-4">
             <form method="get" class="d-flex gap-2">
                 {% if current_project %}
-                    <input type="hidden" name="project" value="{{ current_project.id }}">
+                <input type="hidden" name="project" value="{{ current_project.id }}">
                 {% endif %}
                 <div class="input-group">
                     <input type="text" name="search" class="form-control" placeholder="搜索UI测试用例..."
-                           value="{{ search_query }}">
+                        value="{{ search_query }}">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search"></i>
                     </button>
                 </div>
                 {% if current_project %}
-                    <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg"></i> 清除筛选
-                    </a>
+                <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> 清除筛选
+                </a>
                 {% endif %}
             </form>
         </div>
@@ -73,7 +73,8 @@
                     {% for test_case in test_cases %}
                     <tr>
                         <td>
-                            <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}" class="fw-medium text-decoration-none text-dark">
+                            <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}"
+                                class="fw-medium text-decoration-none text-dark">
                                 {{ test_case.name }}
                             </a>
                             {% if test_case.description %}
@@ -97,9 +98,10 @@
                             </span>
                         </td>
                         <td>
-                            {% if test_case.url %}
-                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block" style="max-width: 250px;" title="{{ test_case.url }}">
-                                {{ test_case.url|truncatechars:40 }}
+                            {% if test_case.target_url %}
+                            <code class="bg-light px-2 py-1 rounded text-truncate d-inline-block"
+                                style="max-width: 250px;" title="{{ test_case.url }}">
+                                {{ test_case.target_url|truncatechars:40 }}
                             </code>
                             {% else %}
                             <span class="text-muted">-</span>
@@ -120,16 +122,20 @@
                         </td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}" class="btn btn-outline-primary" title="查看">
+                                <a href="{% url 'ui_test_case_detail' pk=test_case.pk %}"
+                                    class="btn btn-outline-primary" title="查看">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'ui_test_case_edit' pk=test_case.pk %}" class="btn btn-outline-secondary" title="编辑">
+                                <a href="{% url 'ui_test_case_edit' pk=test_case.pk %}"
+                                    class="btn btn-outline-secondary" title="编辑">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-outline-success" title="运行" onclick="confirmRunTest({{ test_case.pk }}, '{{ test_case.name }}')">
+                                <button type="button" class="btn btn-outline-success" title="运行"
+                                    onclick="confirmRunTest({{ test_case.pk }}, '{{ test_case.name }}')">
                                     <i class="bi bi-play-fill"></i>
                                 </button>
-                                <button type="button" class="btn btn-outline-danger" title="删除" onclick="confirmDeleteTestCase({{ test_case.pk }}, '{{ test_case.name }}')">
+                                <button type="button" class="btn btn-outline-danger" title="删除"
+                                    onclick="confirmDeleteTestCase({{ test_case.pk }}, '{{ test_case.name }}')">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -214,13 +220,14 @@
     function confirmRunTest(testCaseId, testCaseName) {
         document.getElementById('runTestCaseName').textContent = testCaseName;
         document.getElementById('runConfirmBtn').dataset.testCaseId = testCaseId;
+
         new bootstrap.Modal(document.getElementById('runModal')).show();
     }
 
-    document.getElementById('runConfirmBtn').addEventListener('click', function() {
+    document.getElementById('runConfirmBtn').addEventListener('click', function () {
         const testCaseId = this.dataset.testCaseId;
         const modal = bootstrap.Modal.getInstance(document.getElementById('runModal'));
-        
+
         // 显示进度条，隐藏按钮
         document.getElementById('runProgress').style.display = 'block';
         document.getElementById('runModalFooter').style.display = 'none';
@@ -228,32 +235,30 @@
         fetch(`/ui-test-cases/${testCaseId}/run/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                modal.hide();
-                // 显示成功提示
-                showToast('测试运行成功！', 'success');
-                // 跳转到运行详情页面
-                setTimeout(() => {
-                    window.location.href = `/ui-test-runs/${data.test_run_id}/`;
-                }, 1000);
-            } else {
-                showToast('测试运行失败: ' + data.error, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('网络错误: ' + error.message, 'danger');
-        })
-        .finally(() => {
-            document.getElementById('runProgress').style.display = 'none';
-            document.getElementById('runModalFooter').style.display = 'flex';
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modal.hide();
+                    // 显示成功提示
+                    showToast('测试运行成功！', 'success');
+
+
+                } else {
+                    showToast('测试运行失败: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('网络错误: ' + error.message, 'danger');
+            })
+            .finally(() => {
+                document.getElementById('runProgress').style.display = 'none';
+                document.getElementById('runModalFooter').style.display = 'flex';
+            });
     });
 
     // Toast 通知函数

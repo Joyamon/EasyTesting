@@ -97,6 +97,21 @@ class TestCase(models.Model):
     # 新增字段，用于存储跳过测试
     skip_test = models.BooleanField(default=False, verbose_name="跳过测试", db_comment="跳过测试")
     times = models.IntegerField(default=1, verbose_name="执行次数", db_comment="执行次数")
+    test_type = models.CharField(max_length=20, choices=[
+        ('api', 'API'),
+        ('ui', 'UI'),
+    ], default='api', verbose_name="测试类型", db_comment="测试类型")
+    target_url = models.URLField(blank=True, null=True, verbose_name="目标URL", db_comment="目标URL")
+    browser_type = models.CharField(max_length=20, choices=[
+        ('chromium', 'Chromium'),
+        ('firefox', 'Firefox'),
+        ('webkit', 'Webkit')
+    ], default='chrome', verbose_name="浏览器类型", db_comment="浏览器类型")
+    viewport_width = models.IntegerField(default=1280, verbose_name="视图宽度", db_comment="视图宽度")
+    viewport_height = models.IntegerField(default=720, verbose_name="视图高度", db_comment="视图高度")
+    headless = models.BooleanField(default=True, verbose_name="无头模式", db_comment="无头模式")
+    steps = models.IntegerField(default=1, verbose_name="步骤", db_comment="步骤")
+    run_count = models.IntegerField(default=0, verbose_name="运行次数", db_comment="运行次数")
 
     def __str__(self):
         return self.name
@@ -177,7 +192,7 @@ class TestRun(models.Model):
     test_suite = models.ForeignKey(TestSuite, on_delete=models.CASCADE, related_name='test_runs', null=True, blank=True,
                                    verbose_name="测试套件", db_comment="测试套件")
     environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name='test_runs',
-                                    verbose_name="运行环境", db_comment="运行环境")
+                                    verbose_name="运行环境", db_comment="运行环境", null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="运行状态",
                               db_comment="运行状态")
     start_time = models.DateTimeField(null=True, blank=True, verbose_name="开始时间", db_comment="开始时间")
@@ -336,10 +351,10 @@ class Notification(models.Model):
         ('other', '其他'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name="用户", 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name="用户",
                              db_comment="通知所属用户")
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES, default='system',
-                                        verbose_name="通知类型", db_comment="通知类型")
+                                         verbose_name="通知类型", db_comment="通知类型")
     title = models.CharField(max_length=255, verbose_name="通知标题", db_comment="通知标题")
     message = models.TextField(verbose_name="通知内容", db_comment="通知内容")
     is_read = models.BooleanField(default=False, verbose_name="是否已读", db_comment="是否已读")

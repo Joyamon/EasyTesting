@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}测试运行详情 - EasyTesting{% endblock %}
 
 {% block header %}测试运行详情{% endblock %}
 
 {% block header_buttons %}
-    <div class="btn-group">
-        <a href="{% url 'ui_test_case_detail' pk=test_run.test_case.pk %}" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left"></i> 返回测试用例
-        </a>
-        <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-list-ul"></i> 运行历史
-        </a>
-    </div>
+<div class="btn-group">
+    <a href="{% url 'ui_test_case_list'  %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> 返回测试用例
+    </a>
+    <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-list-ul"></i> 运行历史
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -27,7 +28,7 @@
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">测试用例</div>
                     <div class="col-sm-9">
-                        <a href="{% url 'ui_test_case_detail' pk=test_run.test_case.pk %}">
+                        <a href="{% url 'ui_test_case_list'  %}">
                             {{ test_run.test_case.name }}
                         </a>
                     </div>
@@ -70,28 +71,28 @@
                     </div>
                 </div>
 
-                {% if result %}
+                {% if test_run %}
                 <hr>
 
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">执行步骤</div>
                     <div class="col-sm-9">
-                        <span class="badge bg-light text-dark">{{ result.steps_executed }} 步</span>
+                        <span class="badge bg-light text-dark">{{ test_run.steps_executed }} 步</span>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">通过步骤</div>
                     <div class="col-sm-9">
-                        <span class="badge bg-success">{{ result.steps_passed }} 步</span>
+                        <span class="badge bg-success">{{ test_run.steps_passed }} 步</span>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">失败步骤</div>
                     <div class="col-sm-9">
-                        {% if result.steps_failed > 0 %}
-                        <span class="badge bg-danger">{{ result.steps_failed }} 步</span>
+                        {% if test_run.steps_failed > 0 %}
+                        <span class="badge bg-danger">{{ test_run.steps_failed }} 步</span>
                         {% else %}
                         <span class="badge bg-light text-dark">0 步</span>
                         {% endif %}
@@ -101,134 +102,148 @@
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">执行耗时</div>
                     <div class="col-sm-9">
-                        <strong>{{ result.duration|floatformat:2 }} 秒</strong>
+                        <strong>{{ test_run.duration|floatformat:2 }} 秒</strong>
+                    </div>
+                </div>
+                <!--截图展示-->
+                <div class="row mb-3">
+                    <div class="col-sm-3 fw-bold">截图</div>
+                    <div class="col-sm-9">
+                        {% if test_run.screenshots %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <a href="{{ test_run.screenshots.image.url }}" data-lightbox="screenshots"></a>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                {% if result.error_message %}
+
+                {% if test_run.error_message %}
                 <div class="alert alert-danger mt-3">
                     <h6 class="alert-heading">
                         <i class="bi bi-exclamation-triangle"></i> 错误信息
                     </h6>
-                    <code class="d-block p-2 bg-light rounded mt-2">{{ result.error_message|truncatewords:50 }}</code>
+                    <code class="d-block p-2 bg-light rounded mt-2">{{ test_run.error_message|truncatewords:50 }}</code>
                 </div>
-                {% endif %}
-                {% endif %}
             </div>
-        </div>
 
-        <!-- 测试步骤结果 -->
-        {% if result %}
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">执行步骤详情</h5>
-            </div>
-            <div class="card-body">
-                {% if test_run.test_case.steps.all %}
-                <div class="steps-timeline">
-                    {% for step in test_run.test_case.steps.all %}
-                    <div class="step-item mb-3 pb-3 border-bottom" data-step-id="{{ step.id }}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="mb-2">
-                                    <span class="badge bg-secondary">步骤 {{ step.order }}</span>
-                                    <span class="badge bg-light text-dark">{{ step.get_action_display }}</span>
-                                </div>
-                                <p class="mb-1">
-                                    <strong>操作:</strong> {{ step.get_action_display }}
-                                </p>
-                                {% if step.description %}
-                                <p class="mb-0 text-muted small">
-                                    {{ step.description }}
-                                </p>
-                                {% endif %}
+            {% endif %}
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- 测试步骤结果 -->
+    {% if test_run %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">执行步骤详情</h5>
+        </div>
+        <div class="card-body">
+            {% if steps %}
+            <div class="steps-timeline">
+                {% for step in steps %}
+                <div class="step-item mb-3 pb-3 border-bottom" data-step-id="{{ step.id }}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="mb-2">
+                                <span class="badge bg-secondary">步骤 {{ step }}</span>
+                                <span class="badge bg-light text-dark">{{ step.step_number }}</span>
                             </div>
-                            <div>
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i>
-                                </span>
-                            </div>
+                            <p class="mb-1">
+                                <strong>操作:</strong> {{ step.action_type }}
+                            </p>
+                            {% if step.description %}
+                            <p class="mb-0 text-muted small">
+                                {{ step.description }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i>
+                            </span>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <p class="text-muted text-center py-4">此测试用例没有定义步骤</p>
-                {% endif %}
+                {% endfor %}
             </div>
+            {% else %}
+            <p class="text-muted text-center py-4">此测试用例没有定义步骤</p>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
+    {% endif %}
+</div>
 
-    <!-- 右侧统计信息 -->
-    <div class="col-lg-4">
-        <!-- 成功率显示 -->
-        {% if result %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">成功率</h5>
-            </div>
-            <div class="card-body">
-                {% with success_rate=result.steps_passed|multiply:100|divide:result.steps_executed %}
-                <div class="progress mb-3" style="height: 30px;">
-                    <div class="progress-bar {% if success_rate == 100 %}bg-success{% elif success_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                         role="progressbar" 
-                         style="width: {{ success_rate }}%"
-                         aria-valuenow="{{ success_rate }}" 
-                         aria-valuemin="0" 
-                         aria-valuemax="100">
-                        {{ success_rate|floatformat:1 }}%
-                    </div>
-                </div>
-                {% endwith %}
-                <div class="text-center">
-                    <small class="text-muted">
-                        成功: <strong>{{ result.steps_passed }}/{{ result.steps_executed }}</strong>
-                    </small>
-                </div>
-            </div>
+<!-- 右侧统计信息 -->
+<div class="col-lg-4">
+    <!-- 成功率显示 -->
+    {% if test_run %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">成功率</h5>
         </div>
-        {% endif %}
-
-        <!-- 快速操作 -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">快速操作</h5>
-            </div>
-            <div class="card-body d-grid gap-2">
-                <a href="{% url 'ui_test_case_detail' pk=test_run.test_case.pk %}" class="btn btn-outline-primary">
-                    <i class="bi bi-eye"></i> 查看测试用例
-                </a>
-                <button type="button" class="btn btn-success" onclick="rerunTest({{ test_run.test_case.pk }})">
-                    <i class="bi bi-arrow-repeat"></i> 重新运行
-                </button>
-                <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-list-ul"></i> 运行历史
-                </a>
-            </div>
-        </div>
-
-        <!-- 浏览器信息 -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">浏览器信息</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <small><strong>浏览器类型:</strong></small><br>
-                    <small class="text-muted">
-                        {{ test_run.test_case.get_browser_type_display }}
-                    </small>
+        <div class="card-body">
+            {% with success_rate=test_run.steps_passed|multiply:100|divide:test_run.steps_executed %}
+            <div class="progress mb-3" style="height: 30px;">
+                <div class="progress-bar {% if success_rate == 100 %}bg-success{% elif success_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                    role="progressbar" style="width: {{ success_rate }}%" aria-valuenow="{{ success_rate }}"
+                    aria-valuemin="0" aria-valuemax="100">
+                    {{ success_rate|floatformat:1 }}%
                 </div>
-                <div>
-                    <small><strong>测试 URL:</strong></small><br>
-                    <small class="text-muted text-truncate d-block" title="{{ test_run.test_case.url }}">
-                        {{ test_run.test_case.url|truncatechars:30 }}
-                    </small>
-                </div>
+            </div>
+            {% endwith %}
+            <div class="text-center">
+                <small class="text-muted">
+                    成功: <strong>{{ test_run.steps_passed }}/{{ test_run.steps_executed }}</strong>
+                </small>
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- 快速操作 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">快速操作</h5>
+        </div>
+        <div class="card-body d-grid gap-2">
+            <a href="{% url 'ui_test_case_list'  %}" class="btn btn-outline-primary">
+                <i class="bi bi-eye"></i> 查看测试用例
+            </a>
+            <button type="button" class="btn btn-success" onclick="rerunTest({{ test_run.test_case.pk }})">
+                <i class="bi bi-arrow-repeat"></i> 重新运行
+            </button>
+            <a href="{% url 'ui_test_run_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> 运行历史
+            </a>
+        </div>
+    </div>
+
+    <!-- 浏览器信息 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">浏览器信息</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-2">
+                <small><strong>浏览器类型:</strong></small><br>
+                <small class="text-muted">
+                    {{ test_run.test_case.browser_type }}
+                </small>
+            </div>
+            <div>
+                <small><strong>测试 URL:</strong></small><br>
+                <small class="text-muted text-truncate d-block" title="{{ test_run.test_case.target_url }}">
+                    {{ test_run.test_case.target_url|truncatechars:30 }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <!-- 重新运行模态框 -->
@@ -256,11 +271,12 @@
     </div>
 </div>
 
+
 <script>
     function rerunTest(testCaseId) {
         new bootstrap.Modal(document.getElementById('rerunModal')).show();
-        
-        document.getElementById('rerunConfirmBtn').onclick = function() {
+
+        document.getElementById('rerunConfirmBtn').onclick = function () {
             document.getElementById('rerunProgress').style.display = 'block';
             document.getElementById('rerunModalFooter').innerHTML = '';
 
@@ -271,22 +287,22 @@
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('rerunModal')).hide();
-                    showToast('测试重新运行成功', 'success');
-                    setTimeout(() => {
-                        window.location.href = `/ui-test-runs/${data.test_run_id}/`;
-                    }, 1000);
-                } else {
-                    showToast('运行失败: ' + data.error, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('网络错误', 'danger');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('rerunModal')).hide();
+                        showToast('测试重新运行成功', 'success');
+                        setTimeout(() => {
+                            window.location.href = `/ui-test-runs/${data.test_run_id}/`;
+                        }, 1000);
+                    } else {
+                        showToast('运行失败: ' + data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('网络错误', 'danger');
+                });
         };
     }
 
@@ -311,7 +327,7 @@
 
         toastContainer.appendChild(toast);
         new bootstrap.Toast(toast).show();
-        
+
         setTimeout(() => toast.remove(), 3000);
     }
 </script>

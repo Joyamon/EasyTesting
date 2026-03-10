@@ -9,12 +9,13 @@ from test_manager.views.ui_views import (
     ui_test_case_detail,
     ui_test_case_edit,
     ui_test_case_delete,
+    ui_test_case_reorder_steps,
     ui_test_step_add,
     ui_test_step_edit,
     ui_test_step_delete,
     ui_test_run,
     ui_test_run_detail,
-    ui_test_run_list,
+    ui_test_run_list, ui_test_run_delete,
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('ui-test-cases/<int:pk>/edit/', ui_test_case_edit, name='ui_test_case_edit'),
     path('ui-test-cases/<int:pk>/delete/', ui_test_case_delete, name='ui_test_case_delete'),
     path('ui-test-cases/<int:pk>/run/', ui_test_run, name='ui_test_run'),
+    path('ui-test-cases/<int:pk>/reorder-steps/', ui_test_case_reorder_steps, name='ui_test_case_reorder_steps'),
 
     # UI 测试步骤
     path('ui-test-cases/<int:test_case_id>/steps/add/', ui_test_step_add, name='ui_test_step_add'),
@@ -34,4 +36,5 @@ urlpatterns = [
     # UI 测试运行
     path('ui-test-runs/', ui_test_run_list, name='ui_test_run_list'),
     path('ui-test-runs/<int:run_id>/', ui_test_run_detail, name='ui_test_run_detail'),
+    path('ui-test-runs/<int:run_id>/delete/', ui_test_run_delete, name='ui_test_run_delete'),
 ]

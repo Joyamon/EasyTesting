@@ -5,17 +5,17 @@
 {% block header %}{{ test_case.name }}{% endblock %}
 
 {% block header_buttons %}
-    <div class="btn-group">
-        <a href="{% url 'ui_test_case_edit' pk=test_case.pk %}" class="btn btn-primary">
-            <i class="bi bi-pencil"></i> 编辑
-        </a>
-        <button type="button" class="btn btn-success" onclick="runTest({{ test_case.pk }})">
-            <i class="bi bi-play-fill"></i> 运行测试
-        </button>
-        <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> 返回列表
-        </a>
-    </div>
+<div class="btn-group">
+    <a href="{% url 'ui_test_case_edit' pk=test_case.pk %}" class="btn btn-primary">
+        <i class="bi bi-pencil"></i> 编辑
+    </a>
+    <button type="button" class="btn btn-success" onclick="runTest({{ test_case.pk }})">
+        <i class="bi bi-play-fill"></i> 运行测试
+    </button>
+    <a href="{% url 'ui_test_case_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -64,7 +64,7 @@
                         <strong>浏览器:</strong>
                     </div>
                     <div class="col-sm-9">
-                        <span class="badge 
+                        <span class="badge
                             {% if test_case.browser_type == 'chromium' %}bg-primary
                             {% elif test_case.browser_type == 'firefox' %}bg-warning
                             {% elif test_case.browser_type == 'webkit' %}bg-info
@@ -78,9 +78,9 @@
                         <strong>测试 URL:</strong>
                     </div>
                     <div class="col-sm-9">
-                        {% if test_case.url %}
-                        <code class="bg-light px-2 py-1 rounded">{{ test_case.url }}</code>
-                        <a href="{{ test_case.url }}" target="_blank" class="ms-2" title="在新标签页打开">
+                        {% if test_case.target_url %}
+                        <code class="bg-light px-2 py-1 rounded">{{ test_case.target_url }}</code>
+                        <a href="{{ test_case.target_url }}" target="_blank" class="ms-2" title="在新标签页打开">
                             <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                         {% else %}
@@ -103,51 +103,66 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">测试步骤 ({{ steps.count }})</h5>
-                <a href="{% url 'ui_test_step_add' test_case_id=test_case.pk %}" class="btn btn-sm btn-success">
-                    <i class="bi bi-plus-lg"></i> 添加步骤
-                </a>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-warning" id="editOrderBtn" style="display: none;">
+                        <i class="bi bi-check-lg"></i> 完成排序
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="sortBtn" onclick="toggleSortMode()">
+                        <i class="bi bi-arrow-up-down"></i> 调整顺序
+                    </button>
+                    <a href="{% url 'ui_test_step_add' test_case_id=test_case.pk %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-lg"></i> 添加步骤
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 {% if steps %}
-                <div class="steps-list">
+                <div class="steps-list" id="stepsList">
                     {% for step in steps %}
-                    <div class="step-item mb-3 p-3 border rounded" data-step-id="{{ step.id }}">
+                    <div class="step-item mb-3 p-3 border rounded" data-step-id="{{ step.id }}" data-step-number="{{ step.step_number }}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="step-number">
-                                <span class="badge bg-primary rounded-pill">步骤 {{ step.order }}</span>
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <span class="step-drag-handle me-2" style="cursor: grab; display: none; font-size: 1.2em;" title="拖拽排序">
+                                    <i class="bi bi-grip-vertical"></i>
+                                </span>
+                                <div class="step-number">
+                                    <span class="badge bg-primary rounded-pill">步骤 {{ step.step_number }}</span>
+                                </div>
                             </div>
                             <div class="step-actions">
-                                <a href="{% url 'ui_test_step_edit' step_id=step.id %}" class="btn btn-sm btn-outline-secondary" title="编辑">
+                                <a href="{% url 'ui_test_step_edit' step_id=step.id %}"
+                                    class="btn btn-sm btn-outline-secondary" title="编辑">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteStep({{ step.id }})">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="confirmDeleteStep({{ step.id }})">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="step-details">
                             <div class="mb-2">
-                                <strong>动作:</strong> 
-                                <span class="badge bg-light text-dark">{{ step.get_action_display }}</span>
+                                <strong>动作:</strong>
+                                <span class="badge bg-light text-dark">{{ step.action_type }}</span>
                             </div>
                             <div class="mb-2">
-                                <strong>定位方式:</strong> 
-                                <span class="badge bg-light text-dark">{{ step.get_locator_type_display }}</span>
+                                <strong>定位方式:</strong>
+                                <span class="badge bg-light text-dark">{{ step.selector_type }}</span>
                             </div>
                             <div class="mb-2">
-                                <strong>定位值:</strong> 
-                                <code class="bg-light px-2 py-1 rounded">{{ step.locator_value }}</code>
+                                <strong>定位值:</strong>
+                                <code class="bg-light px-2 py-1 rounded">{{ step.element_selector }}</code>
                             </div>
                             {% if step.value %}
                             <div class="mb-2">
-                                <strong>输入值:</strong> 
-                                <code class="bg-light px-2 py-1 rounded">{{ step.value }}</code>
+                                <strong>输入值:</strong>
+                                <code class="bg-light px-2 py-1 rounded">{{ step.action_value }}</code>
                             </div>
                             {% endif %}
                             {% if step.description %}
                             <div>
-                                <strong>描述:</strong> 
+                                <strong>描述:</strong>
                                 {{ step.description }}
                             </div>
                             {% endif %}
@@ -182,7 +197,7 @@
                         <small class="text-muted">执行次数</small>
                     </div>
                     <div class="col-6 mb-3">
-                        <div class="h5 mb-0 text-success">{{ test_case.steps.count }}</div>
+                        <div class="h5 mb-0 text-success">{{ steps.count }}</div>
                         <small class="text-muted">测试步骤</small>
                     </div>
                 </div>
@@ -240,42 +255,137 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
 <script>
+    let sortMode = false;
+    let draggedElement = null;
+
+    // 初始化拖拽排序
+    function initSortable() {
+        const stepsList = document.getElementById('stepsList');
+        if (!stepsList) return;
+
+        Sortable.create(stepsList, {
+            animation: 150,
+            handle: '.step-drag-handle',
+            disabled: true,
+            onEnd: function (evt) {
+                if (sortMode) {
+                    updateStepOrder();
+                }
+            }
+        });
+    }
+
+    // 切换排序模式
+    function toggleSortMode() {
+        sortMode = !sortMode;
+        const sortBtn = document.getElementById('sortBtn');
+        const editOrderBtn = document.getElementById('editOrderBtn');
+        const dragHandles = document.querySelectorAll('.step-drag-handle');
+        const stepsList = document.getElementById('stepsList');
+        const sortableInstance = Sortable.get(stepsList);
+
+        if (sortMode) {
+            // 进入排序模式
+            sortBtn.style.display = 'none';
+            editOrderBtn.style.display = 'inline-block';
+            dragHandles.forEach(handle => {
+                handle.style.display = 'inline';
+            });
+            if (sortableInstance) {
+                sortableInstance.option('disabled', false);
+            }
+            showToast('现在可以拖拽排序步骤，完成后点击"完成排序"', 'info');
+        } else {
+            // 退出排序模式
+            sortBtn.style.display = 'inline-block';
+            editOrderBtn.style.display = 'none';
+            dragHandles.forEach(handle => {
+                handle.style.display = 'none';
+            });
+            if (sortableInstance) {
+                sortableInstance.option('disabled', true);
+            }
+        }
+    }
+
+    // 更新步骤顺序
+    function updateStepOrder() {
+        const stepsList = document.getElementById('stepsList');
+        const steps = Array.from(stepsList.querySelectorAll('.step-item'));
+        const stepOrder = steps.map((item, index) => ({
+            id: item.getAttribute('data-step-id'),
+            step_number: index + 1
+        }));
+
+        fetch(`/ui-test-cases/{{ test_case.pk }}/reorder-steps/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                steps: stepOrder
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新 UI 中的步骤号
+                    steps.forEach((item, index) => {
+                        const badge = item.querySelector('.badge');
+                        badge.textContent = `步骤 ${index + 1}`;
+                        item.setAttribute('data-step-number', index + 1);
+                    });
+                    showToast('步骤顺序已更新', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast('更新步骤顺序失败: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('网络错误: ' + error.message, 'danger');
+            });
+    }
+
     function runTest(testCaseId) {
         new bootstrap.Modal(document.getElementById('runModal')).show();
-        
-        document.getElementById('runConfirmBtn').onclick = function() {
+
+        document.getElementById('runConfirmBtn').onclick = function () {
             document.getElementById('runProgress').style.display = 'block';
             document.getElementById('runModalFooter').innerHTML = '';
 
             fetch(`/ui-test-cases/${testCaseId}/run/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('runModal')).hide();
-                    showToast('测试运行成功！', 'success');
-                    setTimeout(() => {
-                        window.location.href = `/ui-test-runs/${data.test_run_id}/`;
-                    }, 1000);
-                } else {
-                    showToast('测试运行失败: ' + data.error, 'danger');
-                    document.getElementById('runProgress').style.display = 'none';
-                    document.getElementById('runModalFooter').innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('runModal')).hide();
+                        showToast('测试运行成功！', 'success');
+
+                    } else {
+                        showToast('测试运行失败: ' + data.error, 'danger');
+                        document.getElementById('runProgress').style.display = 'none';
+                        document.getElementById('runModalFooter').innerHTML = `
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                         <button type="button" class="btn btn-success" id="runConfirmBtn">重试运行</button>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('网络错误', 'danger');
-            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('网络错误', 'danger', error);
+                });
         };
     }
 
@@ -284,20 +394,25 @@
             fetch(`/ui-test-steps/${stepId}/delete/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('步骤已删除', 'success');
-                    document.querySelector(`[data-step-id="${stepId}"]`).remove();
-                } else {
-                    showToast('删除失败: ' + data.error, 'danger');
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('步骤已删除', 'success');
+                        document.querySelector(`[data-step-id="${stepId}"]`).remove();
+                    } else {
+                        showToast('删除失败: ' + data.error, 'danger');
+                    }
+                });
         }
+    }
+
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
     }
 
     function showToast(message, type = 'success') {
@@ -321,8 +436,13 @@
 
         toastContainer.appendChild(toast);
         new bootstrap.Toast(toast).show();
-        
+
         setTimeout(() => toast.remove(), 3000);
     }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function () {
+        initSortable();
+    });
 </script>
 {% endblock %}

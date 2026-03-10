@@ -5,9 +5,10 @@
 {% block header %}{% if step %}编辑步骤{% else %}添加测试步骤{% endif %}{% endblock %}
 
 {% block header_buttons %}
-    <a href="{% if test_case %}{% url 'ui_test_case_detail' pk=test_case.pk %}{% else %}{% url 'ui_test_case_list' %}{% endif %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> 返回
-    </a>
+<a href="{% if test_case %}{% url 'ui_test_case_detail' pk=test_case.pk %}{% else %}{% url 'ui_test_case_list' %}{% endif %}"
+    class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> 返回
+</a>
 {% endblock %}
 
 {% block content %}
@@ -23,42 +24,47 @@
 
                     <div class="mb-3">
                         <label for="action" class="form-label">操作类型 <span class="text-danger">*</span></label>
-                        <select class="form-select" id="action" name="action" required onchange="updateLocatorOptions()">
+                        <select class="form-select" id="action" name="action" required
+                            onchange="updateLocatorOptions()">
                             <option value="">-- 选择操作 --</option>
-                            <option value="navigate" {% if step and step.action == 'navigate' %}selected{% endif %}>
+                            <option value="navigate" {% if step and step.action_type=='navigate' %}selected{% endif %}>
                                 导航到 URL
                             </option>
-                            <option value="click" {% if step and step.action == 'click' %}selected{% endif %}>
+                            <option value="click" {% if step and step.action_type=='click' %}selected{% endif %}>
                                 点击元素
                             </option>
-                            <option value="fill" {% if step and step.action == 'fill' %}selected{% endif %}>
+                            <option value="fill" {% if step and step.action_type=='fill' %}selected{% endif %}>
                                 填充文本
                             </option>
-                            <option value="select" {% if step and step.action == 'select' %}selected{% endif %}>
+                            <option value="select" {% if step and step.action_type=='select' %}selected{% endif %}>
                                 选择选项
                             </option>
-                            <option value="check" {% if step and step.action == 'check' %}selected{% endif %}>
+                            <option value="check" {% if step and step.action_type=='check' %}selected{% endif %}>
                                 勾选复选框
                             </option>
-                            <option value="uncheck" {% if step and step.action == 'uncheck' %}selected{% endif %}>
+                            <option value="uncheck" {% if step and step.action_type=='uncheck' %}selected{% endif %}>
                                 取消复选框
                             </option>
-                            <option value="hover" {% if step and step.action == 'hover' %}selected{% endif %}>
+                            <option value="hover" {% if step and step.action_type=='hover' %}selected{% endif %}>
                                 悬停元素
                             </option>
-                            <option value="wait" {% if step and step.action == 'wait' %}selected{% endif %}>
+                            <option value="wait" {% if step and step.action_type=='wait' %}selected{% endif %}>
                                 等待
                             </option>
-                            <option value="screenshot" {% if step and step.action == 'screenshot' %}selected{% endif %}>
+                            <option value="screenshot" {% if step and step.action_type=='screenshot' %}selected{% endif
+                                %}>
                                 截图
                             </option>
-                            <option value="assert_text" {% if step and step.action == 'assert_text' %}selected{% endif %}>
+                            <option value="assert_text" {% if step and step.action_type=='assert_text' %}selected{%
+                                endif %}>
                                 验证文本
                             </option>
-                            <option value="assert_visible" {% if step and step.action == 'assert_visible' %}selected{% endif %}>
+                            <option value="assert_visible" {% if step and step.action_type=='assert_visible'
+                                %}selected{% endif %}>
                                 验证可见性
                             </option>
-                            <option value="assert_url" {% if step and step.action == 'assert_url' %}selected{% endif %}>
+                            <option value="assert_url" {% if step and step.action_type=='assert_url' %}selected{% endif
+                                %}>
                                 验证 URL
                             </option>
                         </select>
@@ -69,16 +75,16 @@
                         <label for="locatorType" class="form-label">定位方式 <span class="text-danger">*</span></label>
                         <select class="form-select" id="locatorType" name="locator_type">
                             <option value="">-- 选择定位方式 --</option>
-                            <option value="css" {% if step and step.locator_type == 'css' %}selected{% endif %}>
+                            <option value="css" {% if step and step.selector_type=='css' %}selected{% endif %}>
                                 CSS 选择器
                             </option>
-                            <option value="xpath" {% if step and step.locator_type == 'xpath' %}selected{% endif %}>
+                            <option value="xpath" {% if step and step.selector_type=='xpath' %}selected{% endif %}>
                                 XPath
                             </option>
-                            <option value="id" {% if step and step.locator_type == 'id' %}selected{% endif %}>
+                            <option value="id" {% if step and step.selector_type=='id' %}selected{% endif %}>
                                 元素 ID
                             </option>
-                            <option value="text" {% if step and step.locator_type == 'text' %}selected{% endif %}>
+                            <option value="text" {% if step and step.selector_type=='text' %}selected{% endif %}>
                                 文本内容
                             </option>
                         </select>
@@ -87,24 +93,22 @@
 
                     <div id="locatorValueSection" class="mb-3" style="display: none;">
                         <label for="locatorValue" class="form-label">定位值 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="locatorValue" name="locator_value" 
-                               value="{% if step %}{{ step.locator_value }}{% endif %}" 
-                               placeholder="输入元素定位值">
+                        <input type="text" class="form-control" id="locatorValue" name="locator_value"
+                            value="{% if step %}{{ step.element_selector }}{% endif %}" placeholder="输入元素定位值">
                         <small class="form-text text-muted">输入元素的定位值（如 CSS 选择器、XPath 等）</small>
                     </div>
 
                     <div id="valueSection" class="mb-3" style="display: none;">
                         <label for="value" class="form-label">输入值</label>
-                        <input type="text" class="form-control" id="value" name="value" 
-                               value="{% if step %}{{ step.value }}{% endif %}" 
-                               placeholder="输入要填充的值或等待时间（秒）">
+                        <input type="text" class="form-control" id="value" name="value"
+                            value="{% if step %}{{ step.action_value }}{% endif %}" placeholder="输入要填充的值或等待时间（秒）">
                         <small class="form-text text-muted">对于文本输入，输入要填充的值；对于等待，输入等待秒数</small>
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">步骤描述</label>
                         <textarea class="form-control" id="description" name="description" rows="3"
-                                  placeholder="描述此步骤的目的和期望结果">{% if step %}{{ step.description }}{% endif %}</textarea>
+                            placeholder="描述此步骤的目的和期望结果">{% if step %}{{ step.description }}{% endif %}</textarea>
                         <small class="form-text text-muted">简要描述此步骤做了什么以及期望的结果</small>
                     </div>
 
@@ -122,7 +126,8 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg"></i> {% if step %}保存修改{% else %}添加步骤{% endif %}
                         </button>
-                        <a href="{% if test_case %}{% url 'ui_test_case_detail' pk=test_case.pk %}{% else %}{% url 'ui_test_case_list' %}{% endif %}" class="btn btn-outline-secondary">
+                        <a href="{% if test_case %}{% url 'ui_test_case_detail' pk=test_case.pk %}{% else %}{% url 'ui_test_case_list' %}{% endif %}"
+                            class="btn btn-outline-secondary">
                             <i class="bi bi-x-lg"></i> 取消
                         </a>
                     </div>
@@ -140,7 +145,12 @@
         const valueSection = document.getElementById('valueSection');
 
         // 根据操作类型显示/隐藏相关字段
-        if (['navigate', 'wait', 'screenshot'].includes(action)) {
+        if (action === 'navigate') {
+            locatorSection.style.display = 'none';
+            locatorValueSection.style.display = 'none';
+            valueSection.style.display = action === 'navigate' ? 'block' : 'none';
+        }
+        else if (['wait', 'screenshot'].includes(action)) {
             locatorSection.style.display = 'none';
             locatorValueSection.style.display = 'none';
             valueSection.style.display = action === 'wait' ? 'block' : 'none';
@@ -162,7 +172,7 @@
     // 初始化显示
     updateLocatorOptions();
 
-    document.getElementById('stepForm').addEventListener('submit', function(e) {
+    document.getElementById('stepForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
         const formData = {
@@ -182,30 +192,30 @@
         fetch(url, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(formData)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('{% if step %}步骤已更新{% else %}步骤已添加{% endif %}', 'success');
-                setTimeout(() => {
-                    {% if step %}
-                    window.location.href = '/ui-test-cases/{{ step.test_case.id }}/';
-                    {% else %}
-                    window.location.href = '/ui-test-cases/{{ test_case.id }}/';
-                    {% endif %}
-                }, 1000);
-            } else {
-                showToast('操作失败: ' + data.error, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('网络错误: ' + error.message, 'danger');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('{% if step %}步骤已更新{% else %}步骤已添加{% endif %}', 'success');
+                    setTimeout(() => {
+                        {% if step %}
+                        window.location.href = '/ui-test-cases/{{ step.test_case.id }}/';
+                        {% else %}
+                        window.location.href = '/ui-test-cases/{{ test_case.id }}/';
+                        {% endif %}
+                    }, 1000);
+                } else {
+                    showToast('操作失败: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('网络错误: ' + error.message, 'danger');
+            });
     });
 
     function showToast(message, type = 'success') {
@@ -229,7 +239,7 @@
 
         toastContainer.appendChild(toast);
         new bootstrap.Toast(toast).show();
-        
+
         setTimeout(() => toast.remove(), 3000);
     }
 </script>

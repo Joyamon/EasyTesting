@@ -14,17 +14,18 @@
             <div class="card-body">
                 <form id="testCaseForm">
                     {% csrf_token %}
-                    
+
                     <div class="mb-3">
                         <label for="name" class="form-label">测试用例名称 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" 
-                               value="{% if test_case %}{{ test_case.name }}{% endif %}" required>
+                        <input type="text" class="form-control" id="name" name="name"
+                            value="{% if test_case %}{{ test_case.name }}{% endif %}" required>
                         <small class="form-text text-muted">输入测试用例的名称</small>
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">描述</label>
-                        <textarea class="form-control" id="description" name="description" rows="3">{% if test_case %}{{ test_case.description }}{% endif %}</textarea>
+                        <textarea class="form-control" id="description" name="description"
+                            rows="3">{% if test_case %}{{ test_case.description }}{% endif %}</textarea>
                         <small class="form-text text-muted">简要描述此测试用例的目的</small>
                     </div>
 
@@ -33,8 +34,8 @@
                         <select class="form-select" id="project" name="project_id">
                             <option value="">-- 选择项目 --</option>
                             {% for project in projects %}
-                            <option value="{{ project.id }}" 
-                                    {% if test_case and test_case.project.id == project.id %}selected{% endif %}>
+                            <option value="{{ project.id }}" {% if test_case and test_case.project.id==project.id
+                                %}selected{% endif %}>
                                 {{ project.name }}
                             </option>
                             {% endfor %}
@@ -43,9 +44,9 @@
 
                     <div class="mb-3">
                         <label for="url" class="form-label">测试 URL <span class="text-danger">*</span></label>
-                        <input type="url" class="form-control" id="url" name="url" 
-                               value="{% if test_case %}{{ test_case.url }}{% endif %}" 
-                               placeholder="https://example.com" required>
+                        <input type="url" class="form-control" id="url" name="url"
+                            value="{% if test_case %}{{ test_case.target_url }}{% endif %}"
+                            placeholder="https://example.com" required>
                         <small class="form-text text-muted">输入要测试的网站 URL</small>
                     </div>
 
@@ -53,13 +54,16 @@
                         <label for="browserType" class="form-label">浏览器 <span class="text-danger">*</span></label>
                         <select class="form-select" id="browserType" name="browser_type" required>
                             <option value="">-- 选择浏览器 --</option>
-                            <option value="chromium" {% if test_case and test_case.browser_type == 'chromium' %}selected{% endif %}>
+                            <option value="chromium" {% if test_case and test_case.browser_type=='chromium' %}selected{%
+                                endif %}>
                                 Chromium (推荐)
                             </option>
-                            <option value="firefox" {% if test_case and test_case.browser_type == 'firefox' %}selected{% endif %}>
+                            <option value="firefox" {% if test_case and test_case.browser_type=='firefox' %}selected{%
+                                endif %}>
                                 Firefox
                             </option>
-                            <option value="webkit" {% if test_case and test_case.browser_type == 'webkit' %}selected{% endif %}>
+                            <option value="webkit" {% if test_case and test_case.browser_type=='webkit' %}selected{%
+                                endif %}>
                                 WebKit (Safari)
                             </option>
                         </select>
@@ -86,9 +90,9 @@
 </div>
 
 <script>
-    document.getElementById('testCaseForm').addEventListener('submit', function(e) {
+    document.getElementById('testCaseForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const formData = {
             name: document.getElementById('name').value,
             description: document.getElementById('description').value,
@@ -98,26 +102,26 @@
         };
 
         const isEdit = {% if test_case %}true{% else %}false{% endif %};
-        const testCaseId = {% if test_case %}{{ test_case.id }}{% else %}null{% endif %};
-        
-        const url = isEdit ? `/ui-test-cases/${testCaseId}/edit/` : '/ui-test-cases/create/';
-        const method = 'POST';
+    const testCaseId = {% if test_case %}{ { test_case.id } } {% else %} null{% endif %};
 
-        fetch(url, {
-            method: method,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
+    const url = isEdit ? `/ui-test-cases/${testCaseId}/edit/` : '/ui-test-cases/create/';
+    const method = 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 showToast('{% if test_case %}修改{% else %}创建{% endif %}成功！', 'success');
                 setTimeout(() => {
-                    const redirectUrl = isEdit 
-                        ? `/ui-test-cases/${testCaseId}/` 
+                    const redirectUrl = isEdit
+                        ? `/ui-test-cases/${testCaseId}/`
                         : `/ui-test-cases/${data.id}/`;
                     window.location.href = redirectUrl;
                 }, 1000);
@@ -152,7 +156,7 @@
 
         toastContainer.appendChild(toast);
         new bootstrap.Toast(toast).show();
-        
+
         setTimeout(() => toast.remove(), 3000);
     }
 </script>
