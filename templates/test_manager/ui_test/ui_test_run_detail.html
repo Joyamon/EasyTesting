@@ -135,51 +135,39 @@
                         <strong>{{ test_run.duration|floatformat:2 }} 秒</strong>
                     </div>
                 </div>
-                <!--截图展示-->
+
+                <!-- 截图展示 -->
                 <div class="row mb-3">
                     <div class="col-sm-3 fw-bold">截图</div>
                     <div class="col-sm-9">
-                        {% if screenshots %}
-                            {% if screenshot_count > 0 %}
-                            <div class="row g-2">
-                                {% for screenshot in screenshots %}
-                                    {% if screenshot %}
-                                    <div class="col-6 col-md-4 col-lg-3 mb-2">
-                                        <div class="screenshot-item position-relative cursor-pointer" onclick="showScreenshot({{ forloop.counter0 }})" style="cursor: pointer;" title="点击查看大图">
-                                            <img src="/media/{{ screenshot }}" 
-                                                 alt="测试截图" 
-                                                 class="img-thumbnail rounded screenshot-thumb" 
-                                                 style="max-width: 100%; max-height: 150px; object-fit: cover; width: 100%; transition: transform 0.2s;"
-                                                 onerror="this.src='/static/images/placeholder-image.png';">
-                                            <small class="position-absolute bottom-0 start-0 p-1 text-bg-dark rounded-bottom small">
-                                                #{{ forloop.counter }}
-                                            </small>
-                                            <div class="position-absolute top-50 start-50 translate-middle" style="opacity: 0; transition: opacity 0.2s;">
-                                                <i class="bi bi-zoom-in text-white fs-5"></i>
-                                            </div>
-                                        </div>
+                        {% if screenshots and screenshot_count > 0 %}
+                        <div class="row g-2">
+                            {% for screenshot in screenshots %}
+                            <div class="col-6 col-md-4 col-lg-3 mb-2">
+                                <div class="screenshot-item position-relative" onclick="showScreenshot({{ forloop.counter0 }})" style="cursor: pointer;" title="点击查看大图">
+                                    <img src="/media/{{ screenshot }}" 
+                                         alt="测试截图" 
+                                         class="img-thumbnail rounded screenshot-thumb" 
+                                         style="max-width: 100%; max-height: 150px; object-fit: cover; width: 100%;"
+                                         onerror="this.src='/static/images/placeholder-image.png';">
+                                    <small class="position-absolute bottom-0 start-0 p-1 text-bg-dark rounded-bottom small">
+                                        #{{ forloop.counter }}
+                                    </small>
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        <i class="bi bi-zoom-in text-white fs-5"></i>
                                     </div>
-                                    {% endif %}
-                                {% endfor %}
+                                </div>
                             </div>
-                                    </div>
-                                    {% endif %}
-                                {% empty %}
-                                <small class="text-muted">暂无截图</small>
-                                {% endfor %}
-                            </div>
-                            <small class="text-muted d-block mt-2">
-                                <i class="bi bi-image"></i> 共 {{ screenshot_count }} 张截图
-                            </small>
-                            {% else %}
-                            <small class="text-muted"><i class="bi bi-image"></i> 暂无截图</small>
-                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-image"></i> 共 {{ screenshot_count }} 张截图
+                        </small>
                         {% else %}
-                            <small class="text-muted"><i class="bi bi-image"></i> 暂无截图</small>
+                        <small class="text-muted"><i class="bi bi-image"></i> 暂无截图</small>
                         {% endif %}
                     </div>
                 </div>
-
 
                 {% if test_run.error_message %}
                 <div class="alert alert-danger mt-3">
@@ -188,55 +176,59 @@
                     </h6>
                     <code class="d-block p-2 bg-light rounded mt-2">{{ test_run.error_message|truncatewords:50 }}</code>
                 </div>
+                {% endif %}
             </div>
-
-            {% endif %}
-            {% endif %}
-
         </div>
     </div>
 
     <!-- 测试步骤结果 -->
-    {% if test_run %}
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">执行步骤详情</h5>
-        </div>
-        <div class="card-body">
-            {% if steps %}
-            <div class="steps-timeline">
-                {% for step in steps %}
-                <div class="step-item mb-3 pb-3 border-bottom" data-step-id="{{ step.id }}">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="mb-2">
-                                <span class="badge bg-secondary">步骤 {{ step }}</span>
-                                <span class="badge bg-light text-dark">{{ step.step_number }}</span>
+    <div class="col-lg-8">
+        {% if test_run %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">执行步骤详情</h5>
+            </div>
+            <div class="card-body">
+                {% if steps %}
+                <div class="steps-timeline">
+                    {% for step in steps %}
+                    <div class="step-item mb-3 pb-3 border-bottom" data-step-id="{{ step.id }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary">步骤 {{ step.step_number }}</span>
+                                    <span class="badge bg-light text-dark">{{ step.action_type }}</span>
+                                </div>
+                                <p class="mb-1">
+                                    <strong>操作类型:</strong> {{ step.get_action_type_display }}
+                                </p>
+                                {% if step.selector %}
+                                <p class="mb-1 small">
+                                    <strong>定位器:</strong> {{ step.locator_type }}: <code>{{ step.selector }}</code>
+                                </p>
+                                {% endif %}
+                                {% if step.description %}
+                                <p class="mb-0 text-muted small">
+                                    <strong>说明:</strong> {{ step.description }}
+                                </p>
+                                {% endif %}
                             </div>
-                            <p class="mb-1">
-                                <strong>操作:</strong> {{ step.action_type }}
-                            </p>
-                            {% if step.description %}
-                            <p class="mb-0 text-muted small">
-                                {{ step.description }}
-                            </p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <span class="badge bg-success">
-                                <i class="bi bi-check-circle"></i>
-                            </span>
+                            <div>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center py-4">此测试用例没有定义步骤</p>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="text-muted text-center py-4">此测试用例没有定义步骤</p>
-            {% endif %}
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <!-- 右侧统计信息 -->
