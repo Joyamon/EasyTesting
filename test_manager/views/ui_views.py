@@ -216,7 +216,13 @@ def ui_test_step_delete(request, step_id):
 
 @login_required
 def ui_test_case_reorder_steps(request, pk):
-    """重新排序 UI 测试步骤"""
+    """重新排序 UI 测试步骤
+    
+    使用临时步骤号避免 UNIQUE 约束冲突。
+    流程：
+    1. 使用负数作为临时步骤号
+    2. 最后更新为最终的步骤号
+    """
     test_case = get_object_or_404(TestCase, pk=pk)
     
     if request.method == 'POST':
@@ -230,17 +236,35 @@ def ui_test_case_reorder_steps(request, pk):
                     'error': '步骤列表不能为空'
                 }, status=400)
             
-            # 批量更新步骤顺序
-            for step_data in steps:
+            logger.info(f"Reordering {len(steps)} steps for test case {pk}")
+            
+            # 第一步：使用临时步骤号（负数）以避免 UNIQUE 约束冲突
+            step_updates = {}
+            for idx, step_data in enumerate(steps, start=1):
                 step_id = step_data.get('id')
                 step_number = step_data.get('step_number')
+                step_updates[step_id] = step_number
                 
                 try:
                     step = UITestStep.objects.get(id=step_id, test_case=test_case)
-                    step.step_number = step_number
+                    # 使用临时步骤号（负数）
+                    step.step_number = -(idx)
                     step.save()
                 except UITestStep.DoesNotExist:
                     logger.warning(f"UITestStep {step_id} not found for test case {pk}")
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'步骤 {step_id} 不存在'
+                    }, status=404)
+            
+            # 第二步：使用最终的步骤号（正数）
+            for step_id, final_step_number in step_updates.items():
+                try:
+                    step = UITestStep.objects.get(id=step_id, test_case=test_case)
+                    step.step_number = final_step_number
+                    step.save()
+                except UITestStep.DoesNotExist:
+                    logger.warning(f"UITestStep {step_id} not found during final update")
             
             logger.info(f"Test case {pk} steps reordered successfully")
             return JsonResponse({
@@ -249,6 +273,7 @@ def ui_test_case_reorder_steps(request, pk):
             })
             
         except json.JSONDecodeError:
+            logger.error("Invalid JSON in request body")
             return JsonResponse({
                 'success': False,
                 'error': '无效的 JSON 格式'
@@ -257,7 +282,7 @@ def ui_test_case_reorder_steps(request, pk):
             logger.exception(f"Error reordering steps for test case {pk}: {e}")
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': f'更新步骤顺序失败: {str(e)}'
             }, status=500)
     
     return JsonResponse({
